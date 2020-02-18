@@ -1,6 +1,7 @@
 package hilbert
 
 import (
+	"math/big"
 	"reflect"
 	"testing"
 )
@@ -12,7 +13,7 @@ func TestHilbertCurve_Decode(t *testing.T) {
 		length     uint64
 	}
 	type args struct {
-		d uint64
+		d *big.Int
 	}
 	tests := []struct {
 		name       string
@@ -29,7 +30,7 @@ func TestHilbertCurve_Decode(t *testing.T) {
 				2,
 			},
 			args{
-				3,
+				big.NewInt(3),
 			},
 			[]uint64{
 				1,0,
@@ -44,10 +45,25 @@ func TestHilbertCurve_Decode(t *testing.T) {
 				20,
 			},
 			args{
-				96,
+				big.NewInt(96),
 			},
 			[]uint64{
 				4,12,
+			},
+			false,
+		},
+		{
+			"1096 == [10, 34]",
+			fields{
+				2,
+				10,
+				20,
+			},
+			args{
+				big.NewInt(1096),
+			},
+			[]uint64{
+				10,34,
 			},
 			false,
 		},
@@ -55,7 +71,7 @@ func TestHilbertCurve_Decode(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := HilbertCurve{
-				dimentions: tt.fields.dimensions,
+				dimensions: tt.fields.dimensions,
 				bits:       tt.fields.bits,
 				length:     tt.fields.length,
 			}
@@ -84,7 +100,7 @@ func TestHilbertCurve_Encode(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		wantD   uint64
+		wantD   *big.Int
 		wantErr bool
 	}{
 		{
@@ -97,7 +113,7 @@ func TestHilbertCurve_Encode(t *testing.T) {
 			args{
 			 []uint64{1, 0},
 			},
-			3,
+			big.NewInt(3),
 			false,
 		},
 		{
@@ -110,14 +126,14 @@ func TestHilbertCurve_Encode(t *testing.T) {
 			args{
 				[]uint64{4, 12},
 			},
-			96,
+			big.NewInt(96) ,
 			false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := HilbertCurve{
-				dimentions: tt.fields.dimentions,
+				dimensions: tt.fields.dimentions,
 				bits:       tt.fields.bits,
 				length:     tt.fields.length,
 			}
@@ -126,7 +142,7 @@ func TestHilbertCurve_Encode(t *testing.T) {
 				t.Errorf("Encode() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if gotD != tt.wantD {
+			if gotD.Cmp(tt.wantD) != 0 {
 				t.Errorf("Encode() gotD = %v, want %v", gotD, tt.wantD)
 			}
 		})
