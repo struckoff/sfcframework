@@ -32,7 +32,7 @@ func TestHilbertCurve_Decode(t *testing.T) {
 				3,
 			},
 			[]uint64{
-				1,0,
+				1, 0,
 			},
 			false,
 		},
@@ -47,7 +47,7 @@ func TestHilbertCurve_Decode(t *testing.T) {
 				96,
 			},
 			[]uint64{
-				4,12,
+				4, 12,
 			},
 			false,
 		},
@@ -55,7 +55,7 @@ func TestHilbertCurve_Decode(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := HilbertCurve{
-				dimentions: tt.fields.dimensions,
+				dimensions: tt.fields.dimensions,
 				bits:       tt.fields.bits,
 				length:     tt.fields.length,
 			}
@@ -95,7 +95,7 @@ func TestHilbertCurve_Encode(t *testing.T) {
 				2,
 			},
 			args{
-			 []uint64{1, 0},
+				[]uint64{1, 0},
 			},
 			3,
 			false,
@@ -117,7 +117,7 @@ func TestHilbertCurve_Encode(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := HilbertCurve{
-				dimentions: tt.fields.dimentions,
+				dimensions: tt.fields.dimentions,
 				bits:       tt.fields.bits,
 				length:     tt.fields.length,
 			}
