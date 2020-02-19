@@ -13,14 +13,14 @@ type HilbertCurve struct {
 	length     uint64
 }
 
-func New(b, n uint64) (*HilbertCurve, error){
-	if b <= 0 || n <= 0{
+func New(dims, bits uint64) (*HilbertCurve, error){
+	if bits <= 0 || dims <= 0{
 		return nil, errors.New("Number of bits and dimension must be greater than 0")
 	}
 	return &HilbertCurve{
-		dimensions: n,
-		bits:       b,
-		length:     b * n,
+		dimensions: dims,
+		bits:       bits,
+		length:     bits * dims,
 	}, nil
 }
 
