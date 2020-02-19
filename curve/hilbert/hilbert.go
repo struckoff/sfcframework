@@ -6,38 +6,38 @@ import (
 )
 
 type HilbertCurve struct {
-	dimentions uint64
-	bits uint64
-	length uint64
+	dimensions uint64
+	bits       uint64
+	length     uint64
 }
 
-func New(b, n uint64) (*HilbertCurve, error){
-	if b <= 0 || n <= 0{
+func New(b, n uint64) (*HilbertCurve, error) {
+	if b <= 0 || n <= 0 {
 		return nil, errors.New("Number of bits and dimension must be greater than 0")
 	}
 	return &HilbertCurve{
-		dimentions: n,
-		bits: b,
-		length: b * n,
+		dimensions: n,
+		bits:       b,
+		length:     b * n,
 	}, nil
 }
 
-func (c HilbertCurve) Decode(d uint64) (coords []uint64, err error){
+func (c HilbertCurve) Decode(d uint64) (coords []uint64, err error) {
 	return
 }
 
-func (c HilbertCurve) DecodeWithBuffer(buf []uint64, d uint64) (coords []uint64, err error){
+func (c HilbertCurve) DecodeWithBuffer(buf []uint64, d uint64) (coords []uint64, err error) {
 	return
 }
 
-func (c HilbertCurve) Encode(coords []uint64) (d uint64, err error){
+func (c HilbertCurve) Encode(coords []uint64) (d uint64, err error) {
 	m := uint64(1 << (c.bits - 1))
 	// Inverse undo excess work
-	for q:= m; q > 0; q >>=1{
-		p := q-1
-		for i:=uint64(0); i < c.dimentions; i++{
-			if (coords[i] & q) != 0{
-				coords[i]^=p
+	for q := m; q > 0; q >>= 1 {
+		p := q - 1
+		for i := uint64(0); i < c.dimensions; i++ {
+			if (coords[i] & q) != 0 {
+				coords[i] ^= p
 			} else {
 				t := (coords[0] ^ coords[i]) & p
 				coords[0] ^= t
@@ -46,17 +46,17 @@ func (c HilbertCurve) Encode(coords []uint64) (d uint64, err error){
 		}
 	}
 
-	for i:=uint64(1); i < c.dimentions; i++{
+	for i := uint64(1); i < c.dimensions; i++ {
 		coords[i] ^= coords[i-1]
 	}
 	t := uint64(0)
-	for q:= m; q > 1; q >>=1{
-		if (coords[c.dimentions - 1] & q) != 0{
-			t ^= q -1
+	for q := m; q > 1; q >>= 1 {
+		if (coords[c.dimensions-1] & q) != 0 {
+			t ^= q - 1
 		}
 	}
-	for i:=uint64(0); i < c.dimentions; i++{
-		coords[i]^=t
+	for i := uint64(0); i < c.dimensions; i++ {
+		coords[i] ^= t
 	}
 
 	//h = self._transpose_to_hilbert_integer(x)
@@ -80,13 +80,13 @@ func (c *HilbertCurve) intoNumeric(coords []uint64) uint64 {
 
 	//switch len(tmpCoords) {}
 
-	switch{
-		case c.length >= 8:
-			return binary.BigEndian.Uint64(tmpCoords)
-		case c.length >= 4:
-			return uint64(binary.BigEndian.Uint32(tmpCoords))
-		default:
-			return uint64(binary.BigEndian.Uint16(tmpCoords))
+	switch {
+	case c.length >= 8:
+		return binary.BigEndian.Uint64(tmpCoords)
+	case c.length >= 4:
+		return uint64(binary.BigEndian.Uint32(tmpCoords))
+	default:
+		return uint64(binary.BigEndian.Uint16(tmpCoords))
 	}
 }
 
