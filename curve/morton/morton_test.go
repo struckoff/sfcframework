@@ -1,8 +1,9 @@
 package morton
 
 import (
+	"io/ioutil"
+	"log"
 	"math"
-	"math/big"
 	"reflect"
 	"testing"
 )
@@ -13,7 +14,7 @@ func TestMortonCurve_Decode(t *testing.T) {
 		bits       uint64
 	}
 	type args struct {
-		d *big.Int
+		code uint64
 	}
 	tests := []struct {
 		name       string
@@ -29,10 +30,10 @@ func TestMortonCurve_Decode(t *testing.T) {
 				1,
 			},
 			args{
-				big.NewInt(3),
+				3,
 			},
 			[]uint64{
-				1,1,
+				1, 1,
 			},
 			false,
 		},
@@ -43,10 +44,10 @@ func TestMortonCurve_Decode(t *testing.T) {
 				10,
 			},
 			args{
-				big.NewInt(96),
+				96,
 			},
 			[]uint64{
-				8,4,
+				8, 4,
 			},
 			false,
 		},
@@ -57,10 +58,10 @@ func TestMortonCurve_Decode(t *testing.T) {
 				10,
 			},
 			args{
-				big.NewInt(1096),
+				1096,
 			},
 			[]uint64{
-				40,2,
+				40, 2,
 			},
 			false,
 		},
@@ -71,10 +72,10 @@ func TestMortonCurve_Decode(t *testing.T) {
 				100,
 			},
 			args{
-				big.NewInt(math.MaxInt32),
+				math.MaxInt32,
 			},
 			[]uint64{
-				65535,32767,
+				65535, 32767,
 			},
 			false,
 		},
@@ -85,10 +86,10 @@ func TestMortonCurve_Decode(t *testing.T) {
 				100,
 			},
 			args{
-				big.NewInt(math.MaxInt64),
+				math.MaxInt64,
 			},
 			[]uint64{
-				4294967295,2147483647,
+				4294967295, 2147483647,
 			},
 			false,
 		},
@@ -99,7 +100,7 @@ func TestMortonCurve_Decode(t *testing.T) {
 				100,
 			},
 			args{
-				big.NewInt(6442450941),
+				6442450941,
 			},
 			[]uint64{
 				131071, 32766,
@@ -110,10 +111,10 @@ func TestMortonCurve_Decode(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c, err := New(tt.fields.dimensions, tt.fields.bits)
-			if err!=nil{
+			if err != nil {
 				t.Fatal(err)
 			}
-			gotCoords, err := c.Decode(tt.args.d)
+			gotCoords, err := c.Decode(tt.args.code)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Decode() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -134,11 +135,11 @@ func TestMortonCurve_Encode(t *testing.T) {
 		coords []uint64
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantD   *big.Int
-		wantErr bool
+		name     string
+		fields   fields
+		args     args
+		wantCode uint64
+		wantErr  bool
 	}{
 		{
 			"3 == [1, 1]",
@@ -148,10 +149,10 @@ func TestMortonCurve_Encode(t *testing.T) {
 			},
 			args{
 				[]uint64{
-					1,1,
+					1, 1,
 				},
 			},
-			big.NewInt(3),
+			3,
 			false,
 		},
 		{
@@ -162,10 +163,10 @@ func TestMortonCurve_Encode(t *testing.T) {
 			},
 			args{
 				[]uint64{
-					8,4,
+					8, 4,
 				},
 			},
-			big.NewInt(96),
+			96,
 			false,
 		},
 		{
@@ -176,10 +177,10 @@ func TestMortonCurve_Encode(t *testing.T) {
 			},
 			args{
 				[]uint64{
-					40,2,
+					40, 2,
 				},
 			},
-			big.NewInt(1096),
+			1096,
 			false,
 		},
 		{
@@ -190,10 +191,10 @@ func TestMortonCurve_Encode(t *testing.T) {
 			},
 			args{
 				[]uint64{
-					65535,32767,
+					65535, 32767,
 				},
 			},
-			big.NewInt(math.MaxInt32),
+			math.MaxInt32,
 			false,
 		},
 		{
@@ -204,10 +205,10 @@ func TestMortonCurve_Encode(t *testing.T) {
 			},
 			args{
 				[]uint64{
-					4294967295,2147483647,
+					4294967295, 2147483647,
 				},
 			},
-			big.NewInt(math.MaxInt64),
+			math.MaxInt64,
 			false,
 		},
 		{
@@ -221,14 +222,14 @@ func TestMortonCurve_Encode(t *testing.T) {
 					131071, 32766,
 				},
 			},
-			big.NewInt(6442450941),
+			6442450941,
 			false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c, err := New(tt.fields.dimensions, tt.fields.bits)
-			if err!=nil{
+			if err != nil {
 				t.Fatal(err)
 			}
 			gotD, err := c.Encode(tt.args.coords)
@@ -236,8 +237,115 @@ func TestMortonCurve_Encode(t *testing.T) {
 				t.Errorf("Encode() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotD, tt.wantD) {
-				t.Errorf("Encode() gotD = %v, want %v", gotD, tt.wantD)
+			if !reflect.DeepEqual(gotD, tt.wantCode) {
+				t.Errorf("Encode() gotD = %v, want %v", gotD, tt.wantCode)
+			}
+		})
+	}
+}
+
+func BenchmarkCurve_Decode(b *testing.B) {
+	log.SetOutput(ioutil.Discard)
+
+	c, err := New(2, 10)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := uint64(0); i < uint64(b.N); i++ {
+		log.Print(c.Decode(i))
+	}
+}
+
+func BenchmarkCurve_Decode_Morton(b *testing.B) {
+	log.SetOutput(ioutil.Discard)
+
+	type args struct {
+		dims uint64
+		bits uint64
+	}
+	benchmarks := []struct {
+		name string
+		args args
+	}{
+		{
+			"2x2",
+			args{dims: 2, bits: 2},
+		},
+		{
+			"2x10",
+			args{dims: 2, bits: 10},
+		},
+		{
+			"32x2",
+			args{dims: 32, bits: 2},
+		},
+		{
+			"32x512",
+			args{dims: 32, bits: 512},
+		},
+	}
+	for _, bm := range benchmarks {
+		c, err := New(bm.args.dims, bm.args.bits)
+		if err != nil {
+			b.Fatal(err)
+		}
+		b.Run(bm.name, func(b *testing.B) {
+			b.ReportAllocs()
+			for i := uint64(0); i < uint64(b.N); i++ {
+				log.Print(c.Decode(i))
+			}
+		})
+	}
+}
+
+func BenchmarkCurve_Encode_Morton(b *testing.B) {
+	log.SetOutput(ioutil.Discard)
+
+	type args struct {
+		dims uint64
+		bits uint64
+	}
+	benchmarks := []struct {
+		name string
+		args args
+	}{
+		{
+			"2x2",
+			args{dims: 2, bits: 2},
+		},
+		{
+			"2x10",
+			args{dims: 2, bits: 10},
+		},
+		{
+			"32x2",
+			args{dims: 32, bits: 2},
+		},
+		{
+			"32x512",
+			args{dims: 32, bits: 512},
+		},
+	}
+
+	for _, bm := range benchmarks {
+		c, err := New(bm.args.dims, bm.args.bits)
+		if err != nil {
+			b.Fatal(err)
+		}
+		b.Run(bm.name, func(b *testing.B) {
+			b.StopTimer()
+			b.ReportAllocs()
+			coordsSet := [][]uint64{}
+			for i := uint64(0); i < uint64(b.N); i++ {
+				coord, _ := c.Decode(i)
+				coordsSet = append(coordsSet, coord)
+			}
+			b.StartTimer()
+			for i := 0; i < b.N; i++ {
+				log.Print(c.Encode(coordsSet[i]))
 			}
 		})
 	}
