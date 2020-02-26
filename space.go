@@ -40,10 +40,10 @@ func (s *space) addData(d DataItem) error {
 	c := 0
 	for _, g := range s.cg {
 		for i := range g.cells {
-			if c == cID {
+			if uint64(c) == cID {
 				err = g.cells[i].add(d)
 				if err != nil {
-					return fmt.Errorf("error on adding data iten to cell: %w", err)
+					return fmt.Errorf("error on adding data item to cell: %w", err)
 				}
 				return nil
 			}

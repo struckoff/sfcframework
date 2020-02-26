@@ -1,41 +1,41 @@
 package hilbert
 
 import (
+	"encoding/binary"
 	"errors"
-	"math/big"
 )
 
 const bitSize = 8
 
-type HilbertCurve struct {
+type Curve struct {
 	dimensions uint64
 	bits       uint64
 	length     uint64
 }
 
-func New(dims, bits uint64) (*HilbertCurve, error) {
+func New(dims, bits uint64) (*Curve, error) {
 	if bits <= 0 || dims <= 0 {
 		return nil, errors.New("Number of bits and dimension must be greater than 0")
 	}
-	return &HilbertCurve{
+	return &Curve{
 		dimensions: dims,
 		bits:       bits,
 		length:     bits * dims,
 	}, nil
 }
 
-func (c *HilbertCurve) Decode(d *big.Int) (coords []uint64, err error) {
+func (c Curve) Decode(code uint64) (coords []uint64, err error) {
 	coords = make([]uint64, c.dimensions)
-	coords, err = c.parseIndex(coords, d)
+	coords, err = c.parseIndex(coords, code)
 	if err != nil {
 		return
 	}
 	return c.transpose(coords), nil
 }
 
-func (c *HilbertCurve) DecodeWithBuffer(buf []uint64, d *big.Int) (coords []uint64, err error) {
+func (c Curve) DecodeWithBuffer(buf []uint64, code uint64) (coords []uint64, err error) {
 	// TODO Need to decide how to deal with less or more the c.dimensions
-	coords, err = c.parseIndex(buf, d)
+	coords, err = c.parseIndex(buf, code)
 	if err != nil {
 		return
 	}
@@ -43,12 +43,23 @@ func (c *HilbertCurve) DecodeWithBuffer(buf []uint64, d *big.Int) (coords []uint
 }
 
 // TODO OPTIMIZE
-func (c *HilbertCurve) parseIndex(coords []uint64, d *big.Int) ([]uint64, error) {
-	b := d.Bytes()
-	lenB := len(b)
+func (c Curve) parseIndex(coords []uint64, code uint64) ([]uint64, error) {
+	var bitLen int
 
-	for idx := 0; idx < bitSize*lenB; idx++ {
-		if (b[len(b)-1-idx/bitSize] & (1 << (uint32(idx) % bitSize))) != 0 {
+	b := make([]byte, bitSize)
+	binary.LittleEndian.PutUint64(b, code)
+	for iter := 0; iter < bitSize; iter++ {
+		if (1 << (iter * bitSize)) > code {
+			bitLen = iter
+			break
+		}
+	}
+
+	//fmt.Println(b, b[:bitLen], bitLen, new(big.Int).SetUint64(code).Bytes())
+
+	b = b[:bitLen]
+	for idx := 0; idx < bitSize*bitLen; idx++ {
+		if (b[idx/bitSize] & (1 << (idx % bitSize))) != 0 {
 			dim := (c.length - uint64(idx) - 1) % c.dimensions
 			shift := (uint64(idx) / c.dimensions) % c.bits
 			coords[dim] |= 1 << shift
@@ -58,7 +69,7 @@ func (c *HilbertCurve) parseIndex(coords []uint64, d *big.Int) ([]uint64, error)
 }
 
 //! coords may be altered by method
-func (c HilbertCurve) Encode(coords []uint64) (d *big.Int, err error) {
+func (c Curve) Encode(coords []uint64) (code uint64, err error) {
 	m := uint64(1 << (c.bits - 1))
 	coordsLen := len(coords)
 	// Inverse undo excess work
@@ -92,8 +103,8 @@ func (c HilbertCurve) Encode(coords []uint64) (d *big.Int, err error) {
 	return c.prepareIndex(coords), nil
 }
 
-func (c *HilbertCurve) transpose(coords []uint64) []uint64 {
-	N := uint64(2 << (c.bits - 1))
+func (c Curve) transpose(coords []uint64) []uint64 {
+	m := uint64(2 << (c.bits - 1))
 	// Note that x is mutated by this method (as a performance improvement
 	// to avoid allocation)
 	n := int(c.dimensions)
@@ -108,7 +119,7 @@ func (c *HilbertCurve) transpose(coords []uint64) []uint64 {
 
 	coords[0] ^= t
 	// Undo excess work
-	for q := uint64(2); q != N; q <<= 1 {
+	for q := uint64(2); q != m; q <<= 1 {
 		p := q - 1
 		for i := n - 1; i >= 0; i-- {
 			if (coords[i] & q) != 0 {
@@ -123,24 +134,30 @@ func (c *HilbertCurve) transpose(coords []uint64) []uint64 {
 	return coords
 }
 
-func (c *HilbertCurve) prepareIndex(coords []uint64) *big.Int {
-	tmpCoords := make([]byte, c.length)
+func (c Curve) prepareIndex(coords []uint64) uint64 {
+	var tmpCoords []byte
+	if c.length < bitSize {
+		tmpCoords = make([]byte, bitSize)
+	} else {
+		tmpCoords = make([]byte, c.length)
+	}
+
 	bIndex := c.length - 1
 	mask := uint64(1 << (c.bits - 1))
 
 	for iter := uint64(0); iter < c.bits; iter++ {
 		for coordsIter := range coords {
 			if (coords[coordsIter] & mask) != 0 {
-				tmpCoords[c.length-1-bIndex/8] |= 1 << (bIndex % 8)
+				tmpCoords[c.length-1-bIndex/bitSize] |= 1 << (bIndex % 8)
 			}
 			bIndex--
 		}
 		mask >>= 1
 	}
 
-	return new(big.Int).SetBytes(tmpCoords)
+	return binary.LittleEndian.Uint64(tmpCoords)
 }
 
-func (c *HilbertCurve) Len() uint64 {
+func (c Curve) Len() uint64 {
 	return c.length
 }

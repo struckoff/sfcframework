@@ -2,23 +2,21 @@ package morton
 
 import (
 	"errors"
-	"math/big"
-	"sync"
 )
 
-type MortonCurve struct {
+type Curve struct {
 	dimensions uint64
 	bits       uint64
 	length     uint64
 	masksArray []uint64
 }
 
-func New(dims, bits uint64) (*MortonCurve, error){
-	if bits <= 0 || dims <= 0{
+func New(dims, bits uint64) (*Curve, error) {
+	if bits <= 0 || dims <= 0 {
 		return nil, errors.New("Number of bits and dimension must be greater than 0")
 	}
 
-	mc := &MortonCurve{
+	mc := &Curve{
 		dimensions: dims,
 		bits:       bits,
 		length:     (bits * dims) - bits,
@@ -29,22 +27,27 @@ func New(dims, bits uint64) (*MortonCurve, error){
 }
 
 // TODO USE c.bits
-func (c *MortonCurve) Decode(d *big.Int) (coords []uint64, err error){
+func (c Curve) Decode(code uint64) (coords []uint64, err error) {
 	coords = make([]uint64, c.dimensions)
-	var wg sync.WaitGroup
-	wg.Add(int(c.dimensions))
+	//var wg sync.WaitGroup
+	//wg.Add(int(c.dimensions))
 	for iter := uint64(0); iter < c.dimensions; iter++ {
-		// TODO AM I HERETIC
-		go func (iter uint64, wg *sync.WaitGroup){
-			defer wg.Done()
-		coords[iter] = c.compact(d.Uint64() >> iter)
-		}(iter, &wg)
+		// TODO AM I HERETIC?
+		//go func(iter uint64, wg *sync.WaitGroup) {
+		//	defer wg.Done() // SLOW PART
+		coords[iter] = c.compact(code >> iter)
+		//}(iter, &wg)
 	}
-	wg.Wait()
+	//wg.Wait()
 	return coords, nil
 }
 
-func (c *MortonCurve)compact(x uint64) uint64{
+func (c Curve) DecodeWithBuffer(buf []uint64, code uint64) (coords []uint64, err error) {
+	// TODO IMPLEMENT
+	return nil, nil
+}
+
+func (c Curve) compact(x uint64) uint64 {
 	//x &= 0x55555555
 	//x = (x ^ (x >> 1)) & 0x33333333
 	//x = (x ^ (x >> 2)) & 0x0f0f0f0f
@@ -52,14 +55,14 @@ func (c *MortonCurve)compact(x uint64) uint64{
 	//x = (x ^ (x >> 8)) & 0x0000ffff
 
 	x &= c.masksArray[len(c.masksArray)-1]
-	for iter := 0; iter < len(c.masksArray)-1; iter++{
+	for iter := 0; iter < len(c.masksArray)-1; iter++ {
 		x = (x ^ (x >> (1 << iter))) & (c.masksArray[len(c.masksArray)-2-iter]) //TODO may be "1 << iter" should be pregenerated
 	}
 
 	return x
 }
 
-func (c MortonCurve) masks() []uint64{
+func (c Curve) masks() []uint64 {
 	mask := uint64((1 << c.bits) - 1)
 
 	shift := c.dimensions * (c.bits - 1)
@@ -75,7 +78,7 @@ func (c MortonCurve) masks() []uint64{
 
 	masks = append(masks, mask)
 
-	for ;shift > 0; shift>>=1 {
+	for ; shift > 0; shift >>= 1 {
 		mask = 0
 		shifted := uint64(0)
 
@@ -85,7 +88,7 @@ func (c MortonCurve) masks() []uint64{
 			mask |= 1 << bit << (((shift - 1) ^ uint64(0xffffffffffffffff)) & distance)
 		}
 
-		if shifted != 0{
+		if shifted != 0 {
 			masks = append(masks, mask)
 		}
 
@@ -94,17 +97,17 @@ func (c MortonCurve) masks() []uint64{
 	return masks
 }
 
-func (c MortonCurve) Encode(coords []uint64) (d *big.Int, err error){
+func (c Curve) Encode(coords []uint64) (code uint64, err error) {
 	// TODO ADD ARGUMENTS CHECK
 
-	code := uint64(0)
+	code = 0
 	for iter := uint64(0); iter < c.dimensions; iter++ {
 		code |= c.split(coords[iter]) << iter
 	}
-	return new(big.Int).SetUint64(code), nil
+	return
 }
 
-func (c MortonCurve) split(x uint64) uint64 {
+func (c Curve) split(x uint64) uint64 {
 	shiftIter := len(c.masksArray) - 1
 	for iter := 0; iter < len(c.masksArray); iter++ {
 		x = (x | (x << (1 << shiftIter))) & c.masksArray[iter]
@@ -112,4 +115,8 @@ func (c MortonCurve) split(x uint64) uint64 {
 	}
 
 	return x
+}
+
+func (c Curve) Len() uint64 {
+	return c.length
 }
