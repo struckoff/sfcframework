@@ -99,6 +99,9 @@ func (c Curve) masks() []uint64 {
 
 func (c Curve) Encode(coords []uint64) (code uint64, err error) {
 	// TODO ADD ARGUMENTS CHECK
+	if len(coords) < int(c.dimensions) {
+		return 0, errors.New("number of coordinates less then dimensions")
+	}
 
 	code = 0
 	for iter := uint64(0); iter < c.dimensions; iter++ {

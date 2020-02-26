@@ -87,7 +87,6 @@ func TestBalancer_AddData(t *testing.T) {
 				space: space{
 					cg:  []cellGroup{newCellGroup(testNode)},
 					sfc: morton.Curve{},
-					//sfc: hilbert.HilbertCurve{},
 				},
 			},
 			args{
@@ -104,8 +103,7 @@ func TestBalancer_AddData(t *testing.T) {
 			fields{
 				nType: reflect.TypeOf(testNode),
 				space: space{
-					cg: []cellGroup{newCellGroup(testNode)},
-					//sfc: morton.Curve{},
+					cg:  []cellGroup{newCellGroup(testNode)},
 					sfc: hilbert.Curve{},
 				},
 			},

@@ -48,6 +48,7 @@ func (c Curve) parseIndex(coords []uint64, code uint64) ([]uint64, error) {
 
 	b := make([]byte, bitSize)
 	binary.LittleEndian.PutUint64(b, code)
+
 	for iter := 0; iter < bitSize; iter++ {
 		if (1 << (iter * bitSize)) > code {
 			bitLen = iter
@@ -58,10 +59,10 @@ func (c Curve) parseIndex(coords []uint64, code uint64) ([]uint64, error) {
 	//fmt.Println(b, b[:bitLen], bitLen, new(big.Int).SetUint64(code).Bytes())
 
 	b = b[:bitLen]
-	for idx := 0; idx < bitSize*bitLen; idx++ {
-		if (b[idx/bitSize] & (1 << (idx % bitSize))) != 0 {
-			dim := (c.length - uint64(idx) - 1) % c.dimensions
-			shift := (uint64(idx) / c.dimensions) % c.bits
+	for iter := 0; iter < bitSize*bitLen; iter++ {
+		if (b[iter/bitSize] & (1 << (iter % bitSize))) != 0 {
+			dim := (c.length - uint64(iter) - 1) % c.dimensions
+			shift := (uint64(iter) / c.dimensions) % c.bits
 			coords[dim] |= 1 << shift
 		}
 	}
@@ -70,6 +71,9 @@ func (c Curve) parseIndex(coords []uint64, code uint64) ([]uint64, error) {
 
 //! coords may be altered by method
 func (c Curve) Encode(coords []uint64) (code uint64, err error) {
+	if len(coords) < int(c.dimensions) {
+		return 0, errors.New("number of coordinates less then dimensions")
+	}
 	m := uint64(1 << (c.bits - 1))
 	coordsLen := len(coords)
 	// Inverse undo excess work
@@ -100,7 +104,8 @@ func (c Curve) Encode(coords []uint64) (code uint64, err error) {
 	}
 
 	//h = self._transpose_to_hilbert_integer(x)
-	return c.prepareIndex(coords), nil
+	code = c.prepareIndex(coords)
+	return
 }
 
 func (c Curve) transpose(coords []uint64) []uint64 {
@@ -135,13 +140,7 @@ func (c Curve) transpose(coords []uint64) []uint64 {
 }
 
 func (c Curve) prepareIndex(coords []uint64) uint64 {
-	var tmpCoords []byte
-	if c.length < bitSize {
-		tmpCoords = make([]byte, bitSize)
-	} else {
-		tmpCoords = make([]byte, c.length)
-	}
-
+	tmpCoords := make([]byte, bitSize)
 	bIndex := c.length - 1
 	mask := uint64(1 << (c.bits - 1))
 
