@@ -24,8 +24,8 @@ type Curve struct {
 	dimensions uint64
 	bits       uint64
 	length     uint64
-	maxX       uint64
-	maxH       uint64
+	maxSize    uint64
+	maxCode    uint64
 }
 
 func New(dims, bits uint64) (*Curve, error) {
@@ -36,8 +36,8 @@ func New(dims, bits uint64) (*Curve, error) {
 		dimensions: dims,
 		bits:       bits,
 		length:     bits * dims,
-		maxH:       (1 << bits) - 1,
-		maxX:       (1 << (dims * bits)) - 1,
+		maxSize:    (1 << bits) - 1,
+		maxCode:    (1 << (dims * bits)) - 1,
 	}, nil
 }
 
@@ -70,8 +70,8 @@ func (c Curve) DecodeWithBuffer(buf []uint64, code uint64) (coords []uint64, err
 }
 
 func (c Curve) validateCode(code uint64) error {
-	if code > c.maxH {
-		return errors.New(fmt.Sprintf("code == %v exceeds limit (2^(dimensions * bits) - 1) == %v", code, c.maxX))
+	if code > c.maxCode {
+		return errors.New(fmt.Sprintf("code == %v exceeds limit (2^(dimensions * bits) - 1) == %v", code, c.maxSize))
 	}
 	return nil
 }
@@ -92,8 +92,10 @@ func (c Curve) parseIndex(coords []uint64, code uint64) ([]uint64, error) {
 
 	//fmt.Println(b, b[:bitLen], bitLen, new(big.Int).SetUint64(code).Bytes())
 
-	b = b[:bitLen]
-	for iter := 0; iter < bitSize*bitLen; iter++ {
+	if bitLen > 0 {
+		b = b[:bitLen]
+	}
+	for iter := 0; iter < bitSize*len(b); iter++ {
 		if (b[iter/bitSize] & (1 << (iter % bitSize))) != 0 {
 			dim := (c.length - uint64(iter) - 1) % c.dimensions
 			shift := (uint64(iter) / c.dimensions) % c.bits
@@ -182,7 +184,7 @@ func (c Curve) prepareIndex(coords []uint64) uint64 {
 	for iter := uint64(0); iter < c.bits; iter++ {
 		for coordsIter := range coords {
 			if (coords[coordsIter] & mask) != 0 {
-				tmpCoords[c.length-1-bIndex/bitSize] |= 1 << (bIndex % 8)
+				tmpCoords[bIndex/bitSize] |= 1 << (bIndex % 8)
 			}
 			bIndex--
 		}
@@ -194,11 +196,11 @@ func (c Curve) prepareIndex(coords []uint64) uint64 {
 
 // Size returns the maximum coordinate value in any dimension
 func (c Curve) Size() uint {
-	return uint(c.maxX)
+	return uint(c.maxSize)
 }
 
 // MaxCode returns the maximum distance along curve(code value)
 // 2^(dimensions * bits) - 1
 func (c Curve) MaxCode() uint64 {
-	return c.maxH
+	return c.maxCode
 }
