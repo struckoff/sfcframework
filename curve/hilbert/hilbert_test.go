@@ -280,3 +280,71 @@ func BenchmarkCurve_Encode_Hilbert(b *testing.B) {
 		})
 	}
 }
+
+func TestNew(t *testing.T) {
+	type args struct {
+		dims uint64
+		bits uint64
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *Curve
+		wantErr bool
+	}{
+		{
+			"zero dimensions",
+			args{dims: 0, bits: 4},
+			nil,
+			true,
+		},
+		{
+			"zero bits",
+			args{dims: 4, bits: 0},
+			nil,
+			true,
+		},
+		{
+			"zero dimensions and bits",
+			args{dims: 0, bits: 0},
+			nil,
+			true,
+		},
+		{
+			"2x4",
+			args{dims: 2, bits: 4},
+			&Curve{
+				dimensions: 2,
+				bits:       4,
+				length:     8,
+				maxSize:    15,
+				maxCode:    255,
+			},
+			false,
+		},
+		{
+			"4x32",
+			args{dims: 4, bits: 32},
+			&Curve{
+				dimensions: 4,
+				bits:       32,
+				length:     128,
+				maxSize:    4294967295,
+				maxCode:    18446744073709551615,
+			},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := New(tt.args.dims, tt.args.bits)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("New() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("New() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

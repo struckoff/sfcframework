@@ -108,9 +108,10 @@ func (c Curve) parseIndex(coords []uint64, code uint64) ([]uint64, error) {
 //! coords may be altered by method
 //Encode returns code(distance) for a given set of coordinates
 func (c Curve) Encode(coords []uint64) (code uint64, err error) {
-	if len(coords) < int(c.dimensions) {
-		return 0, errors.New("number of coordinates less then dimensions")
+	if err := c.validateCoordinates(coords); err != nil {
+		return 0, err
 	}
+
 	m := uint64(1 << (c.bits - 1))
 	coordsLen := len(coords)
 	// Inverse undo excess work
@@ -143,6 +144,18 @@ func (c Curve) Encode(coords []uint64) (code uint64, err error) {
 	//h = self._transpose_to_hilbert_integer(x)
 	code = c.prepareIndex(coords)
 	return
+}
+
+func (c Curve) validateCoordinates(coords []uint64) error {
+	if len(coords) < int(c.dimensions) {
+		return errors.New(fmt.Sprintf("number of coordinates == %v less then dimensions == %v", len(coords), c.dimensions))
+	}
+	for iter := range coords {
+		if coords[iter] > c.maxSize {
+			return errors.New(fmt.Sprintf("coordinate == %v exceeds limit == %v", coords[iter], c.maxSize))
+		}
+	}
+	return nil
 }
 
 func (c Curve) transpose(coords []uint64) []uint64 {

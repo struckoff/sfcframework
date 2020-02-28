@@ -132,16 +132,25 @@ func (c Curve) masks() []uint64 {
 
 //Encode returns code(distance) for a given set of coordinates
 func (c Curve) Encode(coords []uint64) (code uint64, err error) {
-	// TODO ADD ARGUMENTS CHECK
-	if len(coords) < int(c.dimensions) {
-		return 0, errors.New("number of coordinates less then dimensions")
+	if err := c.validateCoordinates(coords); err != nil {
+		return 0, err
 	}
-
-	code = 0
 	for iter := uint64(0); iter < c.dimensions; iter++ {
 		code |= c.split(coords[iter]) << iter
 	}
 	return
+}
+
+func (c Curve) validateCoordinates(coords []uint64) error {
+	if len(coords) < int(c.dimensions) {
+		return errors.New(fmt.Sprintf("number of coordinates == %v less then dimensions == %v", len(coords), c.dimensions))
+	}
+	for iter := range coords {
+		if coords[iter] > c.maxSize {
+			return errors.New(fmt.Sprintf("coordinate == %v exceeds limit == %v", coords[iter], c.maxSize))
+		}
+	}
+	return nil
 }
 
 func (c Curve) split(x uint64) uint64 {
