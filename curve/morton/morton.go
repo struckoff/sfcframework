@@ -26,25 +26,39 @@ func New(dims, bits uint64) (*Curve, error) {
 	return mc, nil
 }
 
-// TODO USE c.bits
 func (c Curve) Decode(code uint64) (coords []uint64, err error) {
 	coords = make([]uint64, c.dimensions)
-	//var wg sync.WaitGroup
-	//wg.Add(int(c.dimensions))
-	for iter := uint64(0); iter < c.dimensions; iter++ {
-		// TODO AM I HERETIC?
-		//go func(iter uint64, wg *sync.WaitGroup) {
-		//	defer wg.Done() // SLOW PART
-		coords[iter] = c.compact(code >> iter)
-		//}(iter, &wg)
-	}
-	//wg.Wait()
+	coords = c.compacter(coords, code)
 	return coords, nil
 }
 
 func (c Curve) DecodeWithBuffer(buf []uint64, code uint64) (coords []uint64, err error) {
-	// TODO IMPLEMENT
-	return nil, nil
+	if len(buf) < int(c.dimensions){
+		return nil, errors.New("buffer length less then dimensions")
+	}
+	buf = c.compacter(buf, code)
+	return buf, nil
+}
+
+func (c Curve) compacter(coords []uint64, code uint64) []uint64{
+	for iter := uint64(0); iter < c.dimensions; iter++ {
+		coords[iter] = c.compact(code >> iter)
+	}
+	return coords
+}
+
+func (c Curve) compacterAsync(coords []uint64, code uint64) []uint64{
+	ch := make(chan [2]uint64, c.dimensions)
+	for iter := uint64(0); iter < c.dimensions; iter++ {
+		go func(ch chan [2]uint64, iter uint64){
+			ch <- [2]uint64{iter, c.compact(code >> iter)}
+		}(ch, iter)
+	}
+	for iter := uint64(0); iter < c.dimensions; iter++ {
+		pair := <- ch
+		coords[pair[0]] = pair[1]
+	}
+	return coords
 }
 
 func (c Curve) compact(x uint64) uint64 {

@@ -7,6 +7,18 @@ import (
 
 const bitSize = 8
 
+ //The Hilbert index is expressed as an array of transposed bits.
+ //
+ //Example: 5 bits for each of n=3 coordinates.
+ //15-bit Hilbert integer = A B C D E F G H I J K L M N O is stored
+ //as its Transpose                        ^
+ //X[0] = A D G J M                    X[2]|  7
+ //X[1] = B E H K N        <------->       | /X[1]
+ //X[2] = C F I L O                   axes |/
+ //       high low                         0------> X[0]
+ //
+ //NOTE: This algorithm is derived from work done by John Skilling and published in "Programming the Hilbert curve".
+ //(c) 2004 American Institute of Physics.
 type Curve struct {
 	dimensions uint64
 	bits       uint64
@@ -15,7 +27,7 @@ type Curve struct {
 
 func New(dims, bits uint64) (*Curve, error) {
 	if bits <= 0 || dims <= 0 {
-		return nil, errors.New("Number of bits and dimension must be greater than 0")
+		return nil, errors.New("number of bits and dimension must be greater than 0")
 	}
 	return &Curve{
 		dimensions: dims,
@@ -34,12 +46,15 @@ func (c Curve) Decode(code uint64) (coords []uint64, err error) {
 }
 
 func (c Curve) DecodeWithBuffer(buf []uint64, code uint64) (coords []uint64, err error) {
-	// TODO Need to decide how to deal with less or more the c.dimensions
+	if len(buf) < int(c.dimensions){
+		return nil, errors.New("buffer length less then dimensions")
+	}
 	coords, err = c.parseIndex(buf, code)
 	if err != nil {
 		return
 	}
-	return c.transpose(coords), nil
+	coords = c.transpose(coords)
+	return coords, nil
 }
 
 // TODO OPTIMIZE
