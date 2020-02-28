@@ -64,4 +64,4 @@ func (b *Balancer) Distribution() DataDistribution {
 	return b.space.distribution()
 }
 
-type TransformFunc func(values []interface{}, dimSize uint) ([]uint, error)
+type TransformFunc func(values []interface{}, dimSize uint) ([]uint64, error)
