@@ -2,6 +2,7 @@ package morton
 
 import (
 	"errors"
+	"fmt"
 )
 
 type Curve struct {
@@ -9,6 +10,8 @@ type Curve struct {
 	bits       uint64
 	length     uint64
 	masksArray []uint64
+	max_x      uint64
+	max_h      uint64
 }
 
 func New(dims, bits uint64) (*Curve, error) {
@@ -20,42 +23,58 @@ func New(dims, bits uint64) (*Curve, error) {
 		dimensions: dims,
 		bits:       bits,
 		length:     (bits * dims) - bits,
+		max_x:      (1 << bits) - 1,
+		max_h:      (1 << (dims * bits)) - 1,
 	}
 	mc.masksArray = mc.masks()
 
 	return mc, nil
 }
 
+//Decode returns coordinates for a given code(distance)
 func (c Curve) Decode(code uint64) (coords []uint64, err error) {
+	if err := c.validateCode(code); err != nil {
+		return nil, err
+	}
 	coords = make([]uint64, c.dimensions)
 	coords = c.compacter(coords, code)
 	return coords, nil
 }
 
 func (c Curve) DecodeWithBuffer(buf []uint64, code uint64) (coords []uint64, err error) {
-	if len(buf) < int(c.dimensions){
+	if len(buf) < int(c.dimensions) {
 		return nil, errors.New("buffer length less then dimensions")
+	}
+	if err := c.validateCode(code); err != nil {
+		return nil, err
 	}
 	buf = c.compacter(buf, code)
 	return buf, nil
 }
 
-func (c Curve) compacter(coords []uint64, code uint64) []uint64{
+func (c Curve) validateCode(code uint64) error {
+	if code > c.max_h {
+		return errors.New(fmt.Sprintf("code == %v exceeds limit (2^(dimensions * bits) - 1) == %v", code, c.max_x))
+	}
+	return nil
+}
+
+func (c Curve) compacter(coords []uint64, code uint64) []uint64 {
 	for iter := uint64(0); iter < c.dimensions; iter++ {
 		coords[iter] = c.compact(code >> iter)
 	}
 	return coords
 }
 
-func (c Curve) compacterAsync(coords []uint64, code uint64) []uint64{
+func (c Curve) compacterAsync(coords []uint64, code uint64) []uint64 {
 	ch := make(chan [2]uint64, c.dimensions)
 	for iter := uint64(0); iter < c.dimensions; iter++ {
-		go func(ch chan [2]uint64, iter uint64){
+		go func(ch chan [2]uint64, iter uint64) {
 			ch <- [2]uint64{iter, c.compact(code >> iter)}
 		}(ch, iter)
 	}
 	for iter := uint64(0); iter < c.dimensions; iter++ {
-		pair := <- ch
+		pair := <-ch
 		coords[pair[0]] = pair[1]
 	}
 	return coords
@@ -111,6 +130,7 @@ func (c Curve) masks() []uint64 {
 	return masks
 }
 
+//Encode returns code(distance) for a given set of coordinates
 func (c Curve) Encode(coords []uint64) (code uint64, err error) {
 	// TODO ADD ARGUMENTS CHECK
 	if len(coords) < int(c.dimensions) {
@@ -134,6 +154,13 @@ func (c Curve) split(x uint64) uint64 {
 	return x
 }
 
-func (c Curve) Len() uint64 {
-	return c.length
+// Size returns the maximum coordinate value in any dimension
+func (c Curve) Size() uint {
+	return uint(c.max_x)
+}
+
+// MaxCode returns the maximum distance along curve(code value)
+// 2^(dimensions * bits) - 1
+func (c Curve) MaxCode() uint64 {
+	return c.max_h
 }

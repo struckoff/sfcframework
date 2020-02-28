@@ -350,3 +350,35 @@ func BenchmarkCurve_Encode_Morton(b *testing.B) {
 		})
 	}
 }
+
+func TestCurve_Size(t *testing.T) {
+	type fields struct {
+		bits uint64
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   uint
+	}{
+		{
+			"2 == 3",
+			fields{2},
+			3,
+		},
+		{
+			"2 == 3",
+			fields{2},
+			3,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := Curve{
+				bits: tt.fields.bits,
+			}
+			if got := c.Size(); got != tt.want {
+				t.Errorf("Size() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

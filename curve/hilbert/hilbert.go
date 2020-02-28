@@ -3,26 +3,29 @@ package hilbert
 import (
 	"encoding/binary"
 	"errors"
+	"fmt"
 )
 
 const bitSize = 8
 
- //The Hilbert index is expressed as an array of transposed bits.
- //
- //Example: 5 bits for each of n=3 coordinates.
- //15-bit Hilbert integer = A B C D E F G H I J K L M N O is stored
- //as its Transpose                        ^
- //X[0] = A D G J M                    X[2]|  7
- //X[1] = B E H K N        <------->       | /X[1]
- //X[2] = C F I L O                   axes |/
- //       high low                         0------> X[0]
- //
- //NOTE: This algorithm is derived from work done by John Skilling and published in "Programming the Hilbert curve".
- //(c) 2004 American Institute of Physics.
+//The Hilbert index is expressed as an array of transposed bits.
+//
+//Example: 5 bits for each of n=3 coordinates.
+//15-bit Hilbert integer = A B C D E F G H I J K L M N O is stored
+//as its Transpose                        ^
+//X[0] = A D G J M                    X[2]|  7
+//X[1] = B E H K N        <------->       | /X[1]
+//X[2] = C F I L O                   axes |/
+//       high low                         0------> X[0]
+//
+//NOTE: This algorithm is derived from work done by John Skilling and published in "Programming the Hilbert curve".
+//(c) 2004 American Institute of Physics.
 type Curve struct {
 	dimensions uint64
 	bits       uint64
 	length     uint64
+	max_x      uint64
+	max_h      uint64
 }
 
 func New(dims, bits uint64) (*Curve, error) {
@@ -33,10 +36,16 @@ func New(dims, bits uint64) (*Curve, error) {
 		dimensions: dims,
 		bits:       bits,
 		length:     bits * dims,
+		max_h:      (1 << bits) - 1,
+		max_x:      (1 << (dims * bits)) - 1,
 	}, nil
 }
 
+//Decode returns coordinates for a given code(distance)
 func (c Curve) Decode(code uint64) (coords []uint64, err error) {
+	if err := c.validateCode(code); err != nil {
+		return nil, err
+	}
 	coords = make([]uint64, c.dimensions)
 	coords, err = c.parseIndex(coords, code)
 	if err != nil {
@@ -46,8 +55,11 @@ func (c Curve) Decode(code uint64) (coords []uint64, err error) {
 }
 
 func (c Curve) DecodeWithBuffer(buf []uint64, code uint64) (coords []uint64, err error) {
-	if len(buf) < int(c.dimensions){
+	if len(buf) < int(c.dimensions) {
 		return nil, errors.New("buffer length less then dimensions")
+	}
+	if err := c.validateCode(code); err != nil {
+		return nil, err
 	}
 	coords, err = c.parseIndex(buf, code)
 	if err != nil {
@@ -55,6 +67,13 @@ func (c Curve) DecodeWithBuffer(buf []uint64, code uint64) (coords []uint64, err
 	}
 	coords = c.transpose(coords)
 	return coords, nil
+}
+
+func (c Curve) validateCode(code uint64) error {
+	if code > c.max_h {
+		return errors.New(fmt.Sprintf("code == %v exceeds limit (2^(dimensions * bits) - 1) == %v", code, c.max_x))
+	}
+	return nil
 }
 
 // TODO OPTIMIZE
@@ -85,6 +104,7 @@ func (c Curve) parseIndex(coords []uint64, code uint64) ([]uint64, error) {
 }
 
 //! coords may be altered by method
+//Encode returns code(distance) for a given set of coordinates
 func (c Curve) Encode(coords []uint64) (code uint64, err error) {
 	if len(coords) < int(c.dimensions) {
 		return 0, errors.New("number of coordinates less then dimensions")
@@ -172,6 +192,13 @@ func (c Curve) prepareIndex(coords []uint64) uint64 {
 	return binary.LittleEndian.Uint64(tmpCoords)
 }
 
-func (c Curve) Len() uint64 {
-	return c.length
+// Size returns the maximum coordinate value in any dimension
+func (c Curve) Size() uint {
+	return uint(c.max_x)
+}
+
+// MaxCode returns the maximum distance along curve(code value)
+// 2^(dimensions * bits) - 1
+func (c Curve) MaxCode() uint64 {
+	return c.max_h
 }
