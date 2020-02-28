@@ -10,7 +10,7 @@ type Curve interface {
 	DecodeWithBuffer(buf []uint64, code uint64) (coords []uint64, err error)
 	Encode(coords []uint64) (code uint64, err error) //Encode returns code(distance) for a given set of coordinates
 	Size() uint                                      // Size returns the maximum coordinate value in any dimension
-	MaxCode() uint64                                 // MaxCode returns the maximum distance along curve
+	MaxDistance() uint64                             // MaxDistance returns the maximum distance along curve
 }
 
 func NewCurve(cType CurveType, dims, bits uint64) (Curve, error) {

@@ -110,30 +110,30 @@ func TestHilbertCurve_Encode(t *testing.T) {
 		wantCode uint64
 		wantErr  bool
 	}{
-		//{
-		//	"[1, 0] == 3",
-		//	fields{
-		//		2,
-		//		1,
-		//	},
-		//	args{
-		//		[]uint64{1, 0},
-		//	},
-		//	3,
-		//	false,
-		//},
-		//{
-		//	"[4, 12] == 96",
-		//	fields{
-		//		2,
-		//		10,
-		//	},
-		//	args{
-		//		[]uint64{4, 12},
-		//	},
-		//	96,
-		//	false,
-		//},
+		{
+			"[1, 0] == 3",
+			fields{
+				2,
+				1,
+			},
+			args{
+				[]uint64{1, 0},
+			},
+			3,
+			false,
+		},
+		{
+			"[4, 12] == 96",
+			fields{
+				2,
+				10,
+			},
+			args{
+				[]uint64{4, 12},
+			},
+			96,
+			false,
+		},
 		{
 			"[10, 34] == 1096",
 			fields{

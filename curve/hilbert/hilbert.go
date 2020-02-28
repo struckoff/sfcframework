@@ -212,8 +212,8 @@ func (c Curve) Size() uint {
 	return uint(c.maxSize)
 }
 
-// MaxCode returns the maximum distance along curve(code value)
+// MaxDistance returns the maximum distance along curve(code value)
 // 2^(dimensions * bits) - 1
-func (c Curve) MaxCode() uint64 {
+func (c Curve) MaxDistance() uint64 {
 	return c.maxCode
 }
