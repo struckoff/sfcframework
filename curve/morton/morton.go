@@ -10,8 +10,8 @@ type Curve struct {
 	bits       uint64
 	length     uint64
 	masksArray []uint64
-	max_x      uint64
-	max_h      uint64
+	maxX       uint64
+	maxH       uint64
 }
 
 func New(dims, bits uint64) (*Curve, error) {
@@ -23,8 +23,8 @@ func New(dims, bits uint64) (*Curve, error) {
 		dimensions: dims,
 		bits:       bits,
 		length:     (bits * dims) - bits,
-		max_x:      (1 << bits) - 1,
-		max_h:      (1 << (dims * bits)) - 1,
+		maxX:       (1 << bits) - 1,
+		maxH:       (1 << (dims * bits)) - 1,
 	}
 	mc.masksArray = mc.masks()
 
@@ -53,8 +53,8 @@ func (c Curve) DecodeWithBuffer(buf []uint64, code uint64) (coords []uint64, err
 }
 
 func (c Curve) validateCode(code uint64) error {
-	if code > c.max_h {
-		return errors.New(fmt.Sprintf("code == %v exceeds limit (2^(dimensions * bits) - 1) == %v", code, c.max_x))
+	if code > c.maxH {
+		return errors.New(fmt.Sprintf("code == %v exceeds limit (2^(dimensions * bits) - 1) == %v", code, c.maxX))
 	}
 	return nil
 }
@@ -156,11 +156,11 @@ func (c Curve) split(x uint64) uint64 {
 
 // Size returns the maximum coordinate value in any dimension
 func (c Curve) Size() uint {
-	return uint(c.max_x)
+	return uint(c.maxX)
 }
 
 // MaxCode returns the maximum distance along curve(code value)
 // 2^(dimensions * bits) - 1
 func (c Curve) MaxCode() uint64 {
-	return c.max_h
+	return c.maxH
 }
