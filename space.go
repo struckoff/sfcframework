@@ -12,6 +12,7 @@ type space struct {
 	mu  sync.Mutex
 	cg  []cellGroup
 	sfc curve.Curve
+	tf  TransformFunc
 }
 
 func (s *space) len() int {
@@ -33,7 +34,12 @@ func (s *space) addNode(n Node) {
 func (s *space) addData(d DataItem) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	cID, err := s.sfc.Encode(d.Coordinates())
+	size := s.sfc.Size()
+	if s.tf == nil {
+		return errors.New("transform function is not set")
+	}
+	coords, err := s.tf(d.Values(), size)
+	cID, err := s.sfc.Encode(coords)
 	if err != nil {
 		return fmt.Errorf("item encoding error: %w", err)
 	}

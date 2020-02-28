@@ -63,7 +63,7 @@ func TestHilbertCurve_Decode(t *testing.T) {
 				big.NewInt(1096),
 			},
 			[]uint64{
-				10,34,
+				10, 34,
 			},
 			false,
 		},
@@ -124,9 +124,9 @@ func TestHilbertCurve_Encode(t *testing.T) {
 				20,
 			},
 			args{
-				[]uint64{4, 12},
+				[]uint64{4000, 12},
 			},
-			big.NewInt(96) ,
+			big.NewInt(96),
 			false,
 		},
 	}

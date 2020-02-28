@@ -5,5 +5,5 @@ package balancer
 type DataItem interface {
 	ID() string
 	Size() uint64
-	Coordinates() []uint
+	Values() []interface{}
 }

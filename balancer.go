@@ -3,6 +3,8 @@ package balancer
 import (
 	"errors"
 	"reflect"
+
+	"github.com/struckoff/SFCFramework/curve"
 )
 
 // Balancer is responsible for distributing load between nodes of the cluster. It stores
@@ -13,6 +15,28 @@ import (
 type Balancer struct {
 	nType reflect.Type
 	space space
+}
+
+func NewBalancer(cType curve.CurveType, dims, size uint64, tf TransformFunc) (*Balancer, error) {
+	if (size & (size - 1)) != 0 {
+		return nil, errors.New("size must be a power of 2")
+	}
+	bits := uint64(0)
+	v := uint64(1)
+	for v != size {
+		v *= 2
+		bits++
+	}
+	sfc, err := curve.NewCurve(cType, dims, bits)
+	if err != nil {
+		return nil, err
+	}
+	return &Balancer{
+		space: space{
+			sfc: sfc,
+			tf:  tf,
+		},
+	}, nil
 }
 
 // AddNode adds node to the space of balancer, and initiates rebalancing of cells
@@ -39,3 +63,5 @@ func (b *Balancer) AddData(d DataItem) error {
 func (b *Balancer) Distribution() DataDistribution {
 	return b.space.distribution()
 }
+
+type TransformFunc func(values []interface{}, dimSize uint) ([]uint, error)
