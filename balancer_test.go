@@ -34,7 +34,7 @@ func TestBalancer_AddNode(t *testing.T) {
 			name: "non-empty balancer",
 			balancer: &Balancer{
 				nType: reflect.TypeOf(testNode),
-				space: space{
+				space: &space{
 					cg: []cellGroup{newCellGroup(testNode)},
 				},
 			},
@@ -49,7 +49,7 @@ func TestBalancer_AddNode(t *testing.T) {
 			name: "nil node",
 			balancer: &Balancer{
 				nType: reflect.TypeOf(testNode),
-				space: space{
+				space: &space{
 					cg: []cellGroup{newCellGroup(testNode)},
 				},
 			},
@@ -69,7 +69,7 @@ func TestBalancer_AddNode(t *testing.T) {
 func TestBalancer_AddData(t *testing.T) {
 	type fields struct {
 		nType reflect.Type
-		space space
+		space *space
 	}
 	type args struct {
 		d DataItem
@@ -84,16 +84,16 @@ func TestBalancer_AddData(t *testing.T) {
 			"Morton curve",
 			fields{
 				nType: reflect.TypeOf(testNode),
-				space: space{
+				space: &space{
 					cg:  []cellGroup{newCellGroup(testNode)},
 					sfc: morton.Curve{},
 				},
 			},
 			args{
 				MockDataItem{
-					id:          "item-0",
-					size:        42,
-					coordinates: []uint64{4, 12},
+					id:     "item-0",
+					size:   42,
+					values: []uint64{4, 12},
 				},
 			},
 			false,
@@ -102,16 +102,16 @@ func TestBalancer_AddData(t *testing.T) {
 			"Hilbert curve",
 			fields{
 				nType: reflect.TypeOf(testNode),
-				space: space{
+				space: &space{
 					cg:  []cellGroup{newCellGroup(testNode)},
 					sfc: hilbert.Curve{},
 				},
 			},
 			args{
 				MockDataItem{
-					id:          "item-0",
-					size:        42,
-					coordinates: []uint64{4, 12},
+					id:     "item-0",
+					size:   42,
+					values: []uint64{4, 12},
 				},
 			},
 			false,
