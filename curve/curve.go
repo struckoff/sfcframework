@@ -1,6 +1,7 @@
 package curve
 
 import (
+	"fmt"
 	"github.com/struckoff/SFCFramework/curve/hilbert"
 	"github.com/struckoff/SFCFramework/curve/morton"
 )
@@ -19,5 +20,7 @@ func NewCurve(cType CurveType, dims, bits uint64) (Curve, error) {
 		return hilbert.New(dims, bits)
 	case Morton:
 		return morton.New(dims, bits)
+	default:
+		return nil, fmt.Errorf("curve type %v not supported", cType)
 	}
 }

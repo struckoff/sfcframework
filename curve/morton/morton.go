@@ -54,7 +54,7 @@ func (c Curve) DecodeWithBuffer(buf []uint64, code uint64) (coords []uint64, err
 
 func (c Curve) validateCode(code uint64) error {
 	if code > c.maxCode {
-		return errors.New(fmt.Sprintf("code == %v exceeds limit (2^(dimensions * bits) - 1) == %v", code, c.maxSize))
+		return fmt.Errorf("code == %v exceeds limit (2^(dimensions * bits) - 1) == %v", code, c.maxSize)
 	}
 	return nil
 }
@@ -143,11 +143,11 @@ func (c Curve) Encode(coords []uint64) (code uint64, err error) {
 
 func (c Curve) validateCoordinates(coords []uint64) error {
 	if len(coords) < int(c.dimensions) {
-		return errors.New(fmt.Sprintf("number of coordinates == %v less then dimensions == %v", len(coords), c.dimensions))
+		return fmt.Errorf("number of coordinates == %v less then dimensions == %v", len(coords), c.dimensions)
 	}
 	for iter := range coords {
 		if coords[iter] > c.maxSize {
-			return errors.New(fmt.Sprintf("coordinate == %v exceeds limit == %v", coords[iter], c.maxSize))
+			return fmt.Errorf("coordinate == %v exceeds limit == %v", coords[iter], c.maxSize)
 		}
 	}
 	return nil
