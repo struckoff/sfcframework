@@ -5,10 +5,10 @@ package balancer
 type DataItem interface {
 	ID() string
 	Size() uint64
-	Values() interface{}
+	Values() []interface{}
 }
 
-func NewDefaultDataItem(id string, size uint64, values interface{}) DefaultDataItem {
+func NewDefaultDataItem(id string, size uint64, values []interface{}) DefaultDataItem {
 	return DefaultDataItem{
 		id:     id,
 		size:   size,
@@ -19,7 +19,7 @@ func NewDefaultDataItem(id string, size uint64, values interface{}) DefaultDataI
 type DefaultDataItem struct {
 	id     string
 	size   uint64
-	values interface{}
+	values []interface{}
 }
 
 func (di DefaultDataItem) ID() string {
@@ -30,6 +30,6 @@ func (di DefaultDataItem) Size() uint64 {
 	return di.size
 }
 
-func (di DefaultDataItem) Values() interface{} {
+func (di DefaultDataItem) Values() []interface{} {
 	return di.values
 }

@@ -163,13 +163,13 @@ func (c Curve) split(x uint64) uint64 {
 	return x
 }
 
-// Size returns the maximum coordinate value in any dimension
-func (c Curve) Size() uint {
-	return uint(c.maxSize)
+// DimSize returns the maximum coordinate value in any dimension
+func (c Curve) DimSize() uint64 {
+	return c.maxSize
 }
 
-// MaxDistance returns the maximum distance along curve(code value)
+// Length returns the maximum distance along curve(code value)
 // 2^(dimensions * bits) - 1
-func (c Curve) MaxDistance() uint64 {
+func (c Curve) Length() uint64 {
 	return c.maxCode
 }

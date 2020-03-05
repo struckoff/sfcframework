@@ -7,9 +7,9 @@ import (
 
 // MockDataItem is DataItem implementation used for testing.
 type MockDataItem struct {
-	id          string
-	size        uint64
-	coordinates []uint64
+	id     string
+	size   uint64
+	values []uint64
 }
 
 func (m MockDataItem) ID() string {
@@ -20,8 +20,12 @@ func (m MockDataItem) Size() uint64 {
 	return m.size
 }
 
-func (m MockDataItem) Coordinates() []uint64 {
-	return m.coordinates
+func (m MockDataItem) Values() []interface{} {
+	res := make([]interface{}, len(m.values))
+	for i := range m.values {
+		res[i] = m.values[i]
+	}
+	return res
 }
 
 func GenerateRandomMockDataItem(dimensions uint64) MockDataItem {
@@ -29,10 +33,9 @@ func GenerateRandomMockDataItem(dimensions uint64) MockDataItem {
 	for c := range coords {
 		coords[c] = rand.Uint64()
 	}
-
 	return MockDataItem{
-		id:          uuid.New().String(),
-		size:        rand.Uint64(),
-		coordinates: coords,
+		id:     uuid.New().String(),
+		size:   rand.Uint64(),
+		values: coords,
 	}
 }

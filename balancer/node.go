@@ -8,7 +8,11 @@ type Node interface {
 }
 
 func NewDefaultNode(id string, power float64, capacity float64) *DefaultNode {
-	return &DefaultNode{}
+	return &DefaultNode{
+		id:       id,
+		power:    DefaultPower{power},
+		capacity: DefaultCapacity{capacity},
+	}
 }
 
 type DefaultNode struct {

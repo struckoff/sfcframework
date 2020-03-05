@@ -1,6 +1,6 @@
 package balancer
 
-// DataDistribution represents distribution of data items between nodes.
+// DataDistribution represents Distribution of data items between nodes.
 type DataDistribution []NodeData
 
 // NodeData contains information about what data items should be placed onto node.
