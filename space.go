@@ -32,12 +32,14 @@ func NewSpace(sfc curve.Curve, tf TransformFunc) *Space {
 	}
 }
 
+//CellGroups returns a slice of all CellGroups in the space.
 func (s *Space) CellGroups() []CellGroup {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.cgs
 }
 
+//Cells returns a slice of all cells in the space.
 func (s *Space) Cells() []cell {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -50,6 +52,7 @@ func (s *Space) TotalLoad() uint64 {
 	return s.load
 }
 
+//TotalPower returns the sum of the all node powers in the space.
 func (s *Space) TotalPower() (power float64) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -59,18 +62,21 @@ func (s *Space) TotalPower() (power float64) {
 	return
 }
 
+// SetGroups replace groups in the space.
 func (s *Space) SetGroups(groups []CellGroup) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.cgs = groups
 }
 
+//Len() returns the number of CellGroups in the space.
 func (s *Space) Len() int {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return len(s.cgs)
 }
 
+//AddNode adds a new node to the space.
 func (s *Space) AddNode(n Node) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -89,6 +95,7 @@ func (s *Space) addNode(n Node) error {
 	return nil
 }
 
+//AddData add data item to the space.
 func (s *Space) AddData(d DataItem) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -118,6 +125,7 @@ func (s *Space) addData(d DataItem) error {
 	return nil
 }
 
+//Distribution returns representation of how DataItems distributes per nodes in the space.
 func (s *Space) Distribution() DataDistribution {
 	s.mu.Lock()
 	defer s.mu.Unlock()

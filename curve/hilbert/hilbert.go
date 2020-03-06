@@ -41,7 +41,8 @@ func New(dims, bits uint64) (*Curve, error) {
 	}, nil
 }
 
-//Decode returns coordinates for a given code(distance)
+//Decode returns coordinates for a given code(distance).
+//Method will return error if code(distance) exceeds the limit(2 ^ (dims * bits) - 1)
 func (c Curve) Decode(code uint64) (coords []uint64, err error) {
 	if err := c.validateCode(code); err != nil {
 		return nil, err
@@ -54,6 +55,10 @@ func (c Curve) Decode(code uint64) (coords []uint64, err error) {
 	return c.transpose(coords), nil
 }
 
+//Decode returns coordinates for a given code(distance).
+//Method will return error if:
+//  - buffer less than number of dimensions
+//	- code(distance) exceeds the limit(2 ^ (dims * bits) - 1)
 func (c Curve) DecodeWithBuffer(buf []uint64, code uint64) (coords []uint64, err error) {
 	if len(buf) < int(c.dimensions) {
 		return nil, errors.New("buffer length less then dimensions")
@@ -107,6 +112,7 @@ func (c Curve) parseIndex(coords []uint64, code uint64) ([]uint64, error) {
 
 //! coords may be altered by method
 //Encode returns code(distance) for a given set of coordinates
+//Method will return error if any of the coordinates exceeds limit(2 ^ bits - 1)
 func (c Curve) Encode(coords []uint64) (code uint64, err error) {
 	if err := c.validateCoordinates(coords); err != nil {
 		return 0, err
