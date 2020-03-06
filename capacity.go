@@ -1,4 +1,4 @@
-package balancer
+package SFCFramework
 
 // Capacity is an interface describing how much data can the node hold.
 type Capacity interface {

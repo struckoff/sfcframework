@@ -1,4 +1,4 @@
-package balancer
+package SFCFramework
 
 // MockPower is implementation of Power used for testing.
 type MockPower struct {

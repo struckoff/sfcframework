@@ -1,11 +1,11 @@
 package powerOptimizer
 
 import (
-	"github.com/struckoff/SFCFramework/balancer"
+	"github.com/struckoff/SFCFramework"
 )
 
-func PowerOptimizer(s *balancer.Space) (res []balancer.CellGroup, err error) {
-	var node balancer.Node
+func PowerOptimizer(s *SFCFramework.Space) (res []SFCFramework.CellGroup, err error) {
+	var node SFCFramework.Node
 
 	totalLoad := s.TotalLoad()
 	totalPower := s.TotalPower()
@@ -19,7 +19,7 @@ func PowerOptimizer(s *balancer.Space) (res []balancer.CellGroup, err error) {
 
 	i := 0
 	node = cgs[0].Node()
-	cg := balancer.NewCellGroup(node)
+	cg := SFCFramework.NewCellGroup(node)
 	p := node.Power().Get() / totalPower
 	l := uint64(float64(totalLoad) * p)
 	for j := range cells {
@@ -30,7 +30,7 @@ func PowerOptimizer(s *balancer.Space) (res []balancer.CellGroup, err error) {
 			}
 			res = append(res, cg)
 			i++
-			cg = balancer.NewCellGroup(cgs[i].Node())
+			cg = SFCFramework.NewCellGroup(cgs[i].Node())
 			p = cg.Node().Power().Get() / totalPower
 			l = uint64(float64(totalLoad) * p)
 		}

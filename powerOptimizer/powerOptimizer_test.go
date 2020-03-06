@@ -1,6 +1,7 @@
 package powerOptimizer
 
 import (
+	"github.com/struckoff/SFCFramework"
 	"github.com/struckoff/SFCFramework/balancer"
 	"reflect"
 	"testing"
@@ -30,7 +31,7 @@ func generateCells() []balancer.cell {
 
 func generateTestResult(cs []balancer.cell) []balancer.cellGroup {
 	cgs := make([]balancer.cellGroup, 3)
-	cg := balancer.newCellGroup(balancer.MockNode{power: balancer.MockPower{value: 10.0}})
+	cg := balancer.newCellGroup(SFCFramework.MockNode{power: SFCFramework.MockPower{value: 10.0}})
 	cg.cells = append(cg.cells, &cs[0])
 	cg.cells = append(cg.cells, &cs[1])
 	cg.cells = append(cg.cells, &cs[2])
@@ -40,14 +41,14 @@ func generateTestResult(cs []balancer.cell) []balancer.cellGroup {
 	cg.cells = append(cg.cells, &cs[6])
 	cg.load = 110
 	cgs[0] = cg
-	cg = balancer.newCellGroup(balancer.MockNode{power: balancer.MockPower{value: 10.0}})
+	cg = balancer.newCellGroup(SFCFramework.MockNode{power: SFCFramework.MockPower{value: 10.0}})
 	cg.cells = append(cg.cells, &cs[7])
 	cg.cells = append(cg.cells, &cs[8])
 	cg.cells = append(cg.cells, &cs[9])
 	cg.cells = append(cg.cells, &cs[10])
 	cg.load = 100
 	cgs[1] = cg
-	cg = balancer.newCellGroup(balancer.MockNode{power: balancer.MockPower{value: 10.0}})
+	cg = balancer.newCellGroup(SFCFramework.MockNode{power: SFCFramework.MockPower{value: 10.0}})
 	cg.cells = append(cg.cells, &cs[11])
 	cg.cells = append(cg.cells, &cs[12])
 	cg.cells = append(cg.cells, &cs[13])
@@ -59,21 +60,21 @@ func generateTestResult(cs []balancer.cell) []balancer.cellGroup {
 
 func generateTestCase(cs []balancer.cell) []balancer.cellGroup {
 	cgs := make([]balancer.cellGroup, 3)
-	cg := balancer.newCellGroup(balancer.MockNode{power: balancer.MockPower{value: 10.0}})
+	cg := balancer.newCellGroup(SFCFramework.MockNode{power: SFCFramework.MockPower{value: 10.0}})
 	cg.cells = append(cg.cells, &cs[0])
 	cg.cells = append(cg.cells, &cs[1])
 	cg.cells = append(cg.cells, &cs[2])
 	cg.cells = append(cg.cells, &cs[3])
 	cg.cells = append(cg.cells, &cs[4])
 	cgs[0] = cg
-	cg = balancer.newCellGroup(balancer.MockNode{power: balancer.MockPower{value: 10.0}})
+	cg = balancer.newCellGroup(SFCFramework.MockNode{power: SFCFramework.MockPower{value: 10.0}})
 	cg.cells = append(cg.cells, &cs[5])
 	cg.cells = append(cg.cells, &cs[6])
 	cg.cells = append(cg.cells, &cs[7])
 	cg.cells = append(cg.cells, &cs[8])
 	cg.cells = append(cg.cells, &cs[9])
 	cgs[1] = cg
-	cg = balancer.newCellGroup(balancer.MockNode{power: balancer.MockPower{value: 10.0}})
+	cg = balancer.newCellGroup(SFCFramework.MockNode{power: SFCFramework.MockPower{value: 10.0}})
 	cg.cells = append(cg.cells, &cs[10])
 	cg.cells = append(cg.cells, &cs[11])
 	cg.cells = append(cg.cells, &cs[12])

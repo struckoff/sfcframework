@@ -1,4 +1,4 @@
-package balancer
+package SFCFramework
 
 import (
 	"errors"
@@ -8,7 +8,7 @@ import (
 )
 
 // Balancer is responsible for distributing load between nodes of the cluster. It stores
-// meta-information about the current load in the cells of the Space-filling curve. Cells are
+// meta-information about the current load in the cells of the space-filling curve. Cells are
 // stored in the slice of cell groups, one cell group for every node of the cluster. To balance
 // the load between nodes, balancer analyzes power and capacity of nodes, and distributes
 // cells between cell groups in such way that all nodes would be equally.

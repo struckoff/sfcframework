@@ -1,4 +1,4 @@
-package balancer
+package SFCFramework
 
 import (
 	"github.com/google/uuid"

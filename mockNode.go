@@ -1,10 +1,18 @@
-package balancer
+package SFCFramework
 
 // MockNode is Node implementation used for testing.
 type MockNode struct {
 	id       string
 	power    MockPower
 	capacity MockCapacity
+}
+
+func NewMockNode(id string, power float64, capacity float64) *MockNode {
+	return &MockNode{
+		id:       id,
+		power:    MockPower{power},
+		capacity: MockCapacity{capacity},
+	}
 }
 
 // ID returns identifier of the node.
