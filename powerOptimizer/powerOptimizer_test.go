@@ -2,99 +2,28 @@ package powerOptimizer
 
 import (
 	"github.com/struckoff/SFCFramework"
-	"github.com/struckoff/SFCFramework/balancer"
+	"github.com/struckoff/SFCFramework/curve"
+	"github.com/struckoff/SFCFramework/spaceTransform"
+	"io/ioutil"
+	"log"
 	"reflect"
 	"testing"
 )
 
 //TODO FIX this
 
-func generateCells() []balancer.cell {
-	return []balancer.cell{
-		{load: 0},
-		{load: 0},
-		{load: 10},
-		{load: 20},
-		{load: 0},
-		{load: 0},
-		{load: 80},
-		{load: 0},
-		{load: 60},
-		{load: 0},
-		{load: 40},
-		{load: 0},
-		{load: 90},
-		{load: 0},
-		{load: 0},
-	}
-}
-
-func generateTestResult(cs []balancer.cell) []balancer.cellGroup {
-	cgs := make([]balancer.cellGroup, 3)
-	cg := balancer.newCellGroup(SFCFramework.MockNode{power: SFCFramework.MockPower{value: 10.0}})
-	cg.cells = append(cg.cells, &cs[0])
-	cg.cells = append(cg.cells, &cs[1])
-	cg.cells = append(cg.cells, &cs[2])
-	cg.cells = append(cg.cells, &cs[3])
-	cg.cells = append(cg.cells, &cs[4])
-	cg.cells = append(cg.cells, &cs[5])
-	cg.cells = append(cg.cells, &cs[6])
-	cg.load = 110
-	cgs[0] = cg
-	cg = balancer.newCellGroup(SFCFramework.MockNode{power: SFCFramework.MockPower{value: 10.0}})
-	cg.cells = append(cg.cells, &cs[7])
-	cg.cells = append(cg.cells, &cs[8])
-	cg.cells = append(cg.cells, &cs[9])
-	cg.cells = append(cg.cells, &cs[10])
-	cg.load = 100
-	cgs[1] = cg
-	cg = balancer.newCellGroup(SFCFramework.MockNode{power: SFCFramework.MockPower{value: 10.0}})
-	cg.cells = append(cg.cells, &cs[11])
-	cg.cells = append(cg.cells, &cs[12])
-	cg.cells = append(cg.cells, &cs[13])
-	cg.cells = append(cg.cells, &cs[14])
-	cg.load = 90
-	cgs[2] = cg
-	return cgs
-}
-
-func generateTestCase(cs []balancer.cell) []balancer.cellGroup {
-	cgs := make([]balancer.cellGroup, 3)
-	cg := balancer.newCellGroup(SFCFramework.MockNode{power: SFCFramework.MockPower{value: 10.0}})
-	cg.cells = append(cg.cells, &cs[0])
-	cg.cells = append(cg.cells, &cs[1])
-	cg.cells = append(cg.cells, &cs[2])
-	cg.cells = append(cg.cells, &cs[3])
-	cg.cells = append(cg.cells, &cs[4])
-	cgs[0] = cg
-	cg = balancer.newCellGroup(SFCFramework.MockNode{power: SFCFramework.MockPower{value: 10.0}})
-	cg.cells = append(cg.cells, &cs[5])
-	cg.cells = append(cg.cells, &cs[6])
-	cg.cells = append(cg.cells, &cs[7])
-	cg.cells = append(cg.cells, &cs[8])
-	cg.cells = append(cg.cells, &cs[9])
-	cgs[1] = cg
-	cg = balancer.newCellGroup(SFCFramework.MockNode{power: SFCFramework.MockPower{value: 10.0}})
-	cg.cells = append(cg.cells, &cs[10])
-	cg.cells = append(cg.cells, &cs[11])
-	cg.cells = append(cg.cells, &cs[12])
-	cg.cells = append(cg.cells, &cs[13])
-	cg.cells = append(cg.cells, &cs[14])
-	cgs[2] = cg
-	return cgs
-}
-
 func TestPowerOptimizer(t *testing.T) {
 	type args struct {
-		cgs []balancer.cellGroup
+		cgs []balancer.CellGroup
 	}
-	cs := generateCells()
-	cgs := generateTestCase(cs)
-	rgs := generateTestResult(cs)
+	//cs := generateCells()
+	cs := balancer.GenerateMockCells(0, 0, 10, 20, 0, 0, 80, 0, 60, 0, 40, 0, 90, 0, 0)
+	cgs := balancer.GenerateMockCellGroup(cs, []int{7, 4, 4})
+	rgs := balancer.GenerateMockCellGroup(cs, []int{5, 5, 5})
 	tests := []struct {
 		name    string
 		args    args
-		want    []balancer.cellGroup
+		want    []balancer.CellGroup
 		wantErr bool
 	}{
 		{
@@ -106,14 +35,46 @@ func TestPowerOptimizer(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := PowerOptimizer(tt.args.cgs)
+			s := balancer.NewMockSpace(tt.args.cgs, cs)
+			got, err := PowerOptimizer(s)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("PowerOptimizer() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("PowerOptimizer() got = %v, want %v", got, tt.want)
+				t.Errorf("PowerOptimizer() got = %v, want %v", got[2].Cells(), tt.want[2].Cells())
 			}
 		})
 	}
+}
+
+func BenchmarkPowerOptimizer(b *testing.B) {
+	b.ReportAllocs()
+	bal, err := balancer.NewBalancer(curve.Morton, 3, 32, spaceTransform.SpaceTransform, PowerOptimizer)
+	if err != nil {
+		panic(err)
+	}
+	node0 := balancer.NewMockNode("node-0", 10, 20)
+	if err := bal.AddNode(node0); err != nil {
+		panic(err)
+	}
+	node1 := balancer.NewMockNode("node-1", 10, 20)
+	if err := bal.AddNode(node1); err != nil {
+		panic(err)
+	}
+	node2 := balancer.NewMockNode("node-2", 10, 20)
+	if err := bal.AddNode(node2); err != nil {
+		panic(err)
+	}
+
+	s := bal.Space()
+
+	log.SetOutput(ioutil.Discard)
+	b.ResetTimer()
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		x, _ := PowerOptimizer(s)
+		log.Print(x)
+	}
+	b.StopTimer()
 }

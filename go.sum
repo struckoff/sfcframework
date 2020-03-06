@@ -1,0 +1,6 @@
+github.com/Jsewill/morton v0.0.0-20170808220042-8c2c82106b03 h1:dns8H8RIRWye5GrHOeGpqLEss2W4b46RUi0WJguxG7o=
+github.com/Jsewill/morton v0.0.0-20170808220042-8c2c82106b03/go.mod h1:P6TcEsNFdHN20wWy3z5M1sn7rlDttUepS0zHcDswCAY=
+github.com/gojuno/go.morton v0.0.0-20180202102823-94709bd871ce h1:mUc5xcG/z3O9Y0Ic2P0dpoDIM56SVM22HOS91duNaWQ=
+github.com/gojuno/go.morton v0.0.0-20180202102823-94709bd871ce/go.mod h1:kJO7W3iXPkHAnBENPwQxLWhBV9IjKqdhjGOA4Yy/f5E=
+github.com/google/uuid v1.1.1 h1:Gkbcsh/GbpXz7lPftLA3P6TYMwjCLYm83jiFQZF/3gY=
+github.com/google/uuid v1.1.1/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=

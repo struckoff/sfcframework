@@ -1,4 +1,4 @@
-package SFCFramework
+package balancer
 
 // Node is an interface describing storage/processing node in the cluster.
 type Node interface {

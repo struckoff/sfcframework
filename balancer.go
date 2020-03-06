@@ -1,4 +1,4 @@
-package SFCFramework
+package balancer
 
 import (
 	"errors"
@@ -36,6 +36,10 @@ func NewBalancer(cType curve.CurveType, dims, size uint64, tf TransformFunc, of 
 		space: NewSpace(sfc, tf),
 		of:    of,
 	}, nil
+}
+
+func (b *Balancer) Space() *Space {
+	return b.space
 }
 
 // AddNode adds node to the Space of balancer, and initiates rebalancing of cells

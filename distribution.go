@@ -1,4 +1,4 @@
-package SFCFramework
+package balancer
 
 // DataDistribution represents Distribution of data items between nodes.
 type DataDistribution []NodeData

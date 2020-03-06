@@ -1,4 +1,4 @@
-package SFCFramework
+package balancer
 
 // MockCapacity is implementation of Capacity used for testing.
 type MockCapacity struct {

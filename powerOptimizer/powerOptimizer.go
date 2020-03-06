@@ -4,35 +4,36 @@ import (
 	"github.com/struckoff/SFCFramework"
 )
 
-func PowerOptimizer(s *SFCFramework.Space) (res []SFCFramework.CellGroup, err error) {
-	var node SFCFramework.Node
+func PowerOptimizer(s *balancer.Space) (res []balancer.CellGroup, err error) {
+	var node balancer.Node
 
 	totalLoad := s.TotalLoad()
 	totalPower := s.TotalPower()
 	cgs := s.CellGroups()
 	cells := s.Cells()
 
-	for _, cg := range cgs {
-		node = cg.Node()
-		totalPower += node.Power().Get()
-	}
+	//res := make([]balancer.CellGroup, len(cgs))
+	//weights := make([]float64, len(cgs))
+	//for iter := range cgs {
+	//	weights[iter] = cgs[iter].Node().Power().Get() / totalPower
+	//}
 
 	i := 0
 	node = cgs[0].Node()
-	cg := SFCFramework.NewCellGroup(node)
+	cg := balancer.NewCellGroup(node)
 	p := node.Power().Get() / totalPower
-	l := uint64(float64(totalLoad) * p)
+	l := float64(totalLoad) * p
 	for j := range cells {
 		cg.AddCell(&cells[j])
-		if cg.TotalLoad() >= l {
+		if float64(cg.TotalLoad()) >= l {
 			if i == (len(cgs) - 1) {
 				continue
 			}
 			res = append(res, cg)
 			i++
-			cg = SFCFramework.NewCellGroup(cgs[i].Node())
+			cg = balancer.NewCellGroup(cgs[i].Node())
 			p = cg.Node().Power().Get() / totalPower
-			l = uint64(float64(totalLoad) * p)
+			l = float64(totalLoad) * p
 		}
 	}
 
