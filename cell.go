@@ -22,6 +22,12 @@ func (c *cell) SetGroup(cg *CellGroup) {
 	c.cg = cg
 }
 
+func (c *cell) Load() uint64 {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.load
+}
+
 func (c *cell) add(d DataItem) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()

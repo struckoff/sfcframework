@@ -46,6 +46,17 @@ func (s *Space) Cells() []cell {
 	return s.cells
 }
 
+//func (s *Space) RangeOverCells(f func(*cell) bool) error {
+//	s.mu.Lock()
+//	defer s.mu.Unlock()
+//	for iter := 0; iter < len(s.cells); iter++ {
+//		if ok := f(&s.cells[iter]); !ok {
+//			return nil
+//		}
+//	}
+//	return nil
+//}
+
 func (s *Space) TotalLoad() uint64 {
 	s.mu.Lock()
 	defer s.mu.Unlock()

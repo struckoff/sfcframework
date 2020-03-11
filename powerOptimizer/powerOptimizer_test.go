@@ -14,42 +14,161 @@ import (
 
 func TestPowerOptimizer(t *testing.T) {
 	type args struct {
-		cgs []balancer.CellGroup
+		loadSet []uint64
+		rates   []int
+		powers  []float64
 	}
 	//cs := generateCells()
-	cs := balancer.GenerateMockCells(0, 0, 10, 20, 0, 0, 80, 0, 60, 0, 40, 0, 90, 0, 0)
-	cgs := balancer.GenerateMockCellGroup(cs, []int{7, 4, 4})
-	rgs := balancer.GenerateMockCellGroup(cs, []int{5, 5, 5})
+
 	tests := []struct {
 		name    string
 		args    args
-		want    []balancer.CellGroup
+		want    []int
 		wantErr bool
 	}{
 		{
-			name:    "test",
-			args:    args{cgs: cgs},
-			want:    rgs,
+			name: "test equal power",
+			args: args{
+				loadSet: []uint64{0, 0, 10, 20, 0, 0, 80, 0, 60, 0, 40, 0, 90, 0, 0},
+				rates:   []int{5, 5, 5},
+				powers:  []float64{10, 10, 10},
+			},
+			want:    []int{7, 4, 4},
+			wantErr: false,
+		},
+		{
+			name: "test equal power",
+			args: args{
+				loadSet: []uint64{0, 0, 10, 20, 0, 0, 80, 0, 60, 0, 40, 0, 90, 0, 0},
+				rates:   []int{5, 5, 5},
+				powers:  []float64{10, 100, 10},
+			},
+			want:    []int{0, 15, 0},
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := balancer.NewMockSpace(tt.args.cgs, cs)
+			cs := balancer.GenerateMockCells(tt.args.loadSet...)
+			cgs := balancer.GenerateMockCellGroup(cs, tt.args.rates, tt.args.powers)
+			rgs := balancer.GenerateMockCellGroup(cs, tt.want, tt.args.powers)
+
+			s := balancer.NewMockSpace(cgs, cs)
 			got, err := PowerOptimizer(s)
+
 			if (err != nil) != tt.wantErr {
 				t.Errorf("PowerOptimizer() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("PowerOptimizer() got = %v, want %v", got[2].Cells(), tt.want[2].Cells())
+			if !reflect.DeepEqual(got, rgs) {
+				t.Errorf("PowerOptimizer() got = %v, want %v", got, rgs)
 			}
 		})
 	}
 }
 
-func BenchmarkPowerOptimizer(b *testing.B) {
-	b.ReportAllocs()
+func TestPowerOptimizerGreedy(t *testing.T) {
+	type args struct {
+		loadSet []uint64
+		rates   []int
+		powers  []float64
+	}
+	//cs := generateCells()
+
+	tests := []struct {
+		name    string
+		args    args
+		want    []int
+		wantErr bool
+	}{
+		{
+			name: "test equal power",
+			args: args{
+				loadSet: []uint64{0, 0, 10, 20, 0, 0, 80, 0, 60, 0, 40, 0, 90, 0, 0},
+				rates:   []int{5, 5, 5},
+				powers:  []float64{10, 100, 10},
+			},
+			want:    []int{7, 4, 4},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cs := balancer.GenerateMockCells(tt.args.loadSet...)
+			cgs := balancer.GenerateMockCellGroup(cs, tt.args.rates, tt.args.powers)
+			rgs := balancer.GenerateMockCellGroup(cs, tt.want, tt.args.powers)
+
+			s := balancer.NewMockSpace(cgs, cs)
+			got, err := PowerOptimizerGreedy(s)
+
+			if (err != nil) != tt.wantErr {
+				t.Errorf("PowerOptimizerGreedy() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, rgs) {
+				t.Errorf("PowerOptimizerGreedy() got = %v, want %v", got, rgs)
+			}
+		})
+	}
+}
+
+func TestPowerOptimizerBreezy(t *testing.T) {
+	type args struct {
+		loadSet []uint64
+		rates   []int
+		powers  []float64
+	}
+	//cs := generateCells()
+
+	tests := []struct {
+		name    string
+		args    args
+		want    []int
+		wantErr bool
+	}{
+		//{
+		//	name: "test equal power",
+		//	args: args{
+		//		loadSet: []uint64{0, 0, 10, 20, 0, 0, 80, 0, 60, 0, 40, 0, 90, 0, 0},
+		//		rates:   []int{5, 5, 5},
+		//		powers:  []float64{10, 10, 10},
+		//	},
+		//	want:    []int{7, 4, 4},
+		//	wantErr: false,
+		//},
+		{
+			name: "test equal power",
+			args: args{
+				loadSet: []uint64{0, 0, 10, 20, 0, 0, 80, 0, 60, 0, 40, 0, 90, 0, 0},
+				rates:   []int{5, 5, 5},
+				powers:  []float64{10, 100, 10},
+			},
+			want:    []int{7, 4, 4},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cs := balancer.GenerateMockCells(tt.args.loadSet...)
+			cgs := balancer.GenerateMockCellGroup(cs, tt.args.rates, tt.args.powers)
+			cs = balancer.GenerateMockCells(tt.args.loadSet...)
+			rgs := balancer.GenerateMockCellGroup(cs, tt.want, tt.args.powers)
+
+			s := balancer.NewMockSpace(cgs, cs)
+			got, err := PowerOptimizerPerms(s)
+
+			if (err != nil) != tt.wantErr {
+				t.Errorf("PowerOptimizerPerms() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, rgs) {
+				t.Errorf("PowerOptimizerPerms() got = %v, want %v", got, rgs)
+			}
+		})
+	}
+}
+
+func prepareSpace() *balancer.Space {
 	bal, err := balancer.NewBalancer(curve.Morton, 3, 32, spaceTransform.SpaceTransform, PowerOptimizer)
 	if err != nil {
 		panic(err)
@@ -68,13 +187,41 @@ func BenchmarkPowerOptimizer(b *testing.B) {
 	}
 
 	s := bal.Space()
+	return s
+}
 
+func BenchmarkPowerOptimizer(b *testing.B) {
 	log.SetOutput(ioutil.Discard)
-	b.ResetTimer()
-	b.StartTimer()
-	for i := 0; i < b.N; i++ {
-		x, _ := PowerOptimizer(s)
-		log.Print(x)
-	}
-	b.StopTimer()
+
+	b.Run("orig", func(b *testing.B) {
+		b.ReportAllocs()
+		for i := 0; i < b.N; i++ {
+			b.StopTimer()
+			s := prepareSpace()
+			b.StartTimer()
+			x, _ := PowerOptimizer(s)
+			log.Print(x)
+		}
+	})
+
+	b.Run("greed", func(b *testing.B) {
+		b.ReportAllocs()
+		for i := 0; i < b.N; i++ {
+			b.StopTimer()
+			s := prepareSpace()
+			b.StartTimer()
+			x, _ := PowerOptimizerGreedy(s)
+			log.Print(x)
+		}
+	})
+	b.Run("permutations", func(b *testing.B) {
+		b.ReportAllocs()
+		for i := 0; i < b.N; i++ {
+			b.StopTimer()
+			s := prepareSpace()
+			b.StartTimer()
+			x, _ := PowerOptimizerPerms(s)
+			log.Print(x)
+		}
+	})
 }
