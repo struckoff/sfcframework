@@ -36,16 +36,6 @@ func TestPowerOptimizer(t *testing.T) {
 			want:    []int{7, 4, 4},
 			wantErr: false,
 		},
-		{
-			name: "test equal power",
-			args: args{
-				loadSet: []uint64{0, 0, 10, 20, 0, 0, 80, 0, 60, 0, 40, 0, 90, 0, 0},
-				rates:   []int{5, 5, 5},
-				powers:  []float64{10, 100, 10},
-			},
-			want:    []int{0, 15, 0},
-			wantErr: false,
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -86,7 +76,7 @@ func TestPowerOptimizerGreedy(t *testing.T) {
 			args: args{
 				loadSet: []uint64{0, 0, 10, 20, 0, 0, 80, 0, 60, 0, 40, 0, 90, 0, 0},
 				rates:   []int{5, 5, 5},
-				powers:  []float64{10, 100, 10},
+				powers:  []float64{10, 10, 10},
 			},
 			want:    []int{7, 4, 4},
 			wantErr: false,
@@ -126,16 +116,6 @@ func TestPowerOptimizerBreezy(t *testing.T) {
 		want    []int
 		wantErr bool
 	}{
-		//{
-		//	name: "test equal power",
-		//	args: args{
-		//		loadSet: []uint64{0, 0, 10, 20, 0, 0, 80, 0, 60, 0, 40, 0, 90, 0, 0},
-		//		rates:   []int{5, 5, 5},
-		//		powers:  []float64{10, 10, 10},
-		//	},
-		//	want:    []int{7, 4, 4},
-		//	wantErr: false,
-		//},
 		{
 			name: "test equal power",
 			args: args{
