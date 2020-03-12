@@ -1,9 +1,9 @@
-package powerOptimizer
+package optimizer
 
 import (
 	"github.com/struckoff/SFCFramework"
 	"github.com/struckoff/SFCFramework/curve"
-	"github.com/struckoff/SFCFramework/spaceTransform"
+	"github.com/struckoff/SFCFramework/transform"
 	"io/ioutil"
 	"log"
 	"reflect"
@@ -149,7 +149,7 @@ func TestPowerOptimizerBreezy(t *testing.T) {
 }
 
 func prepareSpace() *balancer.Space {
-	bal, err := balancer.NewBalancer(curve.Morton, 3, 32, spaceTransform.SpaceTransform, PowerOptimizer)
+	bal, err := balancer.NewBalancer(curve.Morton, 3, 32, transform.SpaceTransform, PowerOptimizer)
 	if err != nil {
 		panic(err)
 	}

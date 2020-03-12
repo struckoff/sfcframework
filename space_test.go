@@ -2,8 +2,8 @@ package balancer
 
 import (
 	"github.com/struckoff/SFCFramework/curve"
-	"github.com/struckoff/SFCFramework/powerOptimizer"
-	"github.com/struckoff/SFCFramework/spaceTransform"
+	"github.com/struckoff/SFCFramework/optimizer"
+	"github.com/struckoff/SFCFramework/transform"
 	"testing"
 )
 
@@ -39,7 +39,7 @@ func Test_space_addNode(t *testing.T) {
 	type args struct {
 		n Node
 	}
-	cs := powerOptimizer.generateCells()
+	cs := optimizer.generateCells()
 	sfc, _ := curve.NewCurve(curve.Hilbert, 3, 32)
 	tests := []struct {
 		name    string
@@ -53,8 +53,8 @@ func Test_space_addNode(t *testing.T) {
 				cells: cs,
 				cg:    []CellGroup{generateCellGroup(cs, testNode)},
 				sfc:   sfc,
-				tf:    spaceTransform.SpaceTransform,
-				of:    powerOptimizer.PowerOptimizer,
+				tf:    transform.SpaceTransform,
+				of:    optimizer.PowerOptimizer,
 			},
 			args: args{
 				n: MockNode{power: MockPower{value: 10.0}},

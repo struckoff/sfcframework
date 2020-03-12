@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"github.com/struckoff/SFCFramework"
 	"github.com/struckoff/SFCFramework/curve"
-	"github.com/struckoff/SFCFramework/powerOptimizer"
-	"github.com/struckoff/SFCFramework/spaceTransform"
+	"github.com/struckoff/SFCFramework/optimizer"
+	"github.com/struckoff/SFCFramework/transform"
 )
 
 func main() {
-	bal, err := balancer.NewBalancer(curve.Morton, 3, 1024, spaceTransform.SpaceTransform, powerOptimizer.PowerOptimizer)
+	bal, err := balancer.NewBalancer(curve.Morton, 3, 1024, transform.SpaceTransform, optimizer.PowerOptimizer)
 	if err != nil {
 		panic(err)
 	}

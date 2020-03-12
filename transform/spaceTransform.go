@@ -1,4 +1,4 @@
-package spaceTransform
+package transform
 
 import "errors"
 
