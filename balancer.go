@@ -63,6 +63,11 @@ func (b *Balancer) AddNode(n Node) error {
 	return nil
 }
 
+// GetNode returns the node for the given data item.
+func (b *Balancer) GetNode(d DataItem) (Node, error) {
+	return b.space.GetNode(d)
+}
+
 // AddData loads data into the Space of the balancer.
 func (b *Balancer) AddData(d DataItem) error {
 	return b.space.AddData(d)

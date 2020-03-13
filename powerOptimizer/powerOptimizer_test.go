@@ -43,7 +43,7 @@ func TestPowerOptimizer(t *testing.T) {
 			cgs := balancer.GenerateMockCellGroup(cs, tt.args.rates, tt.args.powers)
 			rgs := balancer.GenerateMockCellGroup(cs, tt.want, tt.args.powers)
 
-			s := balancer.NewMockSpace(cgs, cs)
+			s := balancer.NewMockSpace(cgs, cs, nil)
 			got, err := PowerOptimizer(s)
 
 			if (err != nil) != tt.wantErr {
@@ -88,7 +88,7 @@ func TestPowerOptimizerGreedy(t *testing.T) {
 			cgs := balancer.GenerateMockCellGroup(cs, tt.args.rates, tt.args.powers)
 			rgs := balancer.GenerateMockCellGroup(cs, tt.want, tt.args.powers)
 
-			s := balancer.NewMockSpace(cgs, cs)
+			s := balancer.NewMockSpace(cgs, cs, nil)
 			got, err := PowerOptimizerGreedy(s)
 
 			if (err != nil) != tt.wantErr {
@@ -134,7 +134,7 @@ func TestPowerOptimizerBreezy(t *testing.T) {
 			cs = balancer.GenerateMockCells(tt.args.loadSet...)
 			rgs := balancer.GenerateMockCellGroup(cs, tt.want, tt.args.powers)
 
-			s := balancer.NewMockSpace(cgs, cs)
+			s := balancer.NewMockSpace(cgs, cs, nil)
 			got, err := PowerOptimizerPerms(s)
 
 			if (err != nil) != tt.wantErr {

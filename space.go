@@ -106,6 +106,24 @@ func (s *Space) addNode(n Node) error {
 	return nil
 }
 
+// GetNode returns the node for the given data item.
+func (s *Space) GetNode(d DataItem) (Node, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.getNode(d)
+}
+
+func (s *Space) getNode(d DataItem) (Node, error) {
+	cID, err := s.cellID(d)
+	if err != nil {
+		return nil, err
+	}
+	if s.cells[cID].cg == nil {
+		return nil, errors.New("unable to find node")
+	}
+	return s.cells[cID].cg.Node(), nil
+}
+
 //AddData add data item to the space.
 func (s *Space) AddData(d DataItem) error {
 	s.mu.Lock()
@@ -117,23 +135,36 @@ func (s *Space) addData(d DataItem) error {
 	if len(s.cgs) == 0 {
 		return errors.New("no nodes in the cluster")
 	}
-	size := s.sfc.DimSize()
-	if s.tf == nil {
-		return errors.New("transform function is not set")
-	}
-	coords, err := s.tf(d.Values(), size)
-	cID, err := s.sfc.Encode(coords)
+
+	cID, err := s.cellID(d)
 	if err != nil {
-		return fmt.Errorf("item encoding error: %w", err)
-	}
-	if cID > uint64(len(s.cells)-1) {
-		return errors.New("cell ID is larger that number of cells in the Space")
+		return err
 	}
 	if err = s.cells[cID].add(d); err != nil {
 		return err
 	}
 	s.load += s.cells[cID].load //TODO May be just sum CellGroup.load ?
 	return nil
+}
+
+//cellID calculates the id of cell in space based on transform function and space filling curve.
+func (s *Space) cellID(d DataItem) (uint64, error) {
+	size := s.sfc.DimSize()
+	if s.tf == nil {
+		return 0, errors.New("transform function is not set")
+	}
+	coords, err := s.tf(d.Values(), size)
+	if err != nil {
+		return 0, err
+	}
+	cID, err := s.sfc.Encode(coords)
+	if err != nil {
+		return 0, fmt.Errorf("item encoding error: %w", err)
+	}
+	if cID > uint64(len(s.cells)-1) {
+		return 0, errors.New("cell ID is larger that number of cells in the Space")
+	}
+	return cID, nil
 }
 
 //Distribution returns representation of how DataItems distributes per nodes in the space.

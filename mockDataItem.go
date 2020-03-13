@@ -9,7 +9,7 @@ import (
 type MockDataItem struct {
 	id     string
 	size   uint64
-	values []uint64
+	values []interface{}
 }
 
 func (m MockDataItem) ID() string {
@@ -28,11 +28,23 @@ func (m MockDataItem) Values() []interface{} {
 	return res
 }
 
-func GenerateRandomMockDataItem(dimensions uint64) MockDataItem {
-	coords := make([]uint64, dimensions)
-	for c := range coords {
-		coords[c] = rand.Uint64()
-	}
+//func GenerateRandomMockDataItem(dimensions uint64) MockDataItem {
+//	coords := make([]uint64, dimensions)
+//	for c := range coords {
+//		coords[c] = rand.Uint64()
+//	}
+//	return MockDataItem{
+//		id:     uuid.New().String(),
+//		size:   rand.Uint64(),
+//		values: coords,
+//	}
+//}
+
+func GenerateRandomMockSpaceItem() MockDataItem {
+	coords := make([]interface{}, 3)
+	coords[0] = rand.Float64()
+	coords[1] = rand.Float64()
+	coords[2] = rand.Int63n(31)
 	return MockDataItem{
 		id:     uuid.New().String(),
 		size:   rand.Uint64(),
