@@ -1,4 +1,4 @@
-package powerOptimizer
+package optimizer
 
 import (
 	"github.com/struckoff/SFCFramework"

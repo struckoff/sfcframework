@@ -28,11 +28,11 @@ type Curve struct {
 	maxCode    uint64
 }
 
-func New(dims, bits uint64) (*Curve, error) {
+func New(dims, bits uint64) (Curve, error) {
 	if bits <= 0 || dims <= 0 {
-		return nil, errors.New("number of bits and dimension must be greater than 0")
+		return Curve{}, errors.New("number of bits and dimension must be greater than 0")
 	}
-	return &Curve{
+	return Curve{
 		dimensions: dims,
 		bits:       bits,
 		length:     bits * dims,
