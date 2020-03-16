@@ -2,7 +2,7 @@ package balancer
 
 import (
 	"github.com/struckoff/SFCFramework/curve"
-	"github.com/struckoff/SFCFramework/spaceTransform"
+	"github.com/struckoff/SFCFramework/transform"
 )
 
 func NewMockSpace(cgs []CellGroup, cs []cell, sfc curve.Curve) *Space {
@@ -15,6 +15,6 @@ func NewMockSpace(cgs []CellGroup, cs []cell, sfc curve.Curve) *Space {
 		cgs:   cgs,
 		load:  load,
 		sfc:   sfc,
-		tf:    spaceTransform.SpaceTransform,
+		tf:    transform.SpaceTransform,
 	}
 }

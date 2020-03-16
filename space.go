@@ -125,26 +125,26 @@ func (s *Space) getNode(d DataItem) (Node, error) {
 }
 
 //AddData add data item to the space.
-func (s *Space) AddData(d DataItem) error {
+func (s *Space) AddData(d DataItem) (Node, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.addData(d)
 }
 
-func (s *Space) addData(d DataItem) error {
+func (s *Space) addData(d DataItem) (Node, error) {
 	if len(s.cgs) == 0 {
-		return errors.New("no nodes in the cluster")
+		return nil, errors.New("no nodes in the cluster")
 	}
 
 	cID, err := s.cellID(d)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if err = s.cells[cID].add(d); err != nil {
-		return err
+		return nil, err
 	}
 	s.load += s.cells[cID].load //TODO May be just sum CellGroup.load ?
-	return nil
+	return s.cells[cID].cg.Node(), nil
 }
 
 //cellID calculates the id of cell in space based on transform function and space filling curve.

@@ -69,7 +69,7 @@ func (b *Balancer) GetNode(d DataItem) (Node, error) {
 }
 
 // AddData loads data into the Space of the balancer.
-func (b *Balancer) AddData(d DataItem) error {
+func (b *Balancer) AddData(d DataItem) (Node, error) {
 	return b.space.AddData(d)
 }
 

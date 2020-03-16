@@ -51,3 +51,11 @@ func GenerateRandomMockSpaceItem() MockDataItem {
 		values: coords,
 	}
 }
+
+func NewMockDataItem(id string, size uint64, values []interface{}) DataItem {
+	return MockDataItem{
+		id:     id,
+		size:   size,
+		values: values,
+	}
+}
