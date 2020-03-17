@@ -6,7 +6,7 @@ type cell struct {
 	mu    sync.Mutex
 	load  uint64
 	items []DataItem
-	cg    *cellGroup
+	cg    *CellGroup
 }
 
 func newCell() cell {
@@ -14,6 +14,18 @@ func newCell() cell {
 		load:  0,
 		items: []DataItem{},
 	}
+}
+
+func (c *cell) SetGroup(cg *CellGroup) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.cg = cg
+}
+
+func (c *cell) Load() uint64 {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.load
 }
 
 func (c *cell) add(d DataItem) error {

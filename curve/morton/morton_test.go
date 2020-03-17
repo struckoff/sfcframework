@@ -432,3 +432,159 @@ func TestNew(t *testing.T) {
 		})
 	}
 }
+
+func TestCurve_validateCoordinates(t *testing.T) {
+	type fields struct {
+		dimensions uint64
+		bits       uint64
+		length     uint64
+		masksArray []uint64
+		maxSize    uint64
+		maxCode    uint64
+	}
+	type args struct {
+		coords []uint64
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "normal",
+			fields: fields{
+				dimensions: 2,
+				bits:       4,
+				length:     4,
+				maxSize:    15,
+				maxCode:    255,
+			},
+			args: args{
+				coords: []uint64{4, 12},
+			},
+			wantErr: false,
+		},
+		{
+			name: "not enough coordinates",
+			fields: fields{
+				dimensions: 2,
+				bits:       4,
+				length:     4,
+				maxSize:    15,
+				maxCode:    255,
+			},
+			args: args{
+				coords: []uint64{4},
+			},
+			wantErr: true,
+		},
+		{
+			name: "coordinate exceeds limit",
+			fields: fields{
+				dimensions: 2,
+				bits:       4,
+				length:     8,
+				maxSize:    15,
+				maxCode:    255,
+			},
+			args: args{
+				coords: []uint64{4, 120},
+			},
+			wantErr: true,
+		},
+		{
+			name: "all coordinates exceeds limit",
+			fields: fields{
+				dimensions: 2,
+				bits:       4,
+				length:     4,
+				maxSize:    15,
+				maxCode:    255,
+			},
+			args: args{
+				coords: []uint64{400, 120},
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := Curve{
+				dimensions: tt.fields.dimensions,
+				bits:       tt.fields.bits,
+				length:     tt.fields.length,
+				masksArray: tt.fields.masksArray,
+				maxSize:    tt.fields.maxSize,
+				maxCode:    tt.fields.maxCode,
+			}
+			if err := c.validateCoordinates(tt.args.coords); (err != nil) != tt.wantErr {
+				t.Errorf("validateCoordinates() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestCurve_validateCode(t *testing.T) {
+	type fields struct {
+		dimensions uint64
+		bits       uint64
+		length     uint64
+		masksArray []uint64
+		maxSize    uint64
+		maxCode    uint64
+	}
+	type args struct {
+		code uint64
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "normal",
+			fields: fields{
+				dimensions: 2,
+				bits:       4,
+				length:     4,
+				maxSize:    15,
+				maxCode:    255,
+			},
+			args: args{
+				96,
+			},
+			wantErr: false,
+		},
+		{
+			name: "code exceeds limit",
+			fields: fields{
+				dimensions: 2,
+				bits:       4,
+				length:     4,
+				maxSize:    15,
+				maxCode:    255,
+			},
+			args: args{
+				412,
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := Curve{
+				dimensions: tt.fields.dimensions,
+				bits:       tt.fields.bits,
+				length:     tt.fields.length,
+				masksArray: tt.fields.masksArray,
+				maxSize:    tt.fields.maxSize,
+				maxCode:    tt.fields.maxCode,
+			}
+			if err := c.validateCode(tt.args.code); (err != nil) != tt.wantErr {
+				t.Errorf("validateCode() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}

@@ -14,7 +14,8 @@ import (
 // cells between cell groups in such way that all nodes would be equally.
 type Balancer struct {
 	nType reflect.Type
-	space *space
+	space *Space
+	of    OptimizerFunc
 }
 
 func NewBalancer(cType curve.CurveType, dims, size uint64, tf TransformFunc, of OptimizerFunc) (*Balancer, error) {
@@ -32,29 +33,47 @@ func NewBalancer(cType curve.CurveType, dims, size uint64, tf TransformFunc, of 
 		return nil, err
 	}
 	return &Balancer{
-		space: newSpace(sfc, tf, of),
+		space: NewSpace(sfc, tf),
+		of:    of,
 	}, nil
 }
 
-// AddNode adds node to the space of balancer, and initiates rebalancing of cells
+func (b *Balancer) Space() *Space {
+	return b.space
+}
+
+// AddNode adds node to the Space of balancer, and initiates rebalancing of cells
 // between cell groups.
 func (b *Balancer) AddNode(n Node) error {
-	if b.space.len() == 0 {
+	if b.space.Len() == 0 {
 		b.nType = reflect.TypeOf(n)
-		return b.space.addNode(n)
+		return b.space.AddNode(n)
 	}
 	if reflect.TypeOf(n) != b.nType {
 		return errors.New("incorrect node type")
 	}
-	return b.space.addNode(n)
+	if err := b.space.AddNode(n); err != nil {
+		return err
+	}
+	cgs, err := b.of(b.space)
+	if err != nil {
+		return err
+	}
+	b.space.SetGroups(cgs)
+	return nil
 }
 
-// AddData loads data into the space of the balancer.
-func (b *Balancer) AddData(d DataItem) error {
-	return b.space.addData(d)
+// GetNode returns the node for the given data item.
+func (b *Balancer) GetNode(d DataItem) (Node, error) {
+	return b.space.GetNode(d)
 }
 
-// Distribution generates distribution of data items across nodes of the cluster.
+// AddData loads data into the Space of the balancer.
+func (b *Balancer) AddData(d DataItem) (Node, error) {
+	return b.space.AddData(d)
+}
+
+// Distribution generates Distribution of data items across nodes of the cluster.
 func (b *Balancer) Distribution() DataDistribution {
-	return b.space.distribution()
+	return b.space.Distribution()
 }

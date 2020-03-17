@@ -28,11 +28,11 @@ type Curve struct {
 	maxCode    uint64
 }
 
-func New(dims, bits uint64) (*Curve, error) {
+func New(dims, bits uint64) (Curve, error) {
 	if bits <= 0 || dims <= 0 {
-		return nil, errors.New("number of bits and dimension must be greater than 0")
+		return Curve{}, errors.New("number of bits and dimension must be greater than 0")
 	}
-	return &Curve{
+	return Curve{
 		dimensions: dims,
 		bits:       bits,
 		length:     bits * dims,
@@ -41,7 +41,8 @@ func New(dims, bits uint64) (*Curve, error) {
 	}, nil
 }
 
-//Decode returns coordinates for a given code(distance)
+//Decode returns coordinates for a given code(distance).
+//Method will return error if code(distance) exceeds the limit(2 ^ (dims * bits) - 1)
 func (c Curve) Decode(code uint64) (coords []uint64, err error) {
 	if err := c.validateCode(code); err != nil {
 		return nil, err
@@ -54,6 +55,10 @@ func (c Curve) Decode(code uint64) (coords []uint64, err error) {
 	return c.transpose(coords), nil
 }
 
+//Decode returns coordinates for a given code(distance).
+//Method will return error if:
+//  - buffer less than number of dimensions
+//	- code(distance) exceeds the limit(2 ^ (dims * bits) - 1)
 func (c Curve) DecodeWithBuffer(buf []uint64, code uint64) (coords []uint64, err error) {
 	if len(buf) < int(c.dimensions) {
 		return nil, errors.New("buffer length less then dimensions")
@@ -71,7 +76,7 @@ func (c Curve) DecodeWithBuffer(buf []uint64, code uint64) (coords []uint64, err
 
 func (c Curve) validateCode(code uint64) error {
 	if code > c.maxCode {
-		return errors.New(fmt.Sprintf("code == %v exceeds limit (2^(dimensions * bits) - 1) == %v", code, c.maxSize))
+		return fmt.Errorf("code == %v exceeds limit (2^(dimensions * bits) - 1) == %v", code, c.maxSize)
 	}
 	return nil
 }
@@ -107,6 +112,7 @@ func (c Curve) parseIndex(coords []uint64, code uint64) ([]uint64, error) {
 
 //! coords may be altered by method
 //Encode returns code(distance) for a given set of coordinates
+//Method will return error if any of the coordinates exceeds limit(2 ^ bits - 1)
 func (c Curve) Encode(coords []uint64) (code uint64, err error) {
 	if err := c.validateCoordinates(coords); err != nil {
 		return 0, err
@@ -148,11 +154,11 @@ func (c Curve) Encode(coords []uint64) (code uint64, err error) {
 
 func (c Curve) validateCoordinates(coords []uint64) error {
 	if len(coords) < int(c.dimensions) {
-		return errors.New(fmt.Sprintf("number of coordinates == %v less then dimensions == %v", len(coords), c.dimensions))
+		return fmt.Errorf("number of coordinates == %v less then dimensions == %v", len(coords), c.dimensions)
 	}
 	for iter := range coords {
 		if coords[iter] > c.maxSize {
-			return errors.New(fmt.Sprintf("coordinate == %v exceeds limit == %v", coords[iter], c.maxSize))
+			return fmt.Errorf("coordinate == %v exceeds limit == %v", coords[iter], c.maxSize)
 		}
 	}
 	return nil

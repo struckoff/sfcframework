@@ -1,3 +1,3 @@
 package balancer
 
-type OptimizerFunc func(cgs []cellGroup) ([]cellGroup, error)
+type OptimizerFunc func(s *Space) ([]CellGroup, error)

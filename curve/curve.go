@@ -6,6 +6,7 @@ import (
 	"github.com/struckoff/SFCFramework/curve/morton"
 )
 
+//Curve is an interface of space filling curve realisation.
 type Curve interface {
 	Decode(code uint64) (coords []uint64, err error) //Decode returns coordinates for a given code(distance)
 	DecodeWithBuffer(buf []uint64, code uint64) (coords []uint64, err error)

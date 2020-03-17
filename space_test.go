@@ -2,11 +2,13 @@ package balancer
 
 import (
 	"github.com/struckoff/SFCFramework/curve"
+	"github.com/struckoff/SFCFramework/optimizer"
+	"github.com/struckoff/SFCFramework/transform"
 	"testing"
 )
 
-func generateCellGroup(cs []cell, n Node) cellGroup {
-	cg := newCellGroup(n)
+func generateCellGroup(cs []cell, n Node) CellGroup {
+	cg := NewCellGroup(n)
 	cg.cells = append(cg.cells, &cs[0])
 	cg.cells = append(cg.cells, &cs[1])
 	cg.cells = append(cg.cells, &cs[2])
@@ -29,7 +31,7 @@ func generateCellGroup(cs []cell, n Node) cellGroup {
 func Test_space_addNode(t *testing.T) {
 	type fields struct {
 		cells []cell
-		cg    []cellGroup
+		cg    []CellGroup
 		sfc   curve.Curve
 		tf    TransformFunc
 		of    OptimizerFunc
@@ -37,7 +39,7 @@ func Test_space_addNode(t *testing.T) {
 	type args struct {
 		n Node
 	}
-	cs := generateCells()
+	cs := optimizer.generateCells()
 	sfc, _ := curve.NewCurve(curve.Hilbert, 3, 32)
 	tests := []struct {
 		name    string
@@ -49,10 +51,10 @@ func Test_space_addNode(t *testing.T) {
 			name: "test case",
 			fields: fields{
 				cells: cs,
-				cg:    []cellGroup{generateCellGroup(cs, testNode)},
+				cg:    []CellGroup{generateCellGroup(cs, testNode)},
 				sfc:   sfc,
-				tf:    SpaceTransform,
-				of:    PowerOptimizer,
+				tf:    transform.SpaceTransform,
+				of:    optimizer.PowerOptimizer,
 			},
 			args: args{
 				n: MockNode{power: MockPower{value: 10.0}},
@@ -62,9 +64,9 @@ func Test_space_addNode(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &space{
+			s := &Space{
 				cells: tt.fields.cells,
-				cg:    tt.fields.cg,
+				cgs:   tt.fields.cg,
 				sfc:   tt.fields.sfc,
 				tf:    tt.fields.tf,
 				of:    tt.fields.of,
