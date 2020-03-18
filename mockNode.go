@@ -38,19 +38,19 @@ func GenerateMockCells(loadSet ...uint64) []cell {
 	return cs
 }
 
-func GenerateMockCellGroup(cs []cell, rates []int, powers []float64) []CellGroup {
-	cgs := make([]CellGroup, len(rates))
-	for iter, rate := range rates {
-		var load uint64
-		cgs[iter] = NewCellGroup(NewMockNode("node-"+string(iter), powers[iter], 0))
-		for iterCell := range cs[:rate] {
-			cs[iterCell].cg = &cgs[iter]
-			cgs[iter].cells = append(cgs[iter].cells, &cs[iterCell])
-			load += cs[iterCell].load
-		}
-		cs = cs[rate:]
-		cgs[iter].load = load
-	}
-	return cgs
-
-}
+//func GenerateMockCellGroup(cs []cell, rates []int, powers []float64) []CellGroup {
+//	cgs := make([]CellGroup, len(rates))
+//	for iter, rate := range rates {
+//		var load uint64
+//		cgs[iter] = NewCellGroup(NewMockNode("node-"+string(iter), powers[iter], 0))
+//		for iterCell := range cs[:rate] {
+//			cs[iterCell].cg = &cgs[iter]
+//			cgs[iter].cells = append(cgs[iter].cells, &cs[iterCell])
+//			load += cs[iterCell].load
+//		}
+//		cs = cs[rate:]
+//		cgs[iter].load = load
+//	}
+//	return cgs
+//
+//}

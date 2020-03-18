@@ -1,78 +1,67 @@
 package balancer
 
 import (
-	"github.com/struckoff/SFCFramework/curve"
-	"github.com/struckoff/SFCFramework/optimizer"
-	"github.com/struckoff/SFCFramework/transform"
+	"reflect"
 	"testing"
 )
 
-func generateCellGroup(cs []cell, n Node) CellGroup {
-	cg := NewCellGroup(n)
-	cg.cells = append(cg.cells, &cs[0])
-	cg.cells = append(cg.cells, &cs[1])
-	cg.cells = append(cg.cells, &cs[2])
-	cg.cells = append(cg.cells, &cs[3])
-	cg.cells = append(cg.cells, &cs[4])
-	cg.cells = append(cg.cells, &cs[5])
-	cg.cells = append(cg.cells, &cs[6])
-	cg.cells = append(cg.cells, &cs[7])
-	cg.cells = append(cg.cells, &cs[8])
-	cg.cells = append(cg.cells, &cs[9])
-	cg.cells = append(cg.cells, &cs[10])
-	cg.cells = append(cg.cells, &cs[11])
-	cg.cells = append(cg.cells, &cs[12])
-	cg.cells = append(cg.cells, &cs[13])
-	cg.cells = append(cg.cells, &cs[14])
-	cg.load = 300
-	return cg
-}
-
-func Test_space_addNode(t *testing.T) {
-	type fields struct {
-		cells []cell
-		cg    []CellGroup
-		sfc   curve.Curve
-		tf    TransformFunc
-		of    OptimizerFunc
-	}
+func Test_splitCells(t *testing.T) {
 	type args struct {
-		n Node
+		n int
+		l uint64
 	}
-	cs := optimizer.generateCells()
-	sfc, _ := curve.NewCurve(curve.Hilbert, 3, 32)
 	tests := []struct {
 		name    string
-		fields  fields
 		args    args
+		want    []Range
 		wantErr bool
 	}{
 		{
-			name: "test case",
-			fields: fields{
-				cells: cs,
-				cg:    []CellGroup{generateCellGroup(cs, testNode)},
-				sfc:   sfc,
-				tf:    transform.SpaceTransform,
-				of:    optimizer.PowerOptimizer,
-			},
+			name: "simple test",
 			args: args{
-				n: MockNode{power: MockPower{value: 10.0}},
+				n: 5,
+				l: 5,
 			},
+			want:    []Range{{0, 1}, {1, 2}, {2, 3}, {3, 4}, {4, 5}},
+			wantErr: false,
+		},
+		{
+			name: "error test",
+			args: args{
+				n: 50,
+				l: 5,
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "complex test 1",
+			args: args{
+				n: 3,
+				l: 20,
+			},
+			want:    []Range{{0, 7}, {7, 14}, {14, 20}},
+			wantErr: false,
+		},
+		{
+			name: "complex test 2",
+			args: args{
+				n: 5,
+				l: 256,
+			},
+			want:    []Range{{0, 52}, {52, 103}, {103, 154}, {154, 205}, {205, 256}},
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Space{
-				cells: tt.fields.cells,
-				cgs:   tt.fields.cg,
-				sfc:   tt.fields.sfc,
-				tf:    tt.fields.tf,
-				of:    tt.fields.of,
+			got, err := splitCells(tt.args.n, tt.args.l)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("splitCells() error = %v, wantErr %v", err, tt.wantErr)
+				return
 			}
-			if err := s.addNode(tt.args.n); (err != nil) != tt.wantErr {
-				t.Errorf("addNode() error = %v, wantErr %v", err, tt.wantErr)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("splitCells() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

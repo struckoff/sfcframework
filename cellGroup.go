@@ -1,18 +1,21 @@
 package balancer
 
-import "sync"
+import (
+	"sync"
+)
 
 type CellGroup struct {
-	mu    sync.Mutex
-	node  Node
-	cells []*cell
-	load  uint64
+	mu     sync.Mutex
+	node   Node
+	cells  map[uint64]*cell
+	load   uint64
+	cRange Range
 }
 
 func NewCellGroup(n Node) CellGroup {
 	return CellGroup{
 		node:  n,
-		cells: []*cell{},
+		cells: map[uint64]*cell{},
 	}
 }
 
@@ -28,50 +31,37 @@ func (cg *CellGroup) SetNode(n Node) {
 	cg.node = n
 }
 
-func (cg CellGroup) Cells() []*cell {
+func (cg *CellGroup) SetRange(min, max uint64) {
 	cg.mu.Lock()
 	defer cg.mu.Unlock()
-	return cg.cells
-}
-
-func (cg *CellGroup) AddCell_(c *cell) {
-	cg.mu.Lock()
-	defer cg.mu.Unlock()
-	cg.addLoad(c.load)
-	cg.cells = append(cg.cells, c)
-	c.cg = cg
+	cg.cRange = Range{
+		Min: min,
+		Max: max,
+	}
 }
 
 // AddCell adds a cell to the cell group
-// If autoremove flag is true method calls CellGroup.RemoveCell of previous cell group.
-// Flag is usefull when CellGroup is altered and not refilled
-//! CellGroup.RemoveCell destroys order of CellGroup.cells due to optimizations.
-func (cg *CellGroup) AddCell(c *cell, autoremove bool) {
+// If autoremove flag is true, method calls CellGroup.RemoveCell of previous cell group.
+// Flag is useful when CellGroup is altered and not refilled
+func (cg *CellGroup) AddCell(c cell, autoremove bool) {
 	cg.mu.Lock()
 	defer cg.mu.Unlock()
 	if cg == c.cg {
 		return
 	}
 	cg.load += c.load
-	cg.cells = append(cg.cells, c)
+	cg.cells[c.id] = &c
 	if c.cg != nil && autoremove {
-		c.cg.RemoveCell(c)
+		c.cg.RemoveCell(c.id)
 	}
 	c.cg = cg
 }
 
-//! Destroys order
 // RemoveCell removes a cell from cell group.
-func (cg *CellGroup) RemoveCell(c *cell) {
+func (cg *CellGroup) RemoveCell(id uint64) {
 	cg.mu.Lock()
 	defer cg.mu.Unlock()
-	for iter := range cg.cells {
-		if cg.cells[iter] == c {
-			cg.cells[len(cg.cells)-1], cg.cells[iter] = cg.cells[iter], cg.cells[len(cg.cells)-1]
-			cg.cells = cg.cells[:len(cg.cells)-1]
-			return
-		}
-	}
+	delete(cg.cells, id)
 	return
 }
 

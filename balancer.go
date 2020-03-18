@@ -18,7 +18,7 @@ type Balancer struct {
 	of    OptimizerFunc
 }
 
-func NewBalancer(cType curve.CurveType, dims, size uint64, tf TransformFunc, of OptimizerFunc) (*Balancer, error) {
+func NewBalancer(cType curve.CurveType, dims, size uint64, tf TransformFunc, of OptimizerFunc, nodes []Node) (*Balancer, error) {
 	if (size & (size - 1)) != 0 {
 		return nil, errors.New("size must be a power of 2")
 	}
@@ -32,8 +32,12 @@ func NewBalancer(cType curve.CurveType, dims, size uint64, tf TransformFunc, of 
 	if err != nil {
 		return nil, err
 	}
+	s, err := NewSpace(sfc, tf, nodes)
+	if err != nil {
+		return nil, err
+	}
 	return &Balancer{
-		space: NewSpace(sfc, tf),
+		space: s,
 		of:    of,
 	}, nil
 }
@@ -73,7 +77,11 @@ func (b *Balancer) AddData(d DataItem) (Node, error) {
 	return b.space.AddData(d)
 }
 
-// Distribution generates Distribution of data items across nodes of the cluster.
-func (b *Balancer) Distribution() DataDistribution {
-	return b.space.Distribution()
+func (b *Balancer) Optimize() error {
+	ns, err := b.of(b.space)
+	if err != nil {
+		return err
+	}
+	b.space.cgs = ns
+	return nil
 }
