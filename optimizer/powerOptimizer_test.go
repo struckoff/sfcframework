@@ -149,7 +149,7 @@ func TestPowerOptimizerBreezy(t *testing.T) {
 }
 
 func prepareSpace() *balancer.Space {
-	bal, err := balancer.NewBalancer(curve.Morton, 3, 32, transform.SpaceTransform, PowerOptimizer)
+	bal, err := balancer.NewBalancer(curve.Morton, 3, 32, transform.SpaceTransform, PowerOptimizer, nil)
 	if err != nil {
 		panic(err)
 	}

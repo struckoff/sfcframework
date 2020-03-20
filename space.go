@@ -1,8 +1,7 @@
 package balancer
 
 import (
-	"errors"
-	"fmt"
+	"github.com/pkg/errors"
 	"math"
 	"sort"
 	"sync"
@@ -58,6 +57,7 @@ func splitCells(n int, l uint64) ([]Range, error) {
 			Min: uint64(math.Ceil(c)),
 			Max: uint64(math.Ceil(nc)),
 		}
+		res[i].Len = res[i].Max - res[i].Min
 		i++
 		c = nc
 	}
@@ -112,11 +112,18 @@ func (s *Space) SetGroups(groups []CellGroup) {
 	s.cgs = groups
 }
 
-//Len() returns the number of CellGroups in the space.
+//Len returns the number of CellGroups in the space.
 func (s *Space) Len() int {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return len(s.cgs)
+}
+
+//Capacity returns maximum number of cell which could be located in space
+func (s *Space) Capacity() uint64 {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.sfc.Length()
 }
 
 //AddNode adds a new node to the space.
@@ -172,11 +179,11 @@ func (s *Space) addData(d DataItem) (Node, error) {
 		return nil, err
 	}
 	if _, ok := s.cells[cID]; !ok {
-		c, err := newCell(cID, s.cgs)
-		if err != nil {
-			return nil, err
+		cg, ok := s.findCellGroup(cID)
+		if !ok {
+			return nil, errors.New("unable to bind cell to cell group")
 		}
-		s.cells[cID] = c
+		s.cells[cID] = newCell(cID, cg)
 	}
 	if err = s.cells[cID].add(d); err != nil {
 		return nil, err
@@ -197,10 +204,17 @@ func (s *Space) cellID(d DataItem) (uint64, error) {
 	}
 	cID, err := s.sfc.Encode(coords)
 	if err != nil {
-		return 0, fmt.Errorf("item encoding error: %w", err)
+		return 0, errors.Errorf("item encoding error: %w", err)
 	}
-	if cID > uint64(len(s.cells)-1) {
-		return 0, errors.New("cell ID is larger that number of cells in the Space")
-	}
+
 	return cID, nil
+}
+
+func (s *Space) findCellGroup(cID uint64) (cg *CellGroup, ok bool) {
+	for iter := range s.cgs {
+		if s.cgs[iter].FitsRange(cID) {
+			return &s.cgs[iter], true
+		}
+	}
+	return nil, false
 }

@@ -184,6 +184,20 @@ func TestMortonCurve_Encode(t *testing.T) {
 			false,
 		},
 		{
+			"1562 == [10, 11, 0]",
+			fields{
+				3,
+				4,
+			},
+			args{
+				[]uint64{
+					10, 11, 0,
+				},
+			},
+			1562,
+			false,
+		},
+		{
 			"math.MaxInt32 == [65535, 32767]",
 			fields{
 				2,

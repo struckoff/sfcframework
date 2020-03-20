@@ -6,12 +6,13 @@ import (
 )
 
 type Curve struct {
-	dimensions uint64
-	bits       uint64
-	length     uint64
-	masksArray []uint64
-	maxSize    uint64
-	maxCode    uint64
+	dimensions   uint64
+	bits         uint64
+	length       uint64
+	masksArray   []uint64
+	lshiftsArray []uint64
+	maxSize      uint64
+	maxCode      uint64
 }
 
 func New(dims, bits uint64) (Curve, error) {
@@ -26,7 +27,7 @@ func New(dims, bits uint64) (Curve, error) {
 		maxSize:    (1 << bits) - 1,
 		maxCode:    (1 << (dims * bits)) - 1,
 	}
-	mc.masksArray = mc.masks()
+	mc.masksArray, mc.lshiftsArray = mc.masks()
 
 	return mc, nil
 }
@@ -100,7 +101,7 @@ func (c Curve) compact(x uint64) uint64 {
 	return x
 }
 
-func (c Curve) masks() []uint64 {
+func (c Curve) masks() (masks []uint64, lshifts []uint64) {
 	mask := uint64((1 << c.bits) - 1)
 
 	shift := c.dimensions * (c.bits - 1)
@@ -112,7 +113,8 @@ func (c Curve) masks() []uint64 {
 	shift |= shift >> 32
 	shift -= shift >> 1
 
-	masks := make([]uint64, 0, 8)
+	masks = make([]uint64, 0, 8)
+	lshifts = make([]uint64, 1, 8)
 
 	masks = append(masks, mask)
 
@@ -128,11 +130,12 @@ func (c Curve) masks() []uint64 {
 
 		if shifted != 0 {
 			masks = append(masks, mask)
+			lshifts = append(lshifts, shift)
 		}
 
 	}
 
-	return masks
+	return
 }
 
 //Encode returns code(distance) for a given set of coordinates
@@ -160,10 +163,10 @@ func (c Curve) validateCoordinates(coords []uint64) error {
 }
 
 func (c Curve) split(x uint64) uint64 {
-	shiftIter := len(c.masksArray) - 1
+	//shiftIter := len(c.masksArray) - 1
 	for iter := 0; iter < len(c.masksArray); iter++ {
-		x = (x | (x << (1 << shiftIter))) & c.masksArray[iter]
-		shiftIter--
+		x = (x | (x << c.lshiftsArray[iter])) & c.masksArray[iter]
+		//shiftIter--
 	}
 
 	return x

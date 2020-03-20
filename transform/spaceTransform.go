@@ -21,7 +21,8 @@ func SpaceTransform(values []interface{}, dimSize uint64) ([]uint64, error) {
 	if !ok {
 		return nil, errors.New("third value must be int64 timestamp")
 	}
-	ft := 1609459200.0
-	res[2] = uint64(float64(ts) / ft * float64(dimSize))
+	ft := int64(1609459200)
+	res[2] = uint64(ts-ft) % dimSize
+	//res[2] = uint64(float64(ts) / ft * float64(dimSize))
 	return res, nil
 }

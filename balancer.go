@@ -49,11 +49,10 @@ func (b *Balancer) Space() *Space {
 // AddNode adds node to the Space of balancer, and initiates rebalancing of cells
 // between cell groups.
 func (b *Balancer) AddNode(n Node) error {
-	if b.space.Len() == 0 {
+	if b.space.Len() == 0 || b.nType == nil{
 		b.nType = reflect.TypeOf(n)
-		return b.space.AddNode(n)
-	}
-	if reflect.TypeOf(n) != b.nType {
+		//return b.space.AddNode(n)
+	} else if reflect.TypeOf(n) != b.nType {
 		return errors.New("incorrect node type")
 	}
 	if err := b.space.AddNode(n); err != nil {

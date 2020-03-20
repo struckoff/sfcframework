@@ -19,7 +19,7 @@ func PowerOptimizer(s *balancer.Space) (res []balancer.CellGroup, err error) {
 	l := float64(totalLoad) * p
 	var min, max uint64
 	for iter := range cells {
-		cg.AddCell(cells[iter], false)
+		cg.AddCell(&cells[iter], false)
 		max = cells[iter].ID()
 		if float64(cg.TotalLoad()) >= l {
 			if i == (len(cgs) - 1) {
@@ -34,36 +34,6 @@ func PowerOptimizer(s *balancer.Space) (res []balancer.CellGroup, err error) {
 			l = float64(totalLoad) * p
 		}
 	}
-	res = append(res, cg)
-	return res, nil
-}
-
-func PowerOptimizerAbriged(s *balancer.Space) (res []balancer.CellGroup, err error) {
-	var node balancer.Node
-
-	totalLoad := s.TotalLoad()
-	totalPower := s.TotalPower()
-	cgs := s.CellGroups()
-	cells := s.Cells()
-
-	i := 0
-	node = cgs[i].Node()
-	cg := balancer.NewCellGroup(node)
-	p := node.Power().Get() / totalPower
-	l := float64(totalLoad) * p
-	for iter := range cells {
-		cg.AddCell(cells[iter], false)
-		if float64(cg.TotalLoad()) >= l {
-			if i != (len(cgs) - 1) {
-				res = append(res, cg)
-				i++
-				cg = balancer.NewCellGroup(cgs[i].Node())
-				p = cg.Node().Power().Get() / totalPower
-				l = float64(totalLoad) * p
-			}
-		}
-	}
-
 	res = append(res, cg)
 	return res, nil
 }
@@ -87,7 +57,7 @@ func PowerOptimizerGreedy(s *balancer.Space) (res []balancer.CellGroup, err erro
 	}
 
 	for iter := range cells {
-		res[i].AddCell(cells[iter], false)
+		res[i].AddCell(&cells[iter], false)
 		ws[i] -= float64((&cells[iter]).Load())
 		if ws[i] <= 0 && i < lastCgIndex {
 			i++
@@ -119,7 +89,7 @@ func PowerOptimizerPerms(s *balancer.Space) (res []balancer.CellGroup, err error
 			continue
 		}
 		l -= cl
-		cgs[lastCgIndex].AddCell(cells[iter], true)
+		cgs[lastCgIndex].AddCell(&cells[iter], true)
 	}
 
 	return cgs, nil

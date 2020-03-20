@@ -1,7 +1,6 @@
 package balancer
 
 import (
-	"errors"
 	"sync"
 )
 
@@ -12,23 +11,24 @@ type cell struct {
 	cg   *CellGroup
 }
 
-func newCell(id uint64, cgs []CellGroup) (*cell, error) {
+func newCell(id uint64, cg *CellGroup) *cell {
 	c := cell{
 		id:   id,
 		load: 0,
+		cg:cg,
 	}
-	found := false
-	for i := range cgs {
-		if id >= cgs[i].cRange.Min && id < cgs[i].cRange.Max {
-			found = true
-			c.cg = &cgs[i]
-			break
-		}
-	}
-	if !found {
-		return nil, errors.New("unable to bind cell to cell group")
-	}
-	return &c, nil
+	//found := false
+	//for i := range cgs {
+	//	if id >= cgs[i].cRange.Min && id < cgs[i].cRange.Max {
+	//		found = true
+	//		c.cg = &cgs[i]
+	//		break
+	//	}
+	//}
+	//if !found { //? May be this could be c.cg == nil
+	//	return nil, errors.New("unable to bind cell to cell group")
+	//}
+	return &c
 }
 
 func (c *cell) ID() uint64 {

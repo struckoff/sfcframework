@@ -1,6 +1,7 @@
 package balancer
 
 import (
+	"github.com/pkg/errors"
 	"sync"
 )
 
@@ -31,26 +32,37 @@ func (cg *CellGroup) SetNode(n Node) {
 	cg.node = n
 }
 
-func (cg *CellGroup) SetRange(min, max uint64) {
+func (cg *CellGroup) SetRange(min, max uint64) error {
 	cg.mu.Lock()
 	defer cg.mu.Unlock()
+	if min > max{
+		return errors.Errorf("min(%d) should be less or equall then max(%d)", min, max)
+	}
 	cg.cRange = Range{
 		Min: min,
 		Max: max,
+		Len: max-min,
 	}
+	return nil
+}
+
+func (cg *CellGroup) FitsRange(index uint64) bool{
+	cg.mu.Lock()
+	defer cg.mu.Unlock()
+	return index >= cg.cRange.Min && index < cg.cRange.Max
 }
 
 // AddCell adds a cell to the cell group
 // If autoremove flag is true, method calls CellGroup.RemoveCell of previous cell group.
 // Flag is useful when CellGroup is altered and not refilled
-func (cg *CellGroup) AddCell(c cell, autoremove bool) {
+func (cg *CellGroup) AddCell(c *cell, autoremove bool) {
 	cg.mu.Lock()
 	defer cg.mu.Unlock()
 	if cg == c.cg {
 		return
 	}
 	cg.load += c.load
-	cg.cells[c.id] = &c
+	cg.cells[c.id] = c
 	if c.cg != nil && autoremove {
 		c.cg.RemoveCell(c.id)
 	}
