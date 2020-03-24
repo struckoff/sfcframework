@@ -4,7 +4,7 @@ import (
 	"github.com/struckoff/SFCFramework"
 )
 
-func PowerOptimizer(s *balancer.Space) (res []balancer.CellGroup, err error) {
+func PowerOptimizer(s *balancer.Space) (res []*balancer.CellGroup, err error) {
 	var node balancer.Node
 
 	totalLoad := s.TotalLoad()
@@ -19,13 +19,15 @@ func PowerOptimizer(s *balancer.Space) (res []balancer.CellGroup, err error) {
 	l := float64(totalLoad) * p
 	var min, max uint64
 	for iter := range cells {
-		cg.AddCell(&cells[iter], false)
+		cg.AddCell(cells[iter], false)
 		max = cells[iter].ID()
 		if float64(cg.TotalLoad()) >= l {
 			if i == (len(cgs) - 1) {
 				continue
 			}
-			cg.SetRange(min, max)
+			if err := cg.SetRange(min, max); err != nil {
+				return nil, err
+			}
 			res = append(res, cg)
 			min = max
 			i++
@@ -57,8 +59,8 @@ func PowerOptimizerGreedy(s *balancer.Space) (res []balancer.CellGroup, err erro
 	}
 
 	for iter := range cells {
-		res[i].AddCell(&cells[iter], false)
-		ws[i] -= float64((&cells[iter]).Load())
+		res[i].AddCell(cells[iter], false)
+		ws[i] -= float64(cells[iter].Load())
 		if ws[i] <= 0 && i < lastCgIndex {
 			i++
 		}
@@ -69,7 +71,7 @@ func PowerOptimizerGreedy(s *balancer.Space) (res []balancer.CellGroup, err erro
 
 // PowerOptimizerPerms fills last CellGroup will cells.
 // Function mutates cellGroups in space.
-func PowerOptimizerPerms(s *balancer.Space) (res []balancer.CellGroup, err error) {
+func PowerOptimizerPerms(s *balancer.Space) (res []*balancer.CellGroup, err error) {
 	totalLoad := float64(s.TotalLoad())
 	totalPower := s.TotalPower()
 	cgs := s.CellGroups()
@@ -89,7 +91,7 @@ func PowerOptimizerPerms(s *balancer.Space) (res []balancer.CellGroup, err error
 			continue
 		}
 		l -= cl
-		cgs[lastCgIndex].AddCell(&cells[iter], true)
+		cgs[lastCgIndex].AddCell(cells[iter], true)
 	}
 
 	return cgs, nil

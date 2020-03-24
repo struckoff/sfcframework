@@ -10,6 +10,61 @@ import (
 )
 
 func main() {
+	kv()
+}
+
+func kv() {
+	rates := make(map[string]int)
+	ratesDi := make(map[[3]float64]int)
+
+	bal, err := balancer.NewBalancer(curve.Morton, 3, 64, transform.KVTransform,
+		optimizer.RangeOptimizer, nil)
+	if err != nil {
+		panic(err)
+	}
+	for iter := uint64(0); iter < 1000; iter++ {
+		n := balancer.NewMockNode(fmt.Sprintf("node-%d", iter%3), 1, 20)
+		if err := bal.AddNode(n); err != nil {
+			panic(err)
+		}
+	}
+
+	//if err := bal.Optimize(); err != nil {
+	//	panic(err)
+	//}
+	for iter := uint64(0); iter < 100; iter++ {
+		vals := make([]interface{}, 1)
+		vals[0] = fmt.Sprintf("key-%b", iter)
+		di := balancer.NewMockDataItem(fmt.Sprintf("di-%d", iter), 1024*iter, vals)
+		if n, err := bal.LocateData(di); err != nil {
+			panic(err)
+		} else {
+			rates[n.ID()]++
+		}
+	}
+
+	for key := range ratesDi {
+		if ratesDi[key] == 1 {
+			delete(ratesDi, key)
+		}
+	}
+	fmt.Println(rates, ratesDi)
+
+	rates = make(map[string]int)
+	for iter := uint64(0); iter < 100000; iter++ {
+		vals := make([]interface{}, 1)
+		vals[0] = "key-0"
+		di := balancer.NewMockDataItem(fmt.Sprintf("di-%d", iter), 1024*iter, vals)
+		if n, err := bal.LocateData(di); err != nil {
+			panic(err)
+		} else {
+			rates[n.ID()]++
+		}
+	}
+	fmt.Println(rates, ratesDi)
+}
+
+func space() {
 	rates := make(map[string]int)
 	ratesDi := make(map[[3]float64]int)
 
@@ -33,7 +88,7 @@ func main() {
 		vals[1] = float64(rand.Intn(180))
 		vals[2] = int64(iter + 1609459200)
 		di := balancer.NewMockDataItem(fmt.Sprintf("di-%d", iter), 1024*iter, vals)
-		if _, err := bal.AddData(di); err != nil {
+		if _, err := bal.LocateData(di); err != nil {
 			panic(err)
 		}
 	}
@@ -42,29 +97,28 @@ func main() {
 	}
 	for iter := uint64(0); iter < 100000; iter++ {
 		vals := make([]interface{}, 3)
-		lon := -90 + rand.Float64()  * 180
-		lat := -180 + rand.Float64() * 360
+		lon := -90 + rand.Float64()*180
+		lat := -180 + rand.Float64()*360
 		ts := int64(iter + 1609459200)
 		vals[0] = lon
 		vals[1] = lat
 		vals[2] = ts
-		k := [3]float64{lon,lat,float64(ts)}
+		k := [3]float64{lon, lat, float64(ts)}
 		ratesDi[k]++
 		di := balancer.NewMockDataItem(fmt.Sprintf("di-%d", iter), 1024*iter, vals)
-		if n, err := bal.AddData(di); err != nil {
+		if n, err := bal.LocateData(di); err != nil {
 			panic(err)
 		} else {
 			rates[n.ID()]++
 		}
 	}
 
-	for key := range ratesDi{
+	for key := range ratesDi {
 		//fmt.Println(key)
-		if (ratesDi[key]==1){
+		if ratesDi[key] == 1 {
 			delete(ratesDi, key)
 		}
 	}
 	fmt.Println(rates, ratesDi)
 	//fmt.Println(rates, ratesDi, bal.Space().Rates())
-
 }

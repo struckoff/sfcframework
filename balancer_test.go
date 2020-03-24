@@ -124,8 +124,8 @@ func TestBalancer_AddNode(t *testing.T) {
 //			//if err := b.AddNode(testNode); (err != nil) != tt.wantErr {
 //			//	t.Errorf("Balancer.AddNode() error = %v, wantErr %v", err, tt.wantErr)
 //			//}
-//			if err := b.AddData(tt.args.d); (err != nil) != tt.wantErr {
-//				t.Errorf("AddData() error = %v, wantErr %v", err, tt.wantErr)
+//			if err := b.LocateData(tt.args.d); (err != nil) != tt.wantErr {
+//				t.Errorf("LocateData() error = %v, wantErr %v", err, tt.wantErr)
 //			}
 //		})
 //	}

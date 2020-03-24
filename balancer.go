@@ -49,7 +49,7 @@ func (b *Balancer) Space() *Space {
 // AddNode adds node to the Space of balancer, and initiates rebalancing of cells
 // between cell groups.
 func (b *Balancer) AddNode(n Node) error {
-	if b.space.Len() == 0 || b.nType == nil{
+	if b.space.Len() == 0 || b.nType == nil {
 		b.nType = reflect.TypeOf(n)
 		//return b.space.AddNode(n)
 	} else if reflect.TypeOf(n) != b.nType {
@@ -66,14 +66,9 @@ func (b *Balancer) AddNode(n Node) error {
 	return nil
 }
 
-// GetNode returns the node for the given data item.
-func (b *Balancer) GetNode(d DataItem) (Node, error) {
-	return b.space.GetNode(d)
-}
-
-// AddData loads data into the Space of the balancer.
-func (b *Balancer) AddData(d DataItem) (Node, error) {
-	return b.space.AddData(d)
+// LocateData loads data into the Space of the balancer.
+func (b *Balancer) LocateData(d DataItem) (Node, error) {
+	return b.space.LocateData(d)
 }
 
 func (b *Balancer) Optimize() error {

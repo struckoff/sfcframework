@@ -12,7 +12,7 @@ import (
 type Space struct {
 	mu    sync.Mutex
 	cells map[uint64]*cell
-	cgs   []CellGroup
+	cgs   []*CellGroup
 	sfc   curve.Curve
 	tf    TransformFunc
 	load  uint64
@@ -22,7 +22,7 @@ func NewSpace(sfc curve.Curve, tf TransformFunc, nodes []Node) (*Space, error) {
 	s := Space{
 		mu:    sync.Mutex{},
 		cells: map[uint64]*cell{},
-		cgs:   []CellGroup{},
+		cgs:   []*CellGroup{},
 		sfc:   sfc,
 		tf:    tf,
 	}
@@ -47,10 +47,14 @@ func splitCells(n int, l uint64) ([]Range, error) {
 	if l < uint64(n) {
 		return nil, errors.New("curve length must be larger than number of nodes")
 	}
+
 	s := float64(l) / float64(n)
 	var c float64
 	i := 0
 	res := make([]Range, n)
+	if n == 0 {
+		return res, nil
+	}
 	for c < float64(l) {
 		nc := c + s
 		res[i] = Range{
@@ -65,14 +69,14 @@ func splitCells(n int, l uint64) ([]Range, error) {
 }
 
 //CellGroups returns a slice of all CellGroups in the space.
-func (s *Space) CellGroups() []CellGroup {
+func (s *Space) CellGroups() []*CellGroup {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.cgs
 }
 
 //Cells returns a slice of all cells in the space.
-func (s *Space) Cells() []cell {
+func (s *Space) Cells() []*cell {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	ids := make([]uint64, 0, len(s.cells))
@@ -82,9 +86,9 @@ func (s *Space) Cells() []cell {
 	sort.Slice(ids, func(i, j int) bool {
 		return ids[i] < ids[j]
 	})
-	res := make([]cell, len(s.cells))
+	res := make([]*cell, len(s.cells))
 	for i, id := range ids {
-		res[i] = *s.cells[id]
+		res[i] = s.cells[id]
 	}
 	return res
 }
@@ -106,7 +110,7 @@ func (s *Space) TotalPower() (power float64) {
 }
 
 // SetGroups replace groups in the space.
-func (s *Space) SetGroups(groups []CellGroup) {
+func (s *Space) SetGroups(groups []*CellGroup) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.cgs = groups
@@ -137,40 +141,25 @@ func (s *Space) AddNode(n Node) error {
 }
 
 func (s *Space) addNode(n Node) error {
-	if len(s.cgs) == 0 {
-		s.cgs = []CellGroup{NewCellGroup(n)}
-		return nil
+	//TODO May be s.cgs should be map
+	for iter := range s.cgs {
+		if s.cgs[iter].ID() == n.ID() {
+			s.cgs[iter].SetNode(n)
+			return nil
+		}
 	}
 	s.cgs = append(s.cgs, NewCellGroup(n))
 	return nil
 }
 
-// GetNode returns the node for the given data item.
-func (s *Space) GetNode(d DataItem) (Node, error) {
+//LocateData add data item to the space.
+func (s *Space) LocateData(d DataItem) (Node, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return s.getNode(d)
+	return s.locateData(d)
 }
 
-func (s *Space) getNode(d DataItem) (Node, error) {
-	cID, err := s.cellID(d)
-	if err != nil {
-		return nil, err
-	}
-	if _, ok := s.cells[cID]; !ok {
-		return nil, errors.New("unable to find node")
-	}
-	return s.cells[cID].cg.Node(), nil
-}
-
-//AddData add data item to the space.
-func (s *Space) AddData(d DataItem) (Node, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	return s.addData(d)
-}
-
-func (s *Space) addData(d DataItem) (Node, error) {
+func (s *Space) locateData(d DataItem) (Node, error) {
 	if len(s.cgs) == 0 {
 		return nil, errors.New("no nodes in the cluster")
 	}
@@ -194,17 +183,17 @@ func (s *Space) addData(d DataItem) (Node, error) {
 
 //cellID calculates the id of cell in space based on transform function and space filling curve.
 func (s *Space) cellID(d DataItem) (uint64, error) {
-	size := s.sfc.DimSize()
+	//size := s.sfc.DimensionSize()
 	if s.tf == nil {
 		return 0, errors.New("transform function is not set")
 	}
-	coords, err := s.tf(d.Values(), size)
+	coords, err := s.tf(d.Values(), s.sfc)
 	if err != nil {
 		return 0, err
 	}
 	cID, err := s.sfc.Encode(coords)
 	if err != nil {
-		return 0, errors.Errorf("item encoding error: %w", err)
+		return 0, errors.Wrap(err, "item encoding error")
 	}
 
 	return cID, nil
@@ -213,7 +202,7 @@ func (s *Space) cellID(d DataItem) (uint64, error) {
 func (s *Space) findCellGroup(cID uint64) (cg *CellGroup, ok bool) {
 	for iter := range s.cgs {
 		if s.cgs[iter].FitsRange(cID) {
-			return &s.cgs[iter], true
+			return s.cgs[iter], true
 		}
 	}
 	return nil, false

@@ -15,12 +15,12 @@ type Curve struct {
 	maxCode      uint64
 }
 
-func New(dims, bits uint64) (Curve, error) {
+func New(dims, bits uint64) (*Curve, error) {
 	if bits <= 0 || dims <= 0 {
-		return Curve{}, errors.New("Number of bits and dimension must be greater than 0")
+		return nil, errors.New("Number of bits and dimension must be greater than 0")
 	}
 
-	mc := Curve{
+	mc := &Curve{
 		dimensions: dims,
 		bits:       bits,
 		length:     (bits * dims) - bits,
@@ -34,7 +34,7 @@ func New(dims, bits uint64) (Curve, error) {
 
 //Decode returns coordinates for a given code(distance)
 //Method will return error if code(distance) exceeds the limit(2 ^ (dims * bits) - 1)
-func (c Curve) Decode(code uint64) (coords []uint64, err error) {
+func (c *Curve) Decode(code uint64) (coords []uint64, err error) {
 	if err := c.validateCode(code); err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func (c Curve) Decode(code uint64) (coords []uint64, err error) {
 //Method will return error if:
 //  - buffer less than number of dimensions
 //	- code(distance) exceeds the limit(2 ^ (dims * bits) - 1)
-func (c Curve) DecodeWithBuffer(buf []uint64, code uint64) (coords []uint64, err error) {
+func (c *Curve) DecodeWithBuffer(buf []uint64, code uint64) (coords []uint64, err error) {
 	if len(buf) < int(c.dimensions) {
 		return nil, errors.New("buffer length less then dimensions")
 	}
@@ -58,35 +58,21 @@ func (c Curve) DecodeWithBuffer(buf []uint64, code uint64) (coords []uint64, err
 	return buf, nil
 }
 
-func (c Curve) validateCode(code uint64) error {
+func (c *Curve) validateCode(code uint64) error {
 	if code > c.maxCode {
 		return fmt.Errorf("code == %v exceeds limit (2^(dimensions * bits) - 1) == %v", code, c.maxSize)
 	}
 	return nil
 }
 
-func (c Curve) compacter(coords []uint64, code uint64) []uint64 {
+func (c *Curve) compacter(coords []uint64, code uint64) []uint64 {
 	for iter := uint64(0); iter < c.dimensions; iter++ {
 		coords[iter] = c.compact(code >> iter)
 	}
 	return coords
 }
 
-func (c Curve) compacterAsync(coords []uint64, code uint64) []uint64 {
-	ch := make(chan [2]uint64, c.dimensions)
-	for iter := uint64(0); iter < c.dimensions; iter++ {
-		go func(ch chan [2]uint64, iter uint64) {
-			ch <- [2]uint64{iter, c.compact(code >> iter)}
-		}(ch, iter)
-	}
-	for iter := uint64(0); iter < c.dimensions; iter++ {
-		pair := <-ch
-		coords[pair[0]] = pair[1]
-	}
-	return coords
-}
-
-func (c Curve) compact(x uint64) uint64 {
+func (c *Curve) compact(x uint64) uint64 {
 	//x &= 0x55555555
 	//x = (x ^ (x >> 1)) & 0x33333333
 	//x = (x ^ (x >> 2)) & 0x0f0f0f0f
@@ -101,7 +87,7 @@ func (c Curve) compact(x uint64) uint64 {
 	return x
 }
 
-func (c Curve) masks() (masks []uint64, lshifts []uint64) {
+func (c *Curve) masks() (masks []uint64, lshifts []uint64) {
 	mask := uint64((1 << c.bits) - 1)
 
 	shift := c.dimensions * (c.bits - 1)
@@ -140,7 +126,7 @@ func (c Curve) masks() (masks []uint64, lshifts []uint64) {
 
 //Encode returns code(distance) for a given set of coordinates
 //Method will return error if any of the coordinates exceeds limit(2 ^ bits - 1)
-func (c Curve) Encode(coords []uint64) (code uint64, err error) {
+func (c *Curve) Encode(coords []uint64) (code uint64, err error) {
 	if err := c.validateCoordinates(coords); err != nil {
 		return 0, err
 	}
@@ -150,7 +136,7 @@ func (c Curve) Encode(coords []uint64) (code uint64, err error) {
 	return
 }
 
-func (c Curve) validateCoordinates(coords []uint64) error {
+func (c *Curve) validateCoordinates(coords []uint64) error {
 	if len(coords) < int(c.dimensions) {
 		return fmt.Errorf("number of coordinates == %v less then dimensions == %v", len(coords), c.dimensions)
 	}
@@ -162,7 +148,7 @@ func (c Curve) validateCoordinates(coords []uint64) error {
 	return nil
 }
 
-func (c Curve) split(x uint64) uint64 {
+func (c *Curve) split(x uint64) uint64 {
 	//shiftIter := len(c.masksArray) - 1
 	for iter := 0; iter < len(c.masksArray); iter++ {
 		x = (x | (x << c.lshiftsArray[iter])) & c.masksArray[iter]
@@ -172,13 +158,21 @@ func (c Curve) split(x uint64) uint64 {
 	return x
 }
 
-// DimSize returns the maximum coordinate value in any dimension
-func (c Curve) DimSize() uint64 {
+// DimensionSize returns the maximum coordinate value in any dimension
+func (c *Curve) DimensionSize() uint64 {
 	return c.maxSize
 }
 
 // Length returns the maximum distance along curve(code value)
 // 2^(dimensions * bits) - 1
-func (c Curve) Length() uint64 {
+func (c *Curve) Length() uint64 {
 	return c.maxCode
+}
+
+func (c *Curve) Dimensions() uint64 {
+	return c.dimensions
+}
+
+func (c *Curve) Bits() uint64 {
+	return c.bits
 }

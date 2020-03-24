@@ -13,8 +13,8 @@ type MockNode struct {
 	capacity MockCapacity
 }
 
-func NewMockNode(id string, power float64, capacity float64) *MockNode {
-	return &MockNode{
+func NewMockNode(id string, power float64, capacity float64) MockNode {
+	return MockNode{
 		id:       id,
 		power:    MockPower{power},
 		capacity: MockCapacity{capacity},
@@ -37,15 +37,15 @@ func (n MockNode) Capacity() Capacity {
 }
 
 func GenerateMockCells(loadSet ...uint64) map[uint64]*cell {
-	cs := make(map[uint64]*cell, 0)
+	cs := make(map[uint64]*cell)
 	for iter, load := range loadSet {
 		cs[uint64(iter)] = &cell{load: load, id: uint64(iter)}
 	}
 	return cs
 }
 
-func GenerateMockCellGroup(cs map[uint64]*cell, rates []int, powers []float64) []CellGroup {
-	cgs := make([]CellGroup, len(rates))
+func GenerateMockCellGroup(cs map[uint64]*cell, rates []int, powers []float64) []*CellGroup {
+	cgs := make([]*CellGroup, len(rates))
 	var min, max uint64
 	for iter, rate := range rates {
 		var load uint64
@@ -56,20 +56,22 @@ func GenerateMockCellGroup(cs map[uint64]*cell, rates []int, powers []float64) [
 		}
 		sort.Slice(cells, func(i, j int) bool { return cells[i].ID() < cells[j].ID() })
 		for iterCell := range cells[:rate] {
-			cells[iterCell].cg = &cgs[iter]
+			cells[iterCell].cg = cgs[iter]
 			cgs[iter].cells[cells[iterCell].ID()] = cells[iterCell]
 			load += cells[iterCell].load
 		}
 		max = min + uint64(rate)
 		cells = cells[rate:]
 		cgs[iter].load = load
-		cgs[iter].SetRange(min, max)
+		if err := cgs[iter].SetRange(min, max); err != nil {
+			panic(err)
+		}
 		min = max
 	}
 	return cgs
 }
 
-func CompareCellGroup(cg0, cg1 CellGroup) (bool, string) {
+func CompareCellGroup(cg0, cg1 *CellGroup) (bool, string) {
 	if !reflect.DeepEqual(cg0.cRange, cg1.cRange) {
 		return false, fmt.Sprintf("Different CellGroup.cRange cg0 = %v, cg1 = %v", cg0.cRange, cg1.cRange)
 	}

@@ -1,13 +1,12 @@
 package optimizer
 
 import (
-	"fmt"
 	"github.com/pkg/errors"
 	balancer "github.com/struckoff/SFCFramework"
 	"math"
 )
 
-func RangeOptimizer(s *balancer.Space) (res []balancer.CellGroup, err error) {
+func RangeOptimizer(s *balancer.Space) (res []*balancer.CellGroup, err error) {
 	totalPower := s.TotalPower()
 	cgs := s.CellGroups()
 	var check float64
@@ -25,18 +24,18 @@ func RangeOptimizer(s *balancer.Space) (res []balancer.CellGroup, err error) {
 
 	if check < 1 {
 		if err := cgs[len(cgs)-1].SetRange(min, s.Capacity()); err != nil {
-			return nil, errors.Wrap(err, "count optimizer error")
+			return nil, errors.Wrap(err, "range optimizer error")
 		}
 	}
 	cells := s.Cells()
 	for iter := range cells {
 		for cgiter := range cgs {
 			if cgs[cgiter].FitsRange(cells[iter].ID()) {
-				cgs[cgiter].AddCell(&cells[iter], true)
+				cgs[cgiter].AddCell(cells[iter], true)
 				break
 			}
 		}
 	}
-	fmt.Println(check, len(s.Cells()), len(cells), s.Capacity()+1)
+	//fmt.Println(check, len(s.Cells()), len(cells), s.Capacity()+1)
 	return cgs, nil
 }

@@ -1,9 +1,13 @@
 package transform
 
-import "errors"
+import (
+	"errors"
+	"github.com/struckoff/SFCFramework/curve"
+)
 
-func SpaceTransform(values []interface{}, dimSize uint64) ([]uint64, error) {
-	if len(values) != 3 {
+func SpaceTransform(values []interface{}, sfc curve.Curve) ([]uint64, error) {
+	dimSize := sfc.DimensionSize()
+	if len(values) != 3 || dimSize != 3 {
 		return nil, errors.New("number of dimensions must be 3")
 	}
 	res := make([]uint64, 3)

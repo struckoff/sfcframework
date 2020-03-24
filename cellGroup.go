@@ -6,6 +6,7 @@ import (
 )
 
 type CellGroup struct {
+	id     string
 	mu     sync.Mutex
 	node   Node
 	cells  map[uint64]*cell
@@ -13,11 +14,16 @@ type CellGroup struct {
 	cRange Range
 }
 
-func NewCellGroup(n Node) CellGroup {
-	return CellGroup{
+func NewCellGroup(n Node) *CellGroup {
+	return &CellGroup{
+		id:    n.ID(),
 		node:  n,
 		cells: map[uint64]*cell{},
 	}
+}
+
+func (cg *CellGroup) ID() string {
+	return cg.id
 }
 
 func (cg *CellGroup) Node() Node {
@@ -35,18 +41,18 @@ func (cg *CellGroup) SetNode(n Node) {
 func (cg *CellGroup) SetRange(min, max uint64) error {
 	cg.mu.Lock()
 	defer cg.mu.Unlock()
-	if min > max{
+	if min > max {
 		return errors.Errorf("min(%d) should be less or equall then max(%d)", min, max)
 	}
 	cg.cRange = Range{
 		Min: min,
 		Max: max,
-		Len: max-min,
+		Len: max - min,
 	}
 	return nil
 }
 
-func (cg *CellGroup) FitsRange(index uint64) bool{
+func (cg *CellGroup) FitsRange(index uint64) bool {
 	cg.mu.Lock()
 	defer cg.mu.Unlock()
 	return index >= cg.cRange.Min && index < cg.cRange.Max
@@ -74,7 +80,6 @@ func (cg *CellGroup) RemoveCell(id uint64) {
 	cg.mu.Lock()
 	defer cg.mu.Unlock()
 	delete(cg.cells, id)
-	return
 }
 
 func (cg *CellGroup) TotalLoad() uint64 {

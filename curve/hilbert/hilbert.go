@@ -28,11 +28,11 @@ type Curve struct {
 	maxCode    uint64
 }
 
-func New(dims, bits uint64) (Curve, error) {
+func New(dims, bits uint64) (*Curve, error) {
 	if bits <= 0 || dims <= 0 {
-		return Curve{}, errors.New("number of bits and dimension must be greater than 0")
+		return nil, errors.New("number of bits and dimension must be greater than 0")
 	}
-	return Curve{
+	return &Curve{
 		dimensions: dims,
 		bits:       bits,
 		length:     bits * dims,
@@ -43,7 +43,7 @@ func New(dims, bits uint64) (Curve, error) {
 
 //Decode returns coordinates for a given code(distance).
 //Method will return error if code(distance) exceeds the limit(2 ^ (dims * bits) - 1)
-func (c Curve) Decode(code uint64) (coords []uint64, err error) {
+func (c *Curve) Decode(code uint64) (coords []uint64, err error) {
 	if err := c.validateCode(code); err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func (c Curve) Decode(code uint64) (coords []uint64, err error) {
 //Method will return error if:
 //  - buffer less than number of dimensions
 //	- code(distance) exceeds the limit(2 ^ (dims * bits) - 1)
-func (c Curve) DecodeWithBuffer(buf []uint64, code uint64) (coords []uint64, err error) {
+func (c *Curve) DecodeWithBuffer(buf []uint64, code uint64) (coords []uint64, err error) {
 	if len(buf) < int(c.dimensions) {
 		return nil, errors.New("buffer length less then dimensions")
 	}
@@ -74,7 +74,7 @@ func (c Curve) DecodeWithBuffer(buf []uint64, code uint64) (coords []uint64, err
 	return coords, nil
 }
 
-func (c Curve) validateCode(code uint64) error {
+func (c *Curve) validateCode(code uint64) error {
 	if code > c.maxCode {
 		return fmt.Errorf("code == %v exceeds limit (2^(dimensions * bits) - 1) == %v", code, c.maxSize)
 	}
@@ -82,7 +82,7 @@ func (c Curve) validateCode(code uint64) error {
 }
 
 // TODO OPTIMIZE
-func (c Curve) parseIndex(coords []uint64, code uint64) ([]uint64, error) {
+func (c *Curve) parseIndex(coords []uint64, code uint64) ([]uint64, error) {
 	var bitLen int
 
 	b := make([]byte, bitSize)
@@ -113,7 +113,7 @@ func (c Curve) parseIndex(coords []uint64, code uint64) ([]uint64, error) {
 //! coords may be altered by method
 //Encode returns code(distance) for a given set of coordinates
 //Method will return error if any of the coordinates exceeds limit(2 ^ bits - 1)
-func (c Curve) Encode(coords []uint64) (code uint64, err error) {
+func (c *Curve) Encode(coords []uint64) (code uint64, err error) {
 	if err := c.validateCoordinates(coords); err != nil {
 		return 0, err
 	}
@@ -152,7 +152,7 @@ func (c Curve) Encode(coords []uint64) (code uint64, err error) {
 	return
 }
 
-func (c Curve) validateCoordinates(coords []uint64) error {
+func (c *Curve) validateCoordinates(coords []uint64) error {
 	if len(coords) < int(c.dimensions) {
 		return fmt.Errorf("number of coordinates == %v less then dimensions == %v", len(coords), c.dimensions)
 	}
@@ -164,7 +164,7 @@ func (c Curve) validateCoordinates(coords []uint64) error {
 	return nil
 }
 
-func (c Curve) transpose(coords []uint64) []uint64 {
+func (c *Curve) transpose(coords []uint64) []uint64 {
 	m := uint64(2 << (c.bits - 1))
 	// Note that x is mutated by this method (as a performance improvement
 	// to avoid allocation)
@@ -195,7 +195,7 @@ func (c Curve) transpose(coords []uint64) []uint64 {
 	return coords
 }
 
-func (c Curve) prepareIndex(coords []uint64) uint64 {
+func (c *Curve) prepareIndex(coords []uint64) uint64 {
 	tmpCoords := make([]byte, bitSize)
 	bIndex := c.length - 1
 	mask := uint64(1 << (c.bits - 1))
@@ -213,13 +213,21 @@ func (c Curve) prepareIndex(coords []uint64) uint64 {
 	return binary.LittleEndian.Uint64(tmpCoords)
 }
 
-// DimSize returns the maximum coordinate value in any dimension
-func (c Curve) DimSize() uint64 {
+// DimensionSize returns the maximum coordinate value in any dimension
+func (c *Curve) DimensionSize() uint64 {
 	return c.maxSize
 }
 
 // Length returns the maximum distance along curve(code value)
 // 2^(dimensions * bits) - 1
-func (c Curve) Length() uint64 {
+func (c *Curve) Length() uint64 {
 	return c.maxCode
+}
+
+func (c *Curve) Dimensions() uint64 {
+	return c.dimensions
+}
+
+func (c *Curve) Bits() uint64 {
+	return c.bits
 }

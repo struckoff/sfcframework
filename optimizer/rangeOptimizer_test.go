@@ -58,12 +58,6 @@ func TestRangeOptimizer(t *testing.T) {
 					return
 				}
 			}
-			//if !reflect.DeepEqual(got, rgs) {
-			//	for _, cg := range got{
-			//		fmt.Println(cg.)
-			//	}
-			//	t.Errorf("RangeOptimizer() got = %v, want %v", got, rgs)
-			//}
 		})
 	}
 }

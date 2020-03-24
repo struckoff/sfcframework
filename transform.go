@@ -1,3 +1,5 @@
 package balancer
 
-type TransformFunc func(values []interface{}, dimSize uint64) ([]uint64, error)
+import "github.com/struckoff/SFCFramework/curve"
+
+type TransformFunc func(values []interface{}, sfc curve.Curve) ([]uint64, error)
