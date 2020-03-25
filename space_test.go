@@ -22,7 +22,13 @@ func Test_splitCells(t *testing.T) {
 				n: 5,
 				l: 5,
 			},
-			want:    []Range{{0, 1}, {1, 2}, {2, 3}, {3, 4}, {4, 5}},
+			want: []Range{
+				{0, 1, 1},
+				{1, 2, 1},
+				{2, 3, 1},
+				{3, 4, 1},
+				{4, 5, 1},
+			},
 			wantErr: false,
 		},
 		{
@@ -40,7 +46,11 @@ func Test_splitCells(t *testing.T) {
 				n: 3,
 				l: 20,
 			},
-			want:    []Range{{0, 7}, {7, 14}, {14, 20}},
+			want: []Range{
+				{0, 7, 7},
+				{7, 14, 7},
+				{14, 20, 6},
+			},
 			wantErr: false,
 		},
 		{
@@ -49,7 +59,13 @@ func Test_splitCells(t *testing.T) {
 				n: 5,
 				l: 256,
 			},
-			want:    []Range{{0, 52}, {52, 103}, {103, 154}, {154, 205}, {205, 256}},
+			want: []Range{
+				{0, 52, 52},
+				{52, 103, 51},
+				{103, 154, 51},
+				{154, 205, 51},
+				{205, 256, 51},
+			},
 			wantErr: false,
 		},
 	}

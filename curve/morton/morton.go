@@ -17,7 +17,7 @@ type Curve struct {
 
 func New(dims, bits uint64) (*Curve, error) {
 	if bits <= 0 || dims <= 0 {
-		return nil, errors.New("Number of bits and dimension must be greater than 0")
+		return nil, errors.New("number of bits and dimension must be greater than 0")
 	}
 
 	mc := &Curve{
@@ -81,7 +81,8 @@ func (c *Curve) compact(x uint64) uint64 {
 
 	x &= c.masksArray[len(c.masksArray)-1]
 	for iter := 0; iter < len(c.masksArray)-1; iter++ {
-		x = (x ^ (x >> (1 << iter))) & (c.masksArray[len(c.masksArray)-2-iter]) //TODO may be "1 << iter" should be pregenerated
+		//TODO may be "1 << iter" should be pregenerated
+		x = (x ^ (x >> (1 << iter))) & (c.masksArray[len(c.masksArray)-2-iter])
 	}
 
 	return x
@@ -118,10 +119,8 @@ func (c *Curve) masks() (masks []uint64, lshifts []uint64) {
 			masks = append(masks, mask)
 			lshifts = append(lshifts, shift)
 		}
-
 	}
-
-	return
+	return masks, lshifts
 }
 
 //Encode returns code(distance) for a given set of coordinates

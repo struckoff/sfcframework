@@ -33,7 +33,7 @@ func TestBalancer_AddNode(t *testing.T) {
 			balancer: &Balancer{
 				nType: reflect.TypeOf(testNode),
 				space: &Space{
-					cgs: []CellGroup{NewCellGroup(testNode)},
+					cgs: []*CellGroup{NewCellGroup(testNode)},
 				},
 			},
 			node: MockNode{
@@ -48,7 +48,7 @@ func TestBalancer_AddNode(t *testing.T) {
 			balancer: &Balancer{
 				nType: reflect.TypeOf(testNode),
 				space: &Space{
-					cgs: []CellGroup{NewCellGroup(testNode)},
+					cgs: []*CellGroup{NewCellGroup(testNode)},
 				},
 			},
 			node:    nil,
