@@ -152,6 +152,24 @@ func (s *Space) addNode(n Node) error {
 	return nil
 }
 
+func (s *Space) RemoveNodeByID(id string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if err := s.removeNodeByID(id); err != nil {
+		return err
+	}
+	return nil
+}
+func (s *Space) removeNodeByID(id string) error {
+	for iter := range s.cgs {
+		if s.cgs[iter].ID() == id {
+			s.cgs = append(s.cgs[iter:], s.cgs[iter+1:]...)
+			return nil
+		}
+	}
+	return errors.Errorf("node(%s) not found", id)
+}
+
 //LocateData add data item to the space.
 func (s *Space) LocateData(d DataItem) (Node, error) {
 	s.mu.Lock()
@@ -206,4 +224,14 @@ func (s *Space) findCellGroup(cID uint64) (cg *CellGroup, ok bool) {
 		}
 	}
 	return nil, false
+}
+
+func (s *Space) Nodes() []Node {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	res := make([]Node, len(s.cgs))
+	for iter := range s.cgs {
+		res[iter] = s.cgs[iter].Node()
+	}
+	return res
 }

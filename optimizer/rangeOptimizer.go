@@ -4,6 +4,8 @@ import (
 	"github.com/pkg/errors"
 	balancer "github.com/struckoff/SFCFramework"
 	"math"
+	"sort"
+	"strings"
 )
 
 func RangeOptimizer(s *balancer.Space) (res []*balancer.CellGroup, err error) {
@@ -11,6 +13,8 @@ func RangeOptimizer(s *balancer.Space) (res []*balancer.CellGroup, err error) {
 	cgs := s.CellGroups()
 	var check float64
 	var max, min uint64
+
+	sort.Slice(cgs, func(i, j int) bool { return strings.Compare(cgs[i].ID(), cgs[j].ID()) < 0 })
 
 	for iter := 0; iter < len(cgs); iter++ {
 		min = max

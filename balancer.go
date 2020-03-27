@@ -52,10 +52,27 @@ func (b *Balancer) AddNode(n Node) error {
 	if b.space.Len() == 0 || b.nType == nil {
 		b.nType = reflect.TypeOf(n)
 		//return b.space.AddNode(n)
-	} else if reflect.TypeOf(n) != b.nType {
-		return errors.New("incorrect node type")
 	}
+	//else if reflect.TypeOf(n) != b.nType {
+	//	return errors.New("incorrect node type")
+	//}
 	if err := b.space.AddNode(n); err != nil {
+		return err
+	}
+	cgs, err := b.of(b.space)
+	if err != nil {
+		return err
+	}
+	b.space.SetGroups(cgs)
+	return nil
+}
+
+func (b *Balancer) Nodes() []Node {
+	return b.space.Nodes()
+}
+
+func (b *Balancer) RemoveNodeByID(id string) error {
+	if err := b.space.RemoveNodeByID(id); err != nil {
 		return err
 	}
 	cgs, err := b.of(b.space)
