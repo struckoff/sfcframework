@@ -152,15 +152,15 @@ func (s *Space) addNode(n Node) error {
 	return nil
 }
 
-func (s *Space) RemoveNodeByID(id string) error {
+func (s *Space) RemoveNode(id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if err := s.removeNodeByID(id); err != nil {
+	if err := s.removeNode(id); err != nil {
 		return err
 	}
 	return nil
 }
-func (s *Space) removeNodeByID(id string) error {
+func (s *Space) removeNode(id string) error {
 	for iter := range s.cgs {
 		if s.cgs[iter].ID() == id {
 			s.cgs = append(s.cgs[iter:], s.cgs[iter+1:]...)

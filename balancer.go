@@ -71,8 +71,8 @@ func (b *Balancer) Nodes() []Node {
 	return b.space.Nodes()
 }
 
-func (b *Balancer) RemoveNodeByID(id string) error {
-	if err := b.space.RemoveNodeByID(id); err != nil {
+func (b *Balancer) RemoveNode(id string) error {
+	if err := b.space.RemoveNode(id); err != nil {
 		return err
 	}
 	cgs, err := b.of(b.space)
