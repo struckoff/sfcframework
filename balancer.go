@@ -48,7 +48,7 @@ func (b *Balancer) Space() *Space {
 
 // AddNode adds node to the Space of balancer, and initiates rebalancing of cells
 // between cell groups.
-func (b *Balancer) AddNode(n Node) error {
+func (b *Balancer) AddNode(n Node, optimize bool) error {
 	if b.space.Len() == 0 || b.nType == nil {
 		b.nType = reflect.TypeOf(n)
 		//return b.space.AddNode(n)
@@ -59,25 +59,27 @@ func (b *Balancer) AddNode(n Node) error {
 	if err := b.space.AddNode(n); err != nil {
 		return err
 	}
-	cgs, err := b.of(b.space)
-	if err != nil {
-		return err
+	if optimize {
+		cgs, err := b.of(b.space)
+		if err != nil {
+			return err
+		}
+		b.space.SetGroups(cgs)
 	}
-	b.space.SetGroups(cgs)
 	return nil
 }
 
-func (b *Balancer) SetNodes(ns []Node) error {
-	if err := b.space.SetNodes(ns); err != nil {
-		return err
-	}
-	cgs, err := b.of(b.space)
-	if err != nil {
-		return err
-	}
-	b.space.SetGroups(cgs)
-	return nil
-}
+//func (b *Balancer) SetNodes(ns []Node) error {
+//	if err := b.space.SetNodes(ns); err != nil {
+//		return err
+//	}
+//	cgs, err := b.of(b.space)
+//	if err != nil {
+//		return err
+//	}
+//	b.space.SetGroups(cgs)
+//	return nil
+//}
 
 func (b *Balancer) Nodes() []Node {
 	return b.space.Nodes()

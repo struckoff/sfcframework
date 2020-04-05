@@ -152,22 +152,22 @@ func (s *Space) addNode(n Node) error {
 	return nil
 }
 
-func (s *Space) SetNodes(ns []Node) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if err := s.setNodes(ns); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (s *Space) setNodes(ns []Node) error {
-	s.cgs = nil
-	for _, n := range ns {
-		s.cgs = append(s.cgs, NewCellGroup(n))
-	}
-	return nil
-}
+//func (s *Space) SetNodes(ns []Node) error {
+//	s.mu.Lock()
+//	defer s.mu.Unlock()
+//	if err := s.setNodes(ns); err != nil {
+//		return err
+//	}
+//	return nil
+//}
+//
+//func (s *Space) setNodes(ns []Node) error {
+//	s.cgs = nil
+//	for _, n := range ns {
+//		s.cgs = append(s.cgs, NewCellGroup(n))
+//	}
+//	return nil
+//}
 
 func (s *Space) RemoveNode(id string) error {
 	s.mu.Lock()
