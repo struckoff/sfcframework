@@ -69,17 +69,9 @@ func (b *Balancer) AddNode(n Node, optimize bool) error {
 	return nil
 }
 
-//func (b *Balancer) SetNodes(ns []Node) error {
-//	if err := b.space.SetNodes(ns); err != nil {
-//		return err
-//	}
-//	cgs, err := b.of(b.space)
-//	if err != nil {
-//		return err
-//	}
-//	b.space.SetGroups(cgs)
-//	return nil
-//}
+func (b *Balancer) GetNode(id string) (Node, bool) {
+	return b.space.GetNode(id)
+}
 
 func (b *Balancer) Nodes() []Node {
 	return b.space.Nodes()

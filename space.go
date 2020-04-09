@@ -152,6 +152,23 @@ func (s *Space) addNode(n Node) error {
 	return nil
 }
 
+//GetNode returns node with given ID.
+func (s *Space) GetNode(id string) (Node, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.getNode(id)
+}
+
+func (s *Space) getNode(id string) (Node, bool) {
+	//TODO May be s.cgs should be map
+	for iter := range s.cgs {
+		if s.cgs[iter].ID() == id {
+			return s.cgs[iter].Node(), true
+		}
+	}
+	return nil, false
+}
+
 //func (s *Space) SetNodes(ns []Node) error {
 //	s.mu.Lock()
 //	defer s.mu.Unlock()
