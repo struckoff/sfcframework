@@ -43,6 +43,5 @@ func RangeOptimizer(s *balancer.Space) (res []*balancer.CellGroup, err error) {
 			}
 		}
 	}
-	//fmt.Println(check, len(s.Cells()), len(cells), s.Capacity()+1)
 	return cgs, nil
 }

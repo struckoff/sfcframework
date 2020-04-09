@@ -180,11 +180,7 @@ func (s *Space) RemoveNode(id string) error {
 func (s *Space) removeNode(id string) error {
 	for iter := range s.cgs {
 		if s.cgs[iter].ID() == id {
-			if iter == 0{
-				s.cgs = s.cgs[1:]
-			} else {
-				s.cgs = append(s.cgs[iter:], s.cgs[iter+1:]...)
-			}
+			s.cgs = append(s.cgs[:iter], s.cgs[iter+1:]...)
 			return nil
 		}
 	}
