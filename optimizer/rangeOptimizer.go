@@ -11,6 +11,9 @@ import (
 func RangeOptimizer(s *balancer.Space) (res []*balancer.CellGroup, err error) {
 	totalPower := s.TotalPower()
 	cgs := s.CellGroups()
+	if len(cgs) == 0 {
+		return res, nil
+	}
 	var check float64
 	var max, min uint64
 
