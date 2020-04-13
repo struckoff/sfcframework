@@ -70,8 +70,10 @@ func PowerRangeOptimizer(s *balancer.Space) (res []*balancer.CellGroup, err erro
 			if cells[citer].ID() >= min && cells[citer].ID() <= max {
 				if f <= 0{
 					max = cells[citer].ID()
+					break
 				}
 				f -= float64(cells[citer].Load())
+				cgs[iter].AddCell(cells[citer], true)
 			}
 		}
 
@@ -85,14 +87,10 @@ func PowerRangeOptimizer(s *balancer.Space) (res []*balancer.CellGroup, err erro
 		if err := cgs[len(cgs)-1].SetRange(min, s.Capacity()); err != nil {
 			return nil, errors.Wrap(err, "range optimizer error")
 		}
-	}
-	for iter := range cells {
-		for cgiter := range cgs {
-			if cgs[cgiter].FitsRange(cells[iter].ID()) {
-				cgs[cgiter].AddCell(cells[iter], true)
-				break
+		for citer := range cells[max:] {
+			cgs[len(cgs)-1].AddCell(cells[citer], true)
 			}
-		}
 	}
+
 	return cgs, nil
 }
