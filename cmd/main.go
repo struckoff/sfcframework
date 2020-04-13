@@ -18,7 +18,7 @@ func main() {
 
 func kvcompare() {
 	var keys []string
-	var rates  map[string]int
+	var rates map[string]int
 	for iter := uint64(0); iter < 100_000; iter++ {
 		key := fmt.Sprintf("key-%d", iter)
 		//key := fmt.Sprintf("key-%d", rand.Int())
@@ -100,6 +100,9 @@ func kvPower(keys []string, nodes map[string]int) map[string]int {
 		} else {
 			rates[n.ID()]++
 		}
+		if err := bal.Optimize(); err != nil {
+			panic(err)
+		}
 	}
 	return rates
 }
@@ -123,7 +126,9 @@ func space() {
 		panic(err)
 	}
 
-	if err:=bal.Optimize(); err != nil {panic(err)}
+	if err := bal.Optimize(); err != nil {
+		panic(err)
+	}
 
 	for iter := uint64(0); iter < 10; iter++ {
 		vals := make([]interface{}, 3)
