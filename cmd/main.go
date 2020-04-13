@@ -16,9 +16,14 @@ func main() {
 	kvcompare()
 }
 
+const (
+	DIMS = 3
+	SIZE = 8
+)
+
 func kvcompare() {
 	var keys []string
-	var rates map[string]int
+	rates := make(map[string]int)
 	for iter := uint64(0); iter < 100_000; iter++ {
 		key := fmt.Sprintf("key-%d", iter)
 		//key := fmt.Sprintf("key-%d", rand.Int())
@@ -29,26 +34,35 @@ func kvcompare() {
 		"node-1": 1,
 		"node-2": 1,
 		"node-3": 1,
+		//"node-4": 1,
+		//"node-5": 1,
+		//"node-6": 1,
+		//"node-7": 1,
 	}
 
-	rates = kv(keys, nodes)
-	fmt.Println("SFC", rates)
-	rates = kvPower(keys, nodes)
-	fmt.Println("SFC Power", rates)
+	rates = kvMorton(keys, nodes)
+	fmt.Println("SFC Morton", rates)
+	rates = kvHilbert(keys, nodes)
+	fmt.Println("SFC Hilbert", rates)
+	rates = kvPowerMorton(keys, nodes)
+	fmt.Println("SFC Morton Power", rates)
+	rates = kvPowerHilbert(keys, nodes)
+	fmt.Println("SFC Hilbert Power", rates)
 	rates = hring(keys, nodes)
 	fmt.Println("serialx/hashring", rates)
 	rates = consring(keys, nodes)
 	fmt.Println("buraksezer/consistent", rates)
 }
 
-func kv(keys []string, nodes map[string]int) map[string]int {
+func kvMorton(keys []string, nodes map[string]int) map[string]int {
+
 	rand.Seed(42)
 	var ns []balancer.Node
 	for n, w := range nodes {
 		ns = append(ns, balancer.NewMockNode(n, float64(w), 20))
 	}
 
-	bal, err := balancer.NewBalancer(curve.Morton, 3, 64, transform.KVTransform,
+	bal, err := balancer.NewBalancer(curve.Morton, DIMS, SIZE, transform.KVTransform,
 		optimizer.RangeOptimizer, ns)
 	if err != nil {
 		panic(err)
@@ -59,6 +73,9 @@ func kv(keys []string, nodes map[string]int) map[string]int {
 	}
 
 	rates := make(map[string]int)
+	for n := range nodes {
+		rates[n] = 0
+	}
 	for _, key := range keys {
 		vals := make([]interface{}, 1)
 		vals[0] = key
@@ -72,14 +89,48 @@ func kv(keys []string, nodes map[string]int) map[string]int {
 	}
 	return rates
 }
-func kvPower(keys []string, nodes map[string]int) map[string]int {
+func kvHilbert(keys []string, nodes map[string]int) map[string]int {
 	rand.Seed(42)
 	var ns []balancer.Node
 	for n, w := range nodes {
 		ns = append(ns, balancer.NewMockNode(n, float64(w), 20))
 	}
 
-	bal, err := balancer.NewBalancer(curve.Morton, 3, 64, transform.KVTransform,
+	bal, err := balancer.NewBalancer(curve.Hilbert, DIMS, SIZE, transform.KVTransform,
+		optimizer.RangeOptimizer, ns)
+	if err != nil {
+		panic(err)
+	}
+
+	if err := bal.Optimize(); err != nil {
+		panic(err)
+	}
+
+	rates := make(map[string]int)
+	for n := range nodes {
+		rates[n] = 0
+	}
+	for _, key := range keys {
+		vals := make([]interface{}, 1)
+		vals[0] = key
+		di := balancer.NewMockDataItem(key, 1, vals)
+
+		if n, err := bal.LocateData(di); err != nil {
+			panic(err)
+		} else {
+			rates[n.ID()]++
+		}
+	}
+	return rates
+}
+func kvPowerMorton(keys []string, nodes map[string]int) map[string]int {
+	rand.Seed(42)
+	var ns []balancer.Node
+	for n, w := range nodes {
+		ns = append(ns, balancer.NewMockNode(n, float64(w), 20000))
+	}
+
+	bal, err := balancer.NewBalancer(curve.Morton, DIMS, SIZE, transform.KVTransform,
 		optimizer.PowerRangeOptimizer, ns)
 	if err != nil {
 		panic(err)
@@ -90,6 +141,46 @@ func kvPower(keys []string, nodes map[string]int) map[string]int {
 	}
 
 	rates := make(map[string]int)
+	for n := range nodes {
+		rates[n] = 0
+	}
+	for _, key := range keys {
+		vals := make([]interface{}, 1)
+		vals[0] = key
+		di := balancer.NewMockDataItem(key, 1, vals)
+
+		if n, err := bal.LocateData(di); err != nil {
+			panic(err)
+		} else {
+			rates[n.ID()]++
+		}
+		if err := bal.Optimize(); err != nil {
+			panic(err)
+		}
+	}
+	return rates
+}
+func kvPowerHilbert(keys []string, nodes map[string]int) map[string]int {
+	rand.Seed(42)
+	var ns []balancer.Node
+	for n, w := range nodes {
+		ns = append(ns, balancer.NewMockNode(n, float64(w), 20000))
+	}
+
+	bal, err := balancer.NewBalancer(curve.Morton, DIMS, SIZE, transform.KVTransform,
+		optimizer.PowerRangeOptimizer, ns)
+	if err != nil {
+		panic(err)
+	}
+
+	if err := bal.Optimize(); err != nil {
+		panic(err)
+	}
+
+	rates := make(map[string]int)
+	for n := range nodes {
+		rates[n] = 0
+	}
 	for _, key := range keys {
 		vals := make([]interface{}, 1)
 		vals[0] = key
@@ -108,7 +199,7 @@ func kvPower(keys []string, nodes map[string]int) map[string]int {
 }
 
 func space() {
-	rates := make(map[string]int)
+	var rates map[string]int
 	ratesDi := make(map[[3]float64]int)
 
 	node0 := balancer.NewMockNode("node-0", 1, 20)
@@ -177,6 +268,9 @@ func hring(keys []string, nodes map[string]int) map[string]int {
 	ring := hashring.NewWithWeights(nodes)
 
 	rates := make(map[string]int)
+	for n := range nodes {
+		rates[n] = 0
+	}
 	for _, key := range keys {
 		s, _ := ring.GetNode(key)
 		rates[s]++
@@ -186,7 +280,7 @@ func hring(keys []string, nodes map[string]int) map[string]int {
 
 func consring(keys []string, nodes map[string]int) map[string]int {
 	cfg := consistent.Config{
-		PartitionCount:    4,
+		PartitionCount:    len(nodes),
 		ReplicationFactor: 1,
 		Load:              1.25,
 		Hasher:            hasher{},
@@ -202,6 +296,9 @@ func consring(keys []string, nodes map[string]int) map[string]int {
 	// Add function calculates average load and distributes partitions over members
 
 	rates := make(map[string]int)
+	for n := range nodes {
+		rates[n] = 0
+	}
 	for _, key := range keys {
 		owner := c.LocateKey([]byte(key))
 		rates[owner.String()]++
