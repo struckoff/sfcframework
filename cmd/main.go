@@ -18,6 +18,7 @@ func main() {
 
 func kvcompare() {
 	var keys []string
+	var rates  map[string]int
 	for iter := uint64(0); iter < 100_000; iter++ {
 		key := fmt.Sprintf("key-%d", iter)
 		//key := fmt.Sprintf("key-%d", rand.Int())
@@ -30,8 +31,10 @@ func kvcompare() {
 		"node-3": 1,
 	}
 
-	rates := kv(keys, nodes)
+	rates = kv(keys, nodes)
 	fmt.Println("SFC", rates)
+	rates = kvPower(keys, nodes)
+	fmt.Println("SFC Power", rates)
 	rates = hring(keys, nodes)
 	fmt.Println("serialx/hashring", rates)
 	rates = consring(keys, nodes)
@@ -69,24 +72,58 @@ func kv(keys []string, nodes map[string]int) map[string]int {
 	}
 	return rates
 }
+func kvPower(keys []string, nodes map[string]int) map[string]int {
+	rand.Seed(42)
+	var ns []balancer.Node
+	for n, w := range nodes {
+		ns = append(ns, balancer.NewMockNode(n, float64(w), 20))
+	}
+
+	bal, err := balancer.NewBalancer(curve.Morton, 3, 64, transform.KVTransform,
+		optimizer.PowerRangeOptimizer, ns)
+	if err != nil {
+		panic(err)
+	}
+
+	if err := bal.Optimize(); err != nil {
+		panic(err)
+	}
+
+	rates := make(map[string]int)
+	for _, key := range keys {
+		vals := make([]interface{}, 1)
+		vals[0] = key
+		di := balancer.NewMockDataItem(key, 1, vals)
+
+		if n, err := bal.LocateData(di); err != nil {
+			panic(err)
+		} else {
+			rates[n.ID()]++
+		}
+	}
+	return rates
+}
 
 func space() {
 	rates := make(map[string]int)
 	ratesDi := make(map[[3]float64]int)
 
 	node0 := balancer.NewMockNode("node-0", 1, 20)
-	node1 := balancer.NewMockNode("node-1", 2, 20)
+	node1 := balancer.NewMockNode("node-1", 1, 20)
 	node2 := balancer.NewMockNode("node-2", 1, 20)
+	node3 := balancer.NewMockNode("node-2", 1, 20)
 
-	nodes := []balancer.Node{node0, node1}
+	nodes := []balancer.Node{node0, node1, node2, node3}
 	bal, err := balancer.NewBalancer(curve.Morton, 3, 16, transform.SpaceTransform,
 		optimizer.RangeOptimizer, nodes)
 	if err != nil {
 		panic(err)
 	}
-	if err := bal.AddNode(node2); err != nil {
+	if err := bal.AddNode(node2, true); err != nil {
 		panic(err)
 	}
+
+	if err:=bal.Optimize(); err != nil {panic(err)}
 
 	for iter := uint64(0); iter < 10; iter++ {
 		vals := make([]interface{}, 3)
