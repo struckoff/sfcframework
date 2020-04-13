@@ -46,7 +46,6 @@ func RangeOptimizer(s *balancer.Space) (res []*balancer.CellGroup, err error) {
 	return cgs, nil
 }
 
-
 func PowerRangeOptimizer(s *balancer.Space) (res []*balancer.CellGroup, err error) {
 	cells := s.Cells()
 	totalPower := s.TotalPower()
@@ -64,19 +63,22 @@ func PowerRangeOptimizer(s *balancer.Space) (res []*balancer.CellGroup, err erro
 		min = max
 		p := cgs[iter].Node().Power().Get() / totalPower
 		f := cgs[iter].Node().Capacity().Get()
-		max = min + uint64(math.Round(float64(s.Capacity()) * p))
+		max = min + uint64(math.Round(float64(s.Capacity())*p))
 
 		for citer := 0; citer < len(cells); citer++ {
 			if cells[citer].ID() >= min && cells[citer].ID() <= max {
-				if f <= 0{
-					max = cells[citer].ID()
+				f -= float64(cells[citer].Load())
+				if f <= 0 {
+					c := citer - 1
+					if c < 0 {
+						c = 0
+					}
+					max = cells[c].ID()
 					break
 				}
-				f -= float64(cells[citer].Load())
 				cgs[iter].AddCell(cells[citer], true)
 			}
 		}
-
 		if err := cgs[iter].SetRange(min, max); err != nil {
 			return nil, errors.Wrap(err, "power range optimizer error")
 		}
@@ -89,7 +91,7 @@ func PowerRangeOptimizer(s *balancer.Space) (res []*balancer.CellGroup, err erro
 		}
 		for citer := range cells[max:] {
 			cgs[len(cgs)-1].AddCell(cells[citer], true)
-			}
+		}
 	}
 
 	return cgs, nil
