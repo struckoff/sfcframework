@@ -11,8 +11,8 @@ const lonStep = 180.0
 
 func SpaceTransform(values []interface{}, sfc curve.Curve) ([]uint64, error) {
 	dimSize := sfc.DimensionSize()
-	if len(values) != 3 || sfc.Dimensions() != 3 {
-		return nil, errors.New("number of dimensions must be 3")
+	if len(values) != 2 || sfc.Dimensions() != 2{
+		return nil, errors.New("number of dimensions must be 2")
 	}
 	res := make([]uint64, 3)
 	lat, ok := values[0].(float64)
@@ -25,11 +25,11 @@ func SpaceTransform(values []interface{}, sfc curve.Curve) ([]uint64, error) {
 		return nil, errors.New("second value must be float64 longitude")
 	}
 	res[1] = uint64((lon + lonStep) / (lonStep * 2) * float64(dimSize))
-	ts, ok := values[2].(int64)
-	if !ok {
-		return nil, errors.New("third value must be int64 timestamp")
-	}
-	res[2] = uint64(ts-ft) % dimSize
+	//ts, ok := values[2].(int64)
+	//if !ok {
+	//	return nil, errors.New("third value must be int64 timestamp")
+	//}
+	//res[2] = uint64(ts-ft) % dimSize
 	//res[2] = uint64(float64(ts) / ft * float64(dimSize))
 	return res, nil
 }

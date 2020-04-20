@@ -205,7 +205,9 @@ func (c *Curve) prepareIndex(coords []uint64) uint64 {
 			if (coords[coordsIter] & mask) != 0 {
 				tmpCoords[bIndex/bitSize] |= 1 << (bIndex % 8)
 			}
-			bIndex--
+			if bIndex > 0{
+				bIndex--
+			}
 		}
 		mask >>= 1
 	}

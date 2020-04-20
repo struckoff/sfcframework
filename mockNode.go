@@ -2,6 +2,7 @@ package balancer
 
 import (
 	"fmt"
+	"github.com/google/uuid"
 	"reflect"
 	"sort"
 )
@@ -11,13 +12,15 @@ type MockNode struct {
 	id       string
 	power    MockPower
 	capacity MockCapacity
+	h        uint64
 }
 
-func NewMockNode(id string, power float64, capacity float64) MockNode {
-	return MockNode{
+func NewMockNode(id string, power float64, capacity float64, h uint64) *MockNode {
+	return &MockNode{
 		id:       id,
 		power:    MockPower{power},
 		capacity: MockCapacity{capacity},
+		h:        h,
 	}
 }
 
@@ -36,6 +39,10 @@ func (n MockNode) Capacity() Capacity {
 	return n.capacity
 }
 
+func (n MockNode) Hash() uint64 {
+	return n.h
+}
+
 func GenerateMockCells(loadSet ...uint64) map[uint64]*cell {
 	cs := make(map[uint64]*cell)
 	for iter, load := range loadSet {
@@ -49,7 +56,7 @@ func GenerateMockCellGroup(cs map[uint64]*cell, rates []int, powers []float64) [
 	var min, max uint64
 	for iter, rate := range rates {
 		var load uint64
-		cgs[iter] = NewCellGroup(NewMockNode("node-"+string(iter), powers[iter], 0))
+		cgs[iter] = NewCellGroup(NewMockNode("node-"+string(iter), powers[iter], 0, uint64(uuid.New().ID())))
 		cells := make([]*cell, 0, len(cs))
 		for key := range cs {
 			cells = append(cells, cs[key])

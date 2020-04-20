@@ -5,7 +5,6 @@ import (
 	balancer "github.com/struckoff/SFCFramework"
 	"math"
 	"sort"
-	"strings"
 )
 
 func RangeOptimizer(s *balancer.Space) (res []*balancer.CellGroup, err error) {
@@ -17,7 +16,7 @@ func RangeOptimizer(s *balancer.Space) (res []*balancer.CellGroup, err error) {
 	var check float64
 	var max, min uint64
 
-	sort.Slice(cgs, func(i, j int) bool { return strings.Compare(cgs[i].ID(), cgs[j].ID()) < 0 })
+	sort.Slice(cgs, func(i, j int) bool { return cgs[i].Node().Hash() < cgs[j].Node().Hash() })
 
 	for iter := 0; iter < len(cgs); iter++ {
 		min = max
@@ -89,7 +88,7 @@ func PowerRangeOptimizer(s *balancer.Space) (res []*balancer.CellGroup, err erro
 	}
 
 	if max < s.Capacity() {
-		if err := cgs[len(cgs)-1].SetRange(min, s.Capacity()); err != nil {
+		if err := cgs[len(cgs)-1].SetRange(min, s.Capacity()+1); err != nil {
 			return nil, errors.Wrap(err, "range optimizer error")
 		}
 		for citer := range cells {

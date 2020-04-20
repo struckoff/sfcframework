@@ -15,7 +15,7 @@ func newCell(id uint64, cg *CellGroup) *cell {
 	c := cell{
 		id:   id,
 		load: 0,
-		cg:cg,
+		cg:   cg,
 	}
 	//found := false
 	//for i := range cgs {

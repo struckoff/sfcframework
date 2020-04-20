@@ -19,14 +19,9 @@ type Balancer struct {
 }
 
 func NewBalancer(cType curve.CurveType, dims, size uint64, tf TransformFunc, of OptimizerFunc, nodes []Node) (*Balancer, error) {
-	if (size & (size - 1)) != 0 {
-		return nil, errors.New("size must be a power of 2")
-	}
-	bits := uint64(0)
-	v := uint64(1)
-	for v != size {
-		v *= 2
-		bits++
+	bits, err := Log2(size)
+	if err != nil {
+		return nil, err
 	}
 	sfc, err := curve.NewCurve(cType, dims, bits)
 	if err != nil {
@@ -77,6 +72,10 @@ func (b *Balancer) Nodes() []Node {
 	return b.space.Nodes()
 }
 
+func (b *Balancer) SFC() curve.Curve {
+	return b.Space().sfc
+}
+
 func (b *Balancer) RemoveNode(id string) error {
 	if err := b.space.RemoveNode(id); err != nil {
 		return err
@@ -101,4 +100,15 @@ func (b *Balancer) Optimize() error {
 	}
 	b.space.cgs = ns
 	return nil
+}
+
+func Log2(n uint64) (p uint64, err error) {
+	if (n & (n - 1)) != 0 {
+		return 0, errors.New("number must be a power of 2")
+	}
+	for n > 1 {
+		p++
+		n = n >> 1
+	}
+	return
 }
