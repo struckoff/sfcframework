@@ -39,8 +39,8 @@ func (cg *CellGroup) SetNode(n Node) {
 }
 
 func (cg *CellGroup) Range() Range {
-	//cg.mu.Lock()
-	//defer cg.mu.Unlock()
+	cg.mu.Lock()
+	defer cg.mu.Unlock()
 	return cg.cRange
 }
 
