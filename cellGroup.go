@@ -38,6 +38,12 @@ func (cg *CellGroup) SetNode(n Node) {
 	cg.node = n
 }
 
+func (cg *CellGroup) Range() Range {
+	//cg.mu.Lock()
+	//defer cg.mu.Unlock()
+	return cg.cRange
+}
+
 func (cg *CellGroup) SetRange(min, max uint64) error {
 	cg.mu.Lock()
 	defer cg.mu.Unlock()
@@ -56,6 +62,12 @@ func (cg *CellGroup) FitsRange(index uint64) bool {
 	cg.mu.Lock()
 	defer cg.mu.Unlock()
 	return index >= cg.cRange.Min && index < cg.cRange.Max
+}
+
+func (cg *CellGroup) Cells() map[uint64]*cell {
+	cg.mu.Lock()
+	defer cg.mu.Unlock()
+	return cg.cells
 }
 
 // AddCell adds a cell to the cell group

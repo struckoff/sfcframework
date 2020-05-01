@@ -9,6 +9,9 @@ import (
 	"github.com/struckoff/SFCFramework/curve"
 )
 
+type SpaceInterface interface {
+}
+
 type Space struct {
 	mu    sync.Mutex
 	cells map[uint64]*cell
@@ -224,7 +227,7 @@ func (s *Space) locateData(d DataItem) (Node, error) {
 		if !ok {
 			return nil, errors.New("unable to bind cell to cell group")
 		}
-		s.cells[cID] = newCell(cID, cg)
+		s.cells[cID] = NewCell(cID, cg, 0)
 	}
 	if err = s.cells[cID].add(d); err != nil {
 		return nil, err

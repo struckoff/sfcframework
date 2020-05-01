@@ -11,10 +11,10 @@ type cell struct {
 	cg   *CellGroup
 }
 
-func newCell(id uint64, cg *CellGroup) *cell {
+func NewCell(id uint64, cg *CellGroup, load uint64) *cell {
 	c := cell{
 		id:   id,
-		load: 0,
+		load: load,
 		cg:   cg,
 	}
 	//found := false

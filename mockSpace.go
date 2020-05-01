@@ -5,10 +5,14 @@ import (
 	"github.com/struckoff/SFCFramework/transform"
 )
 
-func NewMockSpace(cgs []*CellGroup, cs map[uint64]*cell, sfc curve.Curve) *Space {
+func NewMockSpace(cgs []*CellGroup, sfc curve.Curve) *Space {
 	var load uint64
-	for iter := range cs {
-		load += cs[iter].load
+	cs := make(map[uint64]*cell)
+	for _, cg := range cgs {
+		for _, c := range cg.cells {
+			cs[c.id] = c
+			load += c.load
+		}
 	}
 	return &Space{
 		cells: cs,
