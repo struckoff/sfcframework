@@ -13,7 +13,6 @@ func RangeOptimizer(s *balancer.Space) (res []*balancer.CellGroup, err error) {
 	if len(cgs) == 0 {
 		return res, nil
 	}
-	var check float64
 	var max, min uint64
 
 	sort.Slice(cgs, func(i, j int) bool { return cgs[i].Node().Hash() < cgs[j].Node().Hash() })
@@ -25,10 +24,9 @@ func RangeOptimizer(s *balancer.Space) (res []*balancer.CellGroup, err error) {
 		if err := cgs[iter].SetRange(min, max); err != nil {
 			return nil, errors.Wrap(err, "range optimizer error")
 		}
-		check += p
 	}
 
-	if check < 1 {
+	if max < s.Capacity() {
 		if err := cgs[len(cgs)-1].SetRange(min, s.Capacity()); err != nil {
 			return nil, errors.Wrap(err, "range optimizer error")
 		}

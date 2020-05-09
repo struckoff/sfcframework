@@ -138,6 +138,20 @@ func TestPowerRangeOptimizer(t *testing.T) {
 			[]int{585, 2925, 585},
 			false,
 		},
+		{
+			"11 equal",
+			args{
+				loadSet: make([]uint64, 4096),
+				rates:   []int{4096, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+				powers:  []float64{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+				caps:    []float64{1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000},
+				cType:   curve.Morton,
+				dims:    2,
+				bits:    6,
+			},
+			[]int{372, 372, 372, 372, 372, 372, 372, 372, 372, 372, 376},
+			false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
