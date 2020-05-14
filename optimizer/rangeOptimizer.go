@@ -27,7 +27,7 @@ func RangeOptimizer(s *balancer.Space) (res []*balancer.CellGroup, err error) {
 	}
 
 	if max < s.Capacity() {
-		if err := cgs[len(cgs)-1].SetRange(min, s.Capacity()); err != nil {
+		if err := cgs[len(cgs)-1].SetRange(min, s.Capacity()+1); err != nil {
 			return nil, errors.Wrap(err, "range optimizer error")
 		}
 	}
