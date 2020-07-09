@@ -9,9 +9,6 @@ import (
 	"github.com/struckoff/SFCFramework/curve"
 )
 
-type SpaceInterface interface {
-}
-
 type Space struct {
 	mu    sync.Mutex
 	cells map[uint64]*cell
@@ -59,6 +56,13 @@ func splitCells(n int, l uint64) ([]Range, error) {
 		return res, nil
 	}
 	for c < float64(l) {
+		if i == n-1 {
+			res[i] = Range{
+				Min: uint64(math.Ceil(c)),
+				Max: l,
+			}
+			break
+		}
 		nc := c + s
 		res[i] = Range{
 			Min: uint64(math.Ceil(c)),

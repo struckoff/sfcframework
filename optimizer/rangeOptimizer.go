@@ -44,6 +44,8 @@ func RangeOptimizer(s *balancer.Space) (res []*balancer.CellGroup, err error) {
 }
 
 func PowerRangeOptimizer(s *balancer.Space) (res []*balancer.CellGroup, err error) {
+	//TODO: reduce Capacity calls
+
 	cells := s.Cells()
 	totalPower := s.TotalPower()
 	//totalFree := s.TotalCapacity() - float64(s.TotalLoad())
@@ -53,14 +55,37 @@ func PowerRangeOptimizer(s *balancer.Space) (res []*balancer.CellGroup, err erro
 	}
 	var max, min uint64
 
+	caps := make([]float64, len(cgs))
+	for iter := range cgs {
+		caps[iter], err = cgs[iter].Node().Capacity().Get()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	//sort.Slice(cgs, func(i, j int) bool {
+	//	return (cgs[i].Node().Capacity().Get() - float64(cgs[i].TotalLoad())) < (cgs[j].Node().Capacity().Get() - float64(cgs[j].TotalLoad()))
+	//})
+
 	sort.Slice(cgs, func(i, j int) bool {
-		return (cgs[i].Node().Capacity().Get() - float64(cgs[i].TotalLoad())) < (cgs[j].Node().Capacity().Get() - float64(cgs[j].TotalLoad()))
+		capI, err := cgs[i].Node().Capacity().Get()
+		if err != nil {
+			return false
+		}
+		capJ, err := cgs[j].Node().Capacity().Get()
+		if err != nil {
+			return false
+		}
+		return capI < capJ
 	})
 
 	for iter := 0; iter < len(cgs); iter++ {
 		min = max
 		p := cgs[iter].Node().Power().Get() / totalPower
-		f := cgs[iter].Node().Capacity().Get()
+		f, err := cgs[iter].Node().Capacity().Get()
+		if err != nil {
+			return nil, err
+		}
 		max = min + uint64(math.Round(float64(s.Capacity())*p))
 
 		for citer := 0; citer < len(cells); citer++ {
