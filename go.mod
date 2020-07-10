@@ -1,4 +1,4 @@
-module github.com/visheratin/balancer
+module github.com/struckoff/SFCFramework
 
 go 1.14
 
