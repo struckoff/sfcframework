@@ -211,14 +211,21 @@ func (s *Space) removeNode(id string) error {
 	return errors.Errorf("node(%s) not found", id)
 }
 
-//LocateData add data item to the space.
+//AddData add data item to the space.
+func (s *Space) AddData(d DataItem) (Node, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.locateData(d, true)
+}
+
+//LocateData find data item in the space.
 func (s *Space) LocateData(d DataItem) (Node, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return s.locateData(d)
+	return s.locateData(d, false)
 }
 
-func (s *Space) locateData(d DataItem) (Node, error) {
+func (s *Space) locateData(d DataItem, load bool) (Node, error) {
 	if len(s.cgs) == 0 {
 		return nil, errors.New("no nodes in the cluster")
 	}
@@ -233,10 +240,12 @@ func (s *Space) locateData(d DataItem) (Node, error) {
 		}
 		s.cells[cID] = NewCell(cID, cg, 0)
 	}
-	if err = s.cells[cID].add(d); err != nil {
-		return nil, err
+	if load {
+		if err = s.cells[cID].add(d); err != nil {
+			return nil, err
+		}
+		s.load += d.Size()
 	}
-	s.load += s.cells[cID].load //TODO May be just sum CellGroup.load ?
 	return s.cells[cID].cg.Node(), nil
 }
 

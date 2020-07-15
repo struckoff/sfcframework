@@ -68,16 +68,22 @@ func PowerRangeOptimizer(s *balancer.Space) (res []*balancer.CellGroup, err erro
 	//})
 
 	sort.Slice(cgs, func(i, j int) bool {
-		capI, err := cgs[i].Node().Capacity().Get()
-		if err != nil {
-			return false
-		}
-		capJ, err := cgs[j].Node().Capacity().Get()
-		if err != nil {
-			return false
-		}
-		return capI < capJ
+		capI, _ := cgs[i].Node().Capacity().Get()
+		capJ, _ := cgs[j].Node().Capacity().Get()
+		return (capI - float64(cgs[i].TotalLoad())) < (capJ - float64(cgs[j].TotalLoad()))
 	})
+
+	//sort.Slice(cgs, func(i, j int) bool {
+	//	capI, err := cgs[i].Node().Capacity().Get()
+	//	if err != nil {
+	//		return false
+	//	}
+	//	capJ, err := cgs[j].Node().Capacity().Get()
+	//	if err != nil {
+	//		return false
+	//	}
+	//	return capI < capJ
+	//})
 
 	for iter := 0; iter < len(cgs); iter++ {
 		min = max
