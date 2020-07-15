@@ -88,9 +88,14 @@ func (b *Balancer) RemoveNode(id string) error {
 	return nil
 }
 
-// LocateData loads data into the Space of the balancer.
+// LocateData finds data in the Space of the balancer.
 func (b *Balancer) LocateData(d DataItem) (Node, error) {
 	return b.space.LocateData(d)
+}
+
+// AddData loads data into the Space of the balancer.
+func (b *Balancer) AddData(d DataItem) (Node, error) {
+	return b.space.AddData(d)
 }
 
 func (b *Balancer) Optimize() error {
