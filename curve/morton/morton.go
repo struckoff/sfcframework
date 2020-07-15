@@ -2,49 +2,77 @@ package morton
 
 import (
 	"errors"
-	"math/big"
-	"sync"
+	"fmt"
 )
 
-type MortonCurve struct {
-	dimensions uint64
-	bits       uint64
-	length     uint64
-	masksArray []uint64
+type Curve struct {
+	dimensions   uint64
+	bits         uint64
+	length       uint64
+	masksArray   []uint64
+	lshiftsArray []uint64
+	maxSize      uint64
+	maxCode      uint64
 }
 
-func New(dims, bits uint64) (*MortonCurve, error){
-	if bits <= 0 || dims <= 0{
-		return nil, errors.New("Number of bits and dimension must be greater than 0")
+func New(dims, bits uint64) (*Curve, error) {
+	if bits <= 0 || dims <= 0 {
+		return nil, errors.New("number of bits and dimension must be greater than 0")
 	}
 
-	mc := &MortonCurve{
+	mc := &Curve{
 		dimensions: dims,
 		bits:       bits,
 		length:     (bits * dims) - bits,
+		maxSize:    (1 << bits) - 1,
+		maxCode:    (1 << (dims * bits)) - 1,
 	}
-	mc.masksArray = mc.masks()
+	mc.masksArray, mc.lshiftsArray = mc.masks()
 
 	return mc, nil
 }
 
-// TODO USE c.bits
-func (c *MortonCurve) Decode(d *big.Int) (coords []uint64, err error){
-	coords = make([]uint64, c.dimensions)
-	var wg sync.WaitGroup
-	wg.Add(int(c.dimensions))
-	for iter := uint64(0); iter < c.dimensions; iter++ {
-		// TODO AM I HERETIC
-		go func (iter uint64, wg *sync.WaitGroup){
-			defer wg.Done()
-		coords[iter] = c.compact(d.Uint64() >> iter)
-		}(iter, &wg)
+//Decode returns coordinates for a given code(distance)
+//Method will return error if code(distance) exceeds the limit(2 ^ (dims * bits) - 1)
+func (c *Curve) Decode(code uint64) (coords []uint64, err error) {
+	if err := c.validateCode(code); err != nil {
+		return nil, err
 	}
-	wg.Wait()
+	coords = make([]uint64, c.dimensions)
+	coords = c.compacter(coords, code)
 	return coords, nil
 }
 
-func (c *MortonCurve)compact(x uint64) uint64{
+//Decode returns coordinates for a given code(distance).
+//Method will return error if:
+//  - buffer less than number of dimensions
+//	- code(distance) exceeds the limit(2 ^ (dims * bits) - 1)
+func (c *Curve) DecodeWithBuffer(buf []uint64, code uint64) (coords []uint64, err error) {
+	if len(buf) < int(c.dimensions) {
+		return nil, errors.New("buffer length less then dimensions")
+	}
+	if err := c.validateCode(code); err != nil {
+		return nil, err
+	}
+	buf = c.compacter(buf, code)
+	return buf, nil
+}
+
+func (c *Curve) validateCode(code uint64) error {
+	if code > c.maxCode {
+		return fmt.Errorf("code == %v exceeds limit (2^(dimensions * bits) - 1) == %v", code, c.maxSize)
+	}
+	return nil
+}
+
+func (c *Curve) compacter(coords []uint64, code uint64) []uint64 {
+	for iter := uint64(0); iter < c.dimensions; iter++ {
+		coords[iter] = c.compact(code >> iter)
+	}
+	return coords
+}
+
+func (c *Curve) compact(x uint64) uint64 {
 	//x &= 0x55555555
 	//x = (x ^ (x >> 1)) & 0x33333333
 	//x = (x ^ (x >> 2)) & 0x0f0f0f0f
@@ -52,14 +80,15 @@ func (c *MortonCurve)compact(x uint64) uint64{
 	//x = (x ^ (x >> 8)) & 0x0000ffff
 
 	x &= c.masksArray[len(c.masksArray)-1]
-	for iter := 0; iter < len(c.masksArray)-1; iter++{
-		x = (x ^ (x >> (1 << iter))) & (c.masksArray[len(c.masksArray)-2-iter]) //TODO may be "1 << iter" should be pregenerated
+	for iter := 0; iter < len(c.masksArray)-1; iter++ {
+		//TODO may be "1 << iter" should be pregenerated
+		x = (x ^ (x >> (1 << iter))) & (c.masksArray[len(c.masksArray)-2-iter])
 	}
 
 	return x
 }
 
-func (c MortonCurve) masks() []uint64{
+func (c *Curve) masks() (masks []uint64, lshifts []uint64) {
 	mask := uint64((1 << c.bits) - 1)
 
 	shift := c.dimensions * (c.bits - 1)
@@ -71,11 +100,12 @@ func (c MortonCurve) masks() []uint64{
 	shift |= shift >> 32
 	shift -= shift >> 1
 
-	masks := make([]uint64, 0, 8)
+	masks = make([]uint64, 0, 8)
+	lshifts = make([]uint64, 1, 8)
 
 	masks = append(masks, mask)
 
-	for ;shift > 0; shift>>=1 {
+	for ; shift > 0; shift >>= 1 {
 		mask = 0
 		shifted := uint64(0)
 
@@ -85,31 +115,63 @@ func (c MortonCurve) masks() []uint64{
 			mask |= 1 << bit << (((shift - 1) ^ uint64(0xffffffffffffffff)) & distance)
 		}
 
-		if shifted != 0{
+		if shifted != 0 {
 			masks = append(masks, mask)
+			lshifts = append(lshifts, shift)
 		}
-
 	}
-
-	return masks
+	return masks, lshifts
 }
 
-func (c MortonCurve) Encode(coords []uint64) (d *big.Int, err error){
-	// TODO ADD ARGUMENTS CHECK
-
-	code := uint64(0)
+//Encode returns code(distance) for a given set of coordinates
+//Method will return error if any of the coordinates exceeds limit(2 ^ bits - 1)
+func (c *Curve) Encode(coords []uint64) (code uint64, err error) {
+	if err := c.validateCoordinates(coords); err != nil {
+		return 0, err
+	}
 	for iter := uint64(0); iter < c.dimensions; iter++ {
 		code |= c.split(coords[iter]) << iter
 	}
-	return new(big.Int).SetUint64(code), nil
+	return
 }
 
-func (c MortonCurve) split(x uint64) uint64 {
-	shiftIter := len(c.masksArray) - 1
+func (c *Curve) validateCoordinates(coords []uint64) error {
+	if len(coords) < int(c.dimensions) {
+		return fmt.Errorf("number of coordinates == %v less then dimensions == %v", len(coords), c.dimensions)
+	}
+	for iter := range coords {
+		if coords[iter] > c.maxSize {
+			return fmt.Errorf("coordinate == %v exceeds limit == %v", coords[iter], c.maxSize)
+		}
+	}
+	return nil
+}
+
+func (c *Curve) split(x uint64) uint64 {
+	//shiftIter := len(c.masksArray) - 1
 	for iter := 0; iter < len(c.masksArray); iter++ {
-		x = (x | (x << (1 << shiftIter))) & c.masksArray[iter]
-		shiftIter--
+		x = (x | (x << c.lshiftsArray[iter])) & c.masksArray[iter]
+		//shiftIter--
 	}
 
 	return x
+}
+
+// DimensionSize returns the maximum coordinate value in any dimension
+func (c *Curve) DimensionSize() uint64 {
+	return c.maxSize
+}
+
+// Length returns the maximum distance along curve(code value)
+// 2^(dimensions * bits) - 1
+func (c *Curve) Length() uint64 {
+	return c.maxCode
+}
+
+func (c *Curve) Dimensions() uint64 {
+	return c.dimensions
+}
+
+func (c *Curve) Bits() uint64 {
+	return c.bits
 }
