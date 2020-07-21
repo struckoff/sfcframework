@@ -79,7 +79,7 @@ func (cg *CellGroup) AddCell(c *cell, autoremove bool) {
 	if cg == c.cg {
 		return
 	}
-	cg.load += c.load
+	//cg.load += c.load
 	cg.cells[c.id] = c
 	if c.cg != nil && autoremove {
 		c.cg.RemoveCell(c.id)
@@ -94,10 +94,13 @@ func (cg *CellGroup) RemoveCell(id uint64) {
 	delete(cg.cells, id)
 }
 
-func (cg *CellGroup) TotalLoad() uint64 {
+func (cg *CellGroup) TotalLoad() (load uint64) {
 	cg.mu.Lock()
 	defer cg.mu.Unlock()
-	return cg.load
+	for iter := range cg.cells {
+		load += cg.cells[iter].load
+	}
+	return
 }
 
 func (cg *CellGroup) addLoad(l uint64) {
