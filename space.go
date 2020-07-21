@@ -238,7 +238,9 @@ func (s *Space) locateData(d DataItem, load bool) (Node, error) {
 		if !ok {
 			return nil, errors.Errorf("unable to bind cell to cell group (cID=%v  d=%s)", cID, d.ID())
 		}
-		s.cells[cID] = NewCell(cID, cg, 0)
+		c := NewCell(cID, cg, 0)
+		s.cells[cID] = c
+		cg.cells[cID] = c
 	}
 	if load {
 		if err = s.cells[cID].add(d); err != nil {
