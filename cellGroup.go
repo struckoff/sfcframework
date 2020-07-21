@@ -2,6 +2,7 @@ package balancer
 
 import (
 	"github.com/pkg/errors"
+	"log"
 	"sync"
 )
 
@@ -98,6 +99,7 @@ func (cg *CellGroup) TotalLoad() (load uint64) {
 	cg.mu.Lock()
 	defer cg.mu.Unlock()
 	for iter := range cg.cells {
+		log.Println(cg.Node().ID(), cg.cells[iter].id, cg.cells[iter].id, load)
 		load += cg.cells[iter].load
 	}
 	return
