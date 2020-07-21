@@ -212,31 +212,31 @@ func (s *Space) removeNode(id string) error {
 }
 
 //AddData add data item to the space.
-func (s *Space) AddData(d DataItem) (Node, error) {
+func (s *Space) AddData(d DataItem) (Node, uint64, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.locateData(d, true)
 }
 
 //LocateData find data item in the space.
-func (s *Space) LocateData(d DataItem) (Node, error) {
+func (s *Space) LocateData(d DataItem) (Node, uint64, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.locateData(d, false)
 }
 
-func (s *Space) locateData(d DataItem, load bool) (Node, error) {
+func (s *Space) locateData(d DataItem, load bool) (Node, uint64, error) {
 	if len(s.cgs) == 0 {
-		return nil, errors.New("no nodes in the cluster")
+		return nil, 0, errors.New("no nodes in the cluster")
 	}
 	cID, err := s.cellID(d)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	if _, ok := s.cells[cID]; !ok {
 		cg, ok := s.findCellGroup(cID)
 		if !ok {
-			return nil, errors.Errorf("unable to bind cell to cell group (cID=%v  d=%s)", cID, d.ID())
+			return nil, 0, errors.Errorf("unable to bind cell to cell group (cID=%v  d=%s)", cID, d.ID())
 		}
 		c := NewCell(cID, cg, 0)
 		s.cells[cID] = c
@@ -244,11 +244,11 @@ func (s *Space) locateData(d DataItem, load bool) (Node, error) {
 	}
 	if load {
 		if err = s.cells[cID].add(d); err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 		s.load += d.Size()
 	}
-	return s.cells[cID].cg.Node(), nil
+	return s.cells[cID].cg.Node(), cID, nil
 }
 
 //cellID calculates the id of cell in space based on transform function and space filling curve.

@@ -89,12 +89,12 @@ func (b *Balancer) RemoveNode(id string) error {
 }
 
 // LocateData finds data in the Space of the balancer.
-func (b *Balancer) LocateData(d DataItem) (Node, error) {
+func (b *Balancer) LocateData(d DataItem) (Node, uint64, error) {
 	return b.space.LocateData(d)
 }
 
 // AddData loads data into the Space of the balancer.
-func (b *Balancer) AddData(d DataItem) (Node, error) {
+func (b *Balancer) AddData(d DataItem) (Node, uint64, error) {
 	return b.space.AddData(d)
 }
 
