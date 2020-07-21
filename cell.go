@@ -54,3 +54,11 @@ func (c *cell) add(d DataItem) error {
 	c.cg.addLoad(d.Size())
 	return nil
 }
+
+func (c *cell) remove(d DataItem) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.load -= d.Size()
+	c.cg.removeLoad(d.Size())
+	return nil
+}
