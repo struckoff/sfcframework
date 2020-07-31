@@ -286,13 +286,7 @@ func (s *Space) relocateData(d DataItem, ncID uint64, load bool) (Node, uint64, 
 		}
 	}
 
-	if load {
-		if err = s.cells[cID].add(d); err != nil {
-			return nil, 0, err
-		}
-		s.load += d.Size()
-	}
-	return s.cells[cID].cg.Node(), cID, nil
+	return s.cells[cID].cg.Node(), ncID, nil
 }
 
 //cellID calculates the id of cell in space based on transform function and space filling curve.
