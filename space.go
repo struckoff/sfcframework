@@ -242,6 +242,50 @@ func (s *Space) locateData(d DataItem, load bool) (Node, uint64, error) {
 		s.cells[cID] = c
 		cg.cells[cID] = c
 	}
+	if ncID, ok := s.cells[cID].relocated(d.ID()); ok {
+		cID = ncID
+	}
+	if load {
+		if err = s.cells[cID].add(d); err != nil {
+			return nil, 0, err
+		}
+		s.load += d.Size()
+	}
+	return s.cells[cID].cg.Node(), cID, nil
+}
+
+func (s *Space) RelocateData(d DataItem, ncID uint64, load bool) (Node, uint64, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.relocateData(d, ncID, load)
+}
+
+func (s *Space) relocateData(d DataItem, ncID uint64, load bool) (Node, uint64, error) {
+	if len(s.cgs) == 0 {
+		return nil, 0, errors.New("no nodes in the cluster")
+	}
+	cID, err := s.cellID(d)
+	if err != nil {
+		return nil, 0, err
+	}
+	if _, ok := s.cells[ncID]; !ok {
+		cg, ok := s.findCellGroup(cID)
+		if !ok {
+			return nil, 0, errors.Errorf("unable to bind cell to cell group (cID=%v  d=%s)", cID, d.ID())
+		}
+		c := NewCell(cID, cg, 0)
+		s.cells[cID] = c
+		cg.cells[cID] = c
+	}
+
+	s.cells[cID].relocate(d.ID(), ncID)
+	if load {
+		s.cells[cID].load -= d.Size()
+		if err = s.cells[ncID].add(d); err != nil {
+			return nil, 0, err
+		}
+	}
+
 	if load {
 		if err = s.cells[cID].add(d); err != nil {
 			return nil, 0, err
