@@ -280,7 +280,7 @@ func (s *Space) relocateData(d DataItem, ncID uint64, load bool) (Node, uint64, 
 
 	s.cells[cID].relocate(d.ID(), ncID)
 	if load {
-		s.cells[cID].load -= d.Size()
+		//s.cells[cID].load -= d.Size()
 		if err = s.cells[ncID].add(d); err != nil {
 			return nil, 0, err
 		}
