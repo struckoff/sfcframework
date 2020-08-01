@@ -8,7 +8,8 @@ type cell struct {
 	id   uint64
 	mu   sync.Mutex
 	load uint64
-	off  map[string]uint64 // location of relocated DataItem. DataItem.ID -> cell.ID
+	off  map[string]uint64   // location of relocated DataItem. DataItem.ID -> cell.ID
+	dis  map[string]struct{} // data items in cell
 	cg   *CellGroup
 }
 
@@ -18,6 +19,7 @@ func NewCell(id uint64, cg *CellGroup, load uint64) *cell {
 		load: load,
 		cg:   cg,
 		off:  make(map[string]uint64),
+		dis:  make(map[string]struct{}),
 	}
 	//found := false
 	//for i := range cgs {
@@ -53,6 +55,7 @@ func (c *cell) add(d DataItem) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.load += d.Size()
+	c.dis[d.ID()] = struct{}{}
 	c.cg.addLoad(d.Size())
 	return nil
 }
@@ -60,8 +63,11 @@ func (c *cell) add(d DataItem) error {
 func (c *cell) remove(d DataItem) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.load -= d.Size()
-	c.cg.removeLoad(d.Size())
+	if _, ok := c.dis[d.ID()]; ok {
+		c.load -= d.Size()
+		delete(c.dis, d.ID())
+		c.cg.removeLoad(d.Size())
+	}
 	return nil
 }
 
