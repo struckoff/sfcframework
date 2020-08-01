@@ -268,7 +268,7 @@ func (s *Space) relocateData(d DataItem, ncID uint64, load bool) (Node, uint64, 
 	if err != nil {
 		return nil, 0, err
 	}
-	if _, ok := s.cells[ncID]; !ok {
+	if _, ok := s.cells[cID]; !ok {
 		cg, ok := s.findCellGroup(cID)
 		if !ok {
 			return nil, 0, errors.Errorf("unable to bind cell to cell group (cID=%v  d=%s)", cID, d.ID())
@@ -276,6 +276,16 @@ func (s *Space) relocateData(d DataItem, ncID uint64, load bool) (Node, uint64, 
 		c := NewCell(cID, cg, 0)
 		s.cells[cID] = c
 		cg.cells[cID] = c
+	}
+
+	if _, ok := s.cells[ncID]; !ok {
+		cg, ok := s.findCellGroup(ncID)
+		if !ok {
+			return nil, 0, errors.Errorf("unable to bind cell to cell group (ncID=%v  d=%s)", ncID, d.ID())
+		}
+		c := NewCell(ncID, cg, 0)
+		s.cells[ncID] = c
+		cg.cells[ncID] = c
 	}
 
 	s.cells[cID].relocate(d.ID(), ncID)
@@ -289,7 +299,7 @@ func (s *Space) relocateData(d DataItem, ncID uint64, load bool) (Node, uint64, 
 		}
 	}
 
-	return s.cells[cID].cg.Node(), ncID, nil
+	return s.cells[ncID].cg.Node(), ncID, nil
 }
 
 //cellID calculates the id of cell in space based on transform function and space filling curve.
