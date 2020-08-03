@@ -5,3 +5,7 @@ type Range struct {
 	Max uint64
 	Len uint64
 }
+
+func (r *Range) Fits(index uint64) bool {
+	return index >= r.Min && index < r.Max
+}

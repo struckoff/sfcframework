@@ -44,7 +44,7 @@ func (cg *CellGroup) Range() Range {
 	return cg.cRange
 }
 
-func (cg *CellGroup) SetRange(min, max uint64) error {
+func (cg *CellGroup) SetRange(min, max uint64, s *Space) error {
 	cg.mu.Lock()
 	defer cg.mu.Unlock()
 	if min > max {
@@ -55,13 +55,27 @@ func (cg *CellGroup) SetRange(min, max uint64) error {
 		Max: max,
 		Len: max - min,
 	}
+
+	if s != nil {
+		cg.load = 0
+		cg.cells = make(map[uint64]*cell)
+		for _, cl := range s.cells {
+			if cg.cRange.Fits(cl.ID()) {
+				cg.load += cl.Load()
+				cg.cells[cl.ID()] = cl
+				//cl.cg.RemoveCell(cl.ID())
+				cl.cg = cg
+			}
+		}
+	}
+
 	return nil
 }
 
 func (cg *CellGroup) FitsRange(index uint64) bool {
 	cg.mu.Lock()
 	defer cg.mu.Unlock()
-	return index >= cg.cRange.Min && index < cg.cRange.Max
+	return cg.cRange.Fits(index)
 }
 
 func (cg *CellGroup) Cells() map[uint64]*cell {

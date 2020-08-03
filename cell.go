@@ -45,6 +45,12 @@ func (c *cell) SetGroup(cg *CellGroup) {
 	c.cg = cg
 }
 
+func (c *cell) Group() *CellGroup {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.cg
+}
+
 func (c *cell) Load() uint64 {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -71,10 +77,15 @@ func (c *cell) remove(d DataItem) error {
 	return nil
 }
 
-func (c *cell) relocate(did string, ncID uint64) {
+func (c *cell) relocate(d DataItem, ncID uint64) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.off[did] = ncID
+	c.off[d.ID()] = ncID
+	if _, ok := c.dis[d.ID()]; ok {
+		delete(c.dis, d.ID())
+		c.cg.removeLoad(d.Size())
+		c.load -= d.Size()
+	}
 }
 
 func (c *cell) relocated(did string) (uint64, bool) {
