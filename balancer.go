@@ -76,15 +76,17 @@ func (b *Balancer) SFC() curve.Curve {
 	return b.Space().sfc
 }
 
-func (b *Balancer) RemoveNode(id string) error {
+func (b *Balancer) RemoveNode(id string, optimize bool) error {
 	if err := b.space.RemoveNode(id); err != nil {
 		return err
 	}
-	cgs, err := b.of(b.space)
-	if err != nil {
-		return err
+	if optimize {
+		cgs, err := b.of(b.space)
+		if err != nil {
+			return err
+		}
+		b.space.SetGroups(cgs)
 	}
-	b.space.SetGroups(cgs)
 	return nil
 }
 
