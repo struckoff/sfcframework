@@ -122,5 +122,17 @@ func (cg *CellGroup) addLoad(l uint64) {
 }
 
 func (cg *CellGroup) removeLoad(l uint64) {
+	cg.mu.Lock()
+	defer cg.mu.Unlock()
 	cg.load -= l
+}
+
+func (cg *CellGroup) truncate() {
+	cg.mu.Lock()
+	defer cg.mu.Unlock()
+	for cid := range cg.cells {
+		cg.cells[cid].dis = make(map[string]struct{})
+		cg.cells[cid].load = 0
+	}
+	cg.load = 0
 }
