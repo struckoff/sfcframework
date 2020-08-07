@@ -100,6 +100,10 @@ func (b *Balancer) AddData(d DataItem) (Node, uint64, error) {
 	return b.space.AddData(d)
 }
 
+func (b *Balancer) RemoveData(d DataItem) error {
+	return b.space.RemoveData(d)
+}
+
 // AddData loads data into the Space of the balancer.
 func (b *Balancer) RelocateData(d DataItem, ncID uint64, load bool) (Node, uint64, error) {
 	return b.space.RelocateData(d, ncID, load)

@@ -69,6 +69,10 @@ func (c *cell) add(d DataItem) error {
 func (c *cell) remove(d DataItem) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	if _, ok := c.off[d.ID()]; ok {
+		delete(c.off, d.ID())
+		return nil
+	}
 	if _, ok := c.dis[d.ID()]; ok {
 		c.load -= d.Size()
 		delete(c.dis, d.ID())

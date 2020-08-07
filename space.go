@@ -218,6 +218,13 @@ func (s *Space) AddData(d DataItem) (Node, uint64, error) {
 	return s.locateData(d, true)
 }
 
+//RemoveData removes data item from the space.
+func (s *Space) RemoveData(d DataItem) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.removeData(d)
+}
+
 //LocateData find data item in the space.
 func (s *Space) LocateData(d DataItem) (Node, uint64, error) {
 	s.mu.Lock()
@@ -252,6 +259,31 @@ func (s *Space) locateData(d DataItem, load bool) (Node, uint64, error) {
 		s.load += d.Size()
 	}
 	return s.cells[cID].cg.Node(), cID, nil
+}
+
+func (s *Space) removeData(d DataItem) error {
+	if len(s.cgs) == 0 {
+		return nil
+	}
+	cID, err := s.cellID(d)
+	if err != nil {
+		return err
+	}
+	if _, ok := s.cells[cID]; !ok {
+		return nil
+	}
+	if ncID, ok := s.cells[cID].relocated(d.ID()); ok {
+		if _, ok := s.cells[ncID]; ok {
+			if err := s.cells[ncID].remove(d); err != nil {
+				return err
+			}
+		}
+	}
+	if err := s.cells[cID].remove(d); err != nil {
+		return err
+	}
+	s.load -= d.Size()
+	return nil
 }
 
 func (s *Space) RelocateData(d DataItem, ncID uint64, load bool) (Node, uint64, error) {
