@@ -208,7 +208,7 @@ func (s *Space) RemoveNode(id string) error {
 func (s *Space) removeNode(id string) error {
 	for iter := range s.cgs {
 		if s.cgs[iter].ID() == id {
-			s.load -= s.cgs[iter].load
+			s.load -= s.cgs[iter].TotalLoad()
 			s.cgs[iter].truncate()
 			s.cgs = append(s.cgs[:iter], s.cgs[iter+1:]...)
 			return nil

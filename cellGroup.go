@@ -63,7 +63,7 @@ func (cg *CellGroup) SetRange(min, max uint64, s *Space) error {
 			if cg.cRange.Fits(cl.ID()) {
 				cg.load += cl.Load()
 				cg.cells[cl.ID()] = cl
-				//cl.cg.RemoveCell(cl.ID())
+				cl.cg.RemoveCell(cl.ID())
 				cl.cg = cg
 			}
 		}
