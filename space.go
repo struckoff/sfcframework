@@ -100,10 +100,13 @@ func (s *Space) Cells() []*cell {
 	return res
 }
 
-func (s *Space) TotalLoad() uint64 {
+func (s *Space) TotalLoad() (load uint64) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return s.load
+	for _, cell := range s.cells {
+		load += cell.load
+	}
+	return load
 }
 
 //TotalPower returns the sum of the all node powers in the space.

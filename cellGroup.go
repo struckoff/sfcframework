@@ -111,10 +111,13 @@ func (cg *CellGroup) RemoveCell(id uint64) {
 	delete(cg.cells, id)
 }
 
-func (cg *CellGroup) TotalLoad() uint64 {
+func (cg *CellGroup) TotalLoad() (load uint64) {
 	cg.mu.Lock()
 	defer cg.mu.Unlock()
-	return cg.load
+	for _, cell := range cg.cells {
+		load += cell.load
+	}
+	return load
 }
 
 func (cg *CellGroup) addLoad(l uint64) {
