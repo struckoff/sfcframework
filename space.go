@@ -104,7 +104,7 @@ func (s *Space) TotalLoad() (load uint64) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	for _, cell := range s.cells {
-		load += cell.load
+		load += cell.Load()
 	}
 	return load
 }
@@ -217,7 +217,7 @@ func (s *Space) removeNode(id string) error {
 	return errors.Errorf("node(%s) not found", id)
 }
 
-//AddData add data item to the space.
+//AddData Add data item to the space.
 func (s *Space) AddData(d DataItem) (Node, uint64, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -255,11 +255,11 @@ func (s *Space) locateData(d DataItem, load bool) (Node, uint64, error) {
 		s.cells[cID] = c
 		cg.cells[cID] = c
 	}
-	if ncID, ok := s.cells[cID].relocated(d.ID()); ok {
+	if ncID, ok := s.cells[cID].Relocated(d.ID()); ok {
 		cID = ncID
 	}
 	if load {
-		if err = s.cells[cID].add(d); err != nil {
+		if err = s.cells[cID].Add(d); err != nil {
 			return nil, 0, err
 		}
 		s.load += d.Size()
@@ -278,14 +278,14 @@ func (s *Space) removeData(d DataItem) error {
 	if _, ok := s.cells[cID]; !ok {
 		return nil
 	}
-	if ncID, ok := s.cells[cID].relocated(d.ID()); ok {
+	if ncID, ok := s.cells[cID].Relocated(d.ID()); ok {
 		if _, ok := s.cells[ncID]; ok {
-			if err := s.cells[ncID].remove(d); err != nil {
+			if err := s.cells[ncID].Remove(d); err != nil {
 				return err
 			}
 		}
 	}
-	if err := s.cells[cID].remove(d); err != nil {
+	if err := s.cells[cID].Remove(d); err != nil {
 		return err
 	}
 	s.load -= d.Size()
@@ -326,13 +326,13 @@ func (s *Space) relocateData(d DataItem, ncID uint64, load bool) (Node, uint64, 
 		cg.cells[ncID] = c
 	}
 
-	s.cells[cID].relocate(d, ncID)
+	s.cells[cID].Relocate(d, ncID)
 	if load {
 		//s.cells[cID].load -= d.Size()
 		//if err := s.cells[cID].remove(d); err != nil {
 		//	return nil, 0, err
 		//}
-		if err = s.cells[ncID].add(d); err != nil {
+		if err = s.cells[ncID].Add(d); err != nil {
 			return nil, 0, err
 		}
 	}

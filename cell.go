@@ -8,7 +8,7 @@ type cell struct {
 	id   uint64
 	mu   sync.Mutex
 	load uint64
-	off  map[string]uint64   // location of relocated DataItem. DataItem.ID -> cell.ID
+	off  map[string]uint64   // location of Relocated DataItem. DataItem.ID -> cell.ID
 	dis  map[string]struct{} // data items in cell
 	cg   *CellGroup
 }
@@ -57,7 +57,14 @@ func (c *cell) Load() uint64 {
 	return c.load
 }
 
-func (c *cell) add(d DataItem) error {
+func (c *cell) Truncate() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.dis = make(map[string]struct{})
+	c.load = 0
+}
+
+func (c *cell) Add(d DataItem) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.load += d.Size()
@@ -66,12 +73,11 @@ func (c *cell) add(d DataItem) error {
 	return nil
 }
 
-func (c *cell) remove(d DataItem) error {
+func (c *cell) Remove(d DataItem) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if _, ok := c.off[d.ID()]; ok {
 		delete(c.off, d.ID())
-		return nil
 	}
 	if _, ok := c.dis[d.ID()]; ok {
 		c.load -= d.Size()
@@ -81,7 +87,7 @@ func (c *cell) remove(d DataItem) error {
 	return nil
 }
 
-func (c *cell) relocate(d DataItem, ncID uint64) {
+func (c *cell) Relocate(d DataItem, ncID uint64) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.off[d.ID()] = ncID
@@ -92,7 +98,7 @@ func (c *cell) relocate(d DataItem, ncID uint64) {
 	}
 }
 
-func (c *cell) relocated(did string) (uint64, bool) {
+func (c *cell) Relocated(did string) (uint64, bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	cid, ok := c.off[did]
