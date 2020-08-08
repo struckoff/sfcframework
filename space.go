@@ -155,7 +155,7 @@ func (s *Space) addNode(n Node) error {
 	for iter := range s.cgs {
 		if s.cgs[iter].ID() == n.ID() {
 			s.cgs[iter].SetNode(n)
-			s.cgs[iter].truncate()
+			s.cgs[iter].Truncate()
 			return nil
 		}
 	}
@@ -209,7 +209,7 @@ func (s *Space) removeNode(id string) error {
 	for iter := range s.cgs {
 		if s.cgs[iter].ID() == id {
 			s.load -= s.cgs[iter].TotalLoad()
-			s.cgs[iter].truncate()
+			s.cgs[iter].Truncate()
 			s.cgs = append(s.cgs[:iter], s.cgs[iter+1:]...)
 			return nil
 		}

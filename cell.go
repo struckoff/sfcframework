@@ -69,7 +69,7 @@ func (c *cell) Add(d DataItem) error {
 	defer c.mu.Unlock()
 	c.load += d.Size()
 	c.dis[d.ID()] = struct{}{}
-	c.cg.addLoad(d.Size())
+	c.cg.AddLoad(d.Size())
 	return nil
 }
 
@@ -82,7 +82,7 @@ func (c *cell) Remove(d DataItem) error {
 	if _, ok := c.dis[d.ID()]; ok {
 		c.load -= d.Size()
 		delete(c.dis, d.ID())
-		c.cg.removeLoad(d.Size())
+		c.cg.RemoveLoad(d.Size())
 	}
 	return nil
 }
@@ -93,7 +93,7 @@ func (c *cell) Relocate(d DataItem, ncID uint64) {
 	c.off[d.ID()] = ncID
 	if _, ok := c.dis[d.ID()]; ok {
 		delete(c.dis, d.ID())
-		c.cg.removeLoad(d.Size())
+		//c.cg.removeLoad(d.Size())
 		c.load -= d.Size()
 	}
 }

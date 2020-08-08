@@ -59,12 +59,14 @@ func (cg *CellGroup) SetRange(min, max uint64, s *Space) error {
 	if s != nil {
 		cg.load = 0
 		cg.cells = make(map[uint64]*cell)
-		for _, cl := range s.cells {
-			if cg.cRange.Fits(cl.ID()) {
-				cg.load += cl.Load()
-				cg.cells[cl.ID()] = cl
-				cl.cg.RemoveCell(cl.ID())
-				cl.cg = cg
+		for _, c := range s.cells {
+			if cg.cRange.Fits(c.ID()) {
+				cg.load += c.Load()
+				cg.cells[c.ID()] = c
+				if c.cg != nil && c.cg.id != cg.id {
+					c.cg.removeCell(c.ID())
+				}
+				c.cg = cg
 			}
 		}
 	}
@@ -95,7 +97,7 @@ func (cg *CellGroup) AddCell(c *cell, autoremove bool) {
 	}
 	cg.load += c.Load()
 	cg.cells[c.id] = c
-	if c.cg != nil && autoremove {
+	if c.cg != nil && autoremove && c.cg.id != cg.id {
 		c.cg.RemoveCell(c.id)
 	}
 	c.cg = cg
@@ -105,6 +107,10 @@ func (cg *CellGroup) AddCell(c *cell, autoremove bool) {
 func (cg *CellGroup) RemoveCell(id uint64) {
 	cg.mu.Lock()
 	defer cg.mu.Unlock()
+	cg.removeCell(id)
+}
+
+func (cg *CellGroup) removeCell(id uint64) {
 	if cell, ok := cg.cells[id]; ok {
 		cg.load -= cell.Load()
 	}
@@ -120,19 +126,33 @@ func (cg *CellGroup) TotalLoad() (load uint64) {
 	return load
 }
 
+func (cg *CellGroup) AddLoad(l uint64) {
+	cg.mu.Lock()
+	defer cg.mu.Unlock()
+	cg.addLoad(l)
+}
+
 func (cg *CellGroup) addLoad(l uint64) {
 	cg.load += l
 }
 
-func (cg *CellGroup) removeLoad(l uint64) {
+func (cg *CellGroup) RemoveLoad(l uint64) {
 	cg.mu.Lock()
 	defer cg.mu.Unlock()
+	cg.removeLoad(l)
+}
+
+func (cg *CellGroup) removeLoad(l uint64) {
 	cg.load -= l
 }
 
-func (cg *CellGroup) truncate() {
+func (cg *CellGroup) Truncate() {
 	cg.mu.Lock()
 	defer cg.mu.Unlock()
+	cg.truncate()
+}
+
+func (cg *CellGroup) truncate() {
 	for cid := range cg.cells {
 		cg.cells[cid].Truncate()
 	}
