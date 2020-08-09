@@ -313,7 +313,7 @@ func (s *Space) relocateData(d DataItem, ncID uint64) (Node, uint64, error) {
 		}
 		c := NewCell(cID, cg, 0)
 		s.cells[cID] = c
-		cg.AddCell(c, true)
+		cg.AddCell(c, false)
 	}
 
 	if _, ok := s.cells[ncID]; !ok {
@@ -323,7 +323,7 @@ func (s *Space) relocateData(d DataItem, ncID uint64) (Node, uint64, error) {
 		}
 		c := NewCell(ncID, cg, 0)
 		s.cells[ncID] = c
-		cg.AddCell(c, true)
+		cg.AddCell(c, false)
 	}
 
 	s.cells[cID].Relocate(d, ncID)
