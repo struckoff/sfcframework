@@ -247,13 +247,9 @@ func (s *Space) locateData(d DataItem, load bool) (Node, uint64, error) {
 		return nil, 0, err
 	}
 	if _, ok := s.cells[cID]; !ok {
-		cg, ok := s.findCellGroup(cID)
-		if !ok {
-			return nil, 0, errors.Errorf("unable to bind cell to cell group (cID=%v  d=%s)", cID, d.ID())
+		if err := s.newCell(cID); err != nil {
+			return nil, 0, err
 		}
-		c := NewCell(cID, cg, 0)
-		s.cells[cID] = c
-		cg.AddCell(c, false)
 	}
 	if ncID, ok := s.cells[cID].Relocated(d.ID()); ok {
 		cID = ncID
@@ -265,6 +261,16 @@ func (s *Space) locateData(d DataItem, load bool) (Node, uint64, error) {
 		s.load += d.Size()
 	}
 	return s.cells[cID].cg.Node(), cID, nil
+}
+
+func (s *Space) newCell(cID uint64) error {
+	cg, ok := s.findCellGroup(cID)
+	if !ok {
+		return errors.Errorf("unable to bind cell to cell group (cID=%v)", cID)
+	}
+	c := NewCell(cID, cg, 0)
+	s.cells[cID] = c
+	return nil
 }
 
 func (s *Space) removeData(d DataItem) error {
@@ -307,23 +313,15 @@ func (s *Space) relocateData(d DataItem, ncID uint64) (Node, uint64, error) {
 		return nil, 0, err
 	}
 	if _, ok := s.cells[cID]; !ok {
-		cg, ok := s.findCellGroup(cID)
-		if !ok {
-			return nil, 0, errors.Errorf("unable to bind cell to cell group (cID=%v  d=%s)", cID, d.ID())
+		if err := s.newCell(cID); err != nil {
+			return nil, 0, err
 		}
-		c := NewCell(cID, cg, 0)
-		s.cells[cID] = c
-		cg.AddCell(c, false)
 	}
 
 	if _, ok := s.cells[ncID]; !ok {
-		cg, ok := s.findCellGroup(ncID)
-		if !ok {
-			return nil, 0, errors.Errorf("unable to bind cell to cell group (ncID=%v  d=%s)", ncID, d.ID())
+		if err := s.newCell(ncID); err != nil {
+			return nil, 0, err
 		}
-		c := NewCell(ncID, cg, 0)
-		s.cells[ncID] = c
-		cg.AddCell(c, false)
 	}
 
 	s.cells[cID].Relocate(d, ncID)

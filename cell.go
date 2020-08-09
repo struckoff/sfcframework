@@ -21,17 +21,9 @@ func NewCell(id uint64, cg *CellGroup, load uint64) *cell {
 		off:  make(map[string]uint64),
 		dis:  make(map[string]uint64),
 	}
-	//found := false
-	//for i := range cgs {
-	//	if id >= cgs[i].cRange.Min && id < cgs[i].cRange.Max {
-	//		found = true
-	//		c.cg = &cgs[i]
-	//		break
-	//	}
-	//}
-	//if !found { //? May be this could be c.cg == nil
-	//	return nil, errors.New("unable to bind cell to cell group")
-	//}
+	if cg != nil {
+		cg.AddCell(&c, false)
+	}
 	return &c
 }
 
