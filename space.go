@@ -253,7 +253,7 @@ func (s *Space) locateData(d DataItem, load bool) (Node, uint64, error) {
 		}
 		c := NewCell(cID, cg, 0)
 		s.cells[cID] = c
-		cg.AddCell(c, true)
+		cg.AddCell(c, false)
 	}
 	if ncID, ok := s.cells[cID].Relocated(d.ID()); ok {
 		cID = ncID
