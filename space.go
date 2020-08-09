@@ -114,7 +114,7 @@ func (s *Space) TotalPower() (power float64) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	for iter := range s.cgs {
-		power += s.cgs[iter].node.Power().Get()
+		power += s.cgs[iter].Node().Power().Get()
 	}
 	return
 }
@@ -154,8 +154,8 @@ func (s *Space) addNode(n Node) error {
 	//TODO May be s.cgs should be map
 	for iter := range s.cgs {
 		if s.cgs[iter].ID() == n.ID() {
-			s.cgs[iter].SetNode(n)
 			s.cgs[iter].Truncate()
+			s.cgs[iter].SetNode(n)
 			return nil
 		}
 	}
@@ -253,7 +253,7 @@ func (s *Space) locateData(d DataItem, load bool) (Node, uint64, error) {
 		}
 		c := NewCell(cID, cg, 0)
 		s.cells[cID] = c
-		cg.cells[cID] = c
+		cg.AddCell(c, true)
 	}
 	if ncID, ok := s.cells[cID].Relocated(d.ID()); ok {
 		cID = ncID
@@ -292,13 +292,13 @@ func (s *Space) removeData(d DataItem) error {
 	return nil
 }
 
-func (s *Space) RelocateData(d DataItem, ncID uint64, load bool) (Node, uint64, error) {
+func (s *Space) RelocateData(d DataItem, ncID uint64) (Node, uint64, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return s.relocateData(d, ncID, load)
+	return s.relocateData(d, ncID)
 }
 
-func (s *Space) relocateData(d DataItem, ncID uint64, load bool) (Node, uint64, error) {
+func (s *Space) relocateData(d DataItem, ncID uint64) (Node, uint64, error) {
 	if len(s.cgs) == 0 {
 		return nil, 0, errors.New("no nodes in the cluster")
 	}
@@ -313,7 +313,7 @@ func (s *Space) relocateData(d DataItem, ncID uint64, load bool) (Node, uint64, 
 		}
 		c := NewCell(cID, cg, 0)
 		s.cells[cID] = c
-		cg.cells[cID] = c
+		cg.AddCell(c, true)
 	}
 
 	if _, ok := s.cells[ncID]; !ok {
@@ -323,18 +323,12 @@ func (s *Space) relocateData(d DataItem, ncID uint64, load bool) (Node, uint64, 
 		}
 		c := NewCell(ncID, cg, 0)
 		s.cells[ncID] = c
-		cg.cells[ncID] = c
+		cg.AddCell(c, true)
 	}
 
 	s.cells[cID].Relocate(d, ncID)
-	if load {
-		//s.cells[cID].load -= d.Size()
-		//if err := s.cells[cID].remove(d); err != nil {
-		//	return nil, 0, err
-		//}
-		if err = s.cells[ncID].Add(d); err != nil {
-			return nil, 0, err
-		}
+	if err = s.cells[ncID].Add(d); err != nil {
+		return nil, 0, err
 	}
 
 	return s.cells[ncID].cg.Node(), ncID, nil

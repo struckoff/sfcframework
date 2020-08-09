@@ -106,15 +106,15 @@ func (b *Balancer) RemoveData(d DataItem) error {
 
 // AddData loads data into the Space of the balancer.
 func (b *Balancer) RelocateData(d DataItem, ncID uint64, load bool) (Node, uint64, error) {
-	return b.space.RelocateData(d, ncID, load)
+	return b.space.RelocateData(d, ncID)
 }
 
 func (b *Balancer) Optimize() error {
-	ns, err := b.of(b.space)
+	cgs, err := b.of(b.space)
 	if err != nil {
 		return err
 	}
-	b.space.cgs = ns
+	b.space.SetGroups(cgs)
 	return nil
 }
 

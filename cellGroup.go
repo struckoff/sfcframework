@@ -66,7 +66,7 @@ func (cg *CellGroup) SetRange(min, max uint64, s *Space) error {
 				if c.cg != nil && c.cg.id != cg.id {
 					c.cg.removeCell(c.ID())
 				}
-				c.cg = cg
+				c.SetGroup(cg)
 			}
 		}
 	}
@@ -100,7 +100,7 @@ func (cg *CellGroup) AddCell(c *cell, autoremove bool) {
 	if c.cg != nil && autoremove && c.cg.id != cg.id {
 		c.cg.RemoveCell(c.id)
 	}
-	c.cg = cg
+	c.SetGroup(cg)
 }
 
 // RemoveCell removes a cell from cell group.
