@@ -246,31 +246,39 @@ func (s *Space) locateData(d DataItem, load bool) (Node, uint64, error) {
 	if err != nil {
 		return nil, 0, err
 	}
-	if _, ok := s.cells[cID]; !ok {
-		if err := s.newCell(cID); err != nil {
+	c, err := s.getCell(cID)
+	if err != nil {
+		return nil, 0, err
+	}
+	if ncID, ok := c.Relocated(d.ID()); ok {
+		cID = ncID
+		c, err = s.getCell(ncID)
+		if err != nil {
 			return nil, 0, err
 		}
 	}
-	if ncID, ok := s.cells[cID].Relocated(d.ID()); ok {
-		cID = ncID
-	}
 	if load {
-		if err = s.cells[cID].Add(d); err != nil {
+		if err = c.Add(d); err != nil {
 			return nil, 0, err
 		}
 		s.load += d.Size()
 	}
-	return s.cells[cID].cg.Node(), cID, nil
+	return c.cg.Node(), cID, nil
 }
 
-func (s *Space) newCell(cID uint64) error {
-	cg, ok := s.findCellGroup(cID)
-	if !ok {
-		return errors.Errorf("unable to bind cell to cell group (cID=%v)", cID)
+func (s *Space) getCell(cID uint64) (*cell, error) {
+	if cg, ok := s.cells[cID]; !ok {
+		if cg != nil {
+			return nil, errors.Errorf("cell exists (cID=%v)", cID)
+		}
+		cg, ok := s.findCellGroup(cID)
+		if !ok {
+			return nil, errors.Errorf("unable to bind cell to cell group (cID=%v)", cID)
+		}
+		c := NewCell(cID, cg, 0)
+		s.cells[cID] = c
 	}
-	c := NewCell(cID, cg, 0)
-	s.cells[cID] = c
-	return nil
+	return s.cells[cID], nil
 }
 
 func (s *Space) removeData(d DataItem) error {
@@ -312,24 +320,21 @@ func (s *Space) relocateData(d DataItem, ncID uint64) (Node, uint64, error) {
 	if err != nil {
 		return nil, 0, err
 	}
-	if _, ok := s.cells[cID]; !ok {
-		if err := s.newCell(cID); err != nil {
-			return nil, 0, err
-		}
+	c, err := s.getCell(cID)
+	if err != nil {
+		return nil, 0, err
 	}
-
-	if _, ok := s.cells[ncID]; !ok {
-		if err := s.newCell(ncID); err != nil {
-			return nil, 0, err
-		}
-	}
-
-	s.cells[cID].Relocate(d, ncID)
-	if err = s.cells[ncID].Add(d); err != nil {
+	nc, err := s.getCell(ncID)
+	if err != nil {
 		return nil, 0, err
 	}
 
-	return s.cells[ncID].cg.Node(), ncID, nil
+	c.Relocate(d, ncID)
+	if err = nc.Add(d); err != nil {
+		return nil, 0, err
+	}
+
+	return nc.cg.Node(), ncID, nil
 }
 
 //cellID calculates the id of cell in space based on transform function and space filling curve.
