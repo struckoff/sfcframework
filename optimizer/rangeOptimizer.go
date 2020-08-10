@@ -21,13 +21,13 @@ func RangeOptimizer(s *balancer.Space) (res []*balancer.CellGroup, err error) {
 		min = max
 		p := cgs[iter].Node().Power().Get() / totalPower
 		max = min + uint64(math.Round(float64(s.Capacity())*p))
-		if err := cgs[iter].SetRange(min, max, nil); err != nil {
+		if err := cgs[iter].SetRange(min, max); err != nil {
 			return nil, errors.Wrap(err, "range optimizer error")
 		}
 	}
 
 	if max < s.Capacity() {
-		if err := cgs[len(cgs)-1].SetRange(min, s.Capacity()+1, nil); err != nil {
+		if err := cgs[len(cgs)-1].SetRange(min, s.Capacity()+1); err != nil {
 			return nil, errors.Wrap(err, "range optimizer error")
 		}
 	}
@@ -111,13 +111,13 @@ func PowerRangeOptimizer(s *balancer.Space) (res []*balancer.CellGroup, err erro
 				cgs[iter].AddCell(cells[citer], true)
 			}
 		}
-		if err := cgs[iter].SetRange(min, max, nil); err != nil {
+		if err := cgs[iter].SetRange(min, max); err != nil {
 			return nil, errors.Wrap(err, "power range optimizer error")
 		}
 	}
 
 	if max < s.Capacity() {
-		if err := cgs[len(cgs)-1].SetRange(min, s.Capacity()+1, nil); err != nil {
+		if err := cgs[len(cgs)-1].SetRange(min, s.Capacity()+1); err != nil {
 			return nil, errors.Wrap(err, "range optimizer error")
 		}
 		for citer := range cells {
