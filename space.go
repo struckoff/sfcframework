@@ -154,7 +154,7 @@ func (s *Space) addNode(n Node) error {
 	//TODO May be s.cgs should be map
 	for iter := range s.cgs {
 		if s.cgs[iter].ID() == n.ID() {
-			s.cgs[iter].Truncate()
+			//s.cgs[iter].Truncate()
 			s.cgs[iter].SetNode(n)
 			return nil
 		}

@@ -59,7 +59,7 @@ func (cg *CellGroup) SetRange(min, max uint64, s *Space) error {
 	if s != nil {
 		cg.load = 0
 		cg.cells = make(map[uint64]*cell)
-		for _, c := range s.cells {
+		for _, c := range s.Cells() {
 			if cg.cRange.Fits(c.ID()) {
 				cg.load += c.Load()
 				cg.cells[c.ID()] = c
