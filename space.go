@@ -107,8 +107,6 @@ func (s *Space) TotalLoad() (load uint64) {
 }
 
 func (s *Space) totalLoad() (load uint64) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 	for _, cell := range s.cells {
 		load += cell.Load()
 	}
