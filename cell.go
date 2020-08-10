@@ -11,6 +11,7 @@ type cell struct {
 	off  map[string]uint64 // location of Relocated DataItem. DataItem.ID -> cell.ID
 	dis  map[string]uint64 // data items in cell
 	cg   *CellGroup
+	isn  bool
 }
 
 func NewCell(id uint64, cg *CellGroup, load uint64) *cell {
@@ -20,6 +21,7 @@ func NewCell(id uint64, cg *CellGroup, load uint64) *cell {
 		cg:   cg,
 		off:  make(map[string]uint64),
 		dis:  make(map[string]uint64),
+		isn:  true,
 	}
 	if cg != nil {
 		cg.AddCell(&c, false)
@@ -62,6 +64,7 @@ func (c *cell) Truncate() {
 func (c *cell) Add(d DataItem) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	c.isn = true
 	c.load += d.Size()
 	c.dis[d.ID()] = d.Size()
 	c.cg.AddLoad(d.Size())
@@ -71,6 +74,7 @@ func (c *cell) Add(d DataItem) error {
 func (c *cell) Remove(d DataItem) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	c.isn = true
 	if _, ok := c.off[d.ID()]; ok {
 		delete(c.off, d.ID())
 	}
@@ -85,6 +89,7 @@ func (c *cell) Remove(d DataItem) error {
 func (c *cell) Relocate(d DataItem, ncID uint64) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	c.isn = true
 	c.off[d.ID()] = ncID
 	if _, ok := c.dis[d.ID()]; ok {
 		delete(c.dis, d.ID())
