@@ -124,6 +124,9 @@ func (s *Space) SetGroups(groups []*CellGroup) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.cgs = groups
+	for _, cg := range s.cgs {
+		cg.SetCells(nil)
+	}
 	for _, c := range s.cells {
 		if cg, ok := s.findCellGroup(c.id); ok {
 			cg.AddCell(c, true)

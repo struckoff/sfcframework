@@ -44,7 +44,7 @@ func (cg *CellGroup) Range() Range {
 	return cg.cRange
 }
 
-func (cg *CellGroup) SetRange(min, max uint64, s *Space) error {
+func (cg *CellGroup) SetRange(min, max uint64) error {
 	cg.mu.Lock()
 	defer cg.mu.Unlock()
 	if min > max {
@@ -56,20 +56,20 @@ func (cg *CellGroup) SetRange(min, max uint64, s *Space) error {
 		Len: max - min,
 	}
 
-	if s != nil {
-		cg.load = 0
-		cg.cells = make(map[uint64]*cell)
-		//for _, c := range s.Cells() {
-		//	if cg.cRange.Fits(c.ID()) {
-		//		cg.load += c.Load()
-		//		cg.cells[c.ID()] = c
-		//		if c.cg != nil && c.cg.id != cg.id {
-		//			c.cg.removeCell(c.ID())
-		//		}
-		//		c.SetGroup(cg)
-		//	}
-		//}
-	}
+	//if s != nil {
+	//	cg.load = 0
+	//	cg.cells = make(map[uint64]*cell)
+	//for _, c := range s.Cells() {
+	//	if cg.cRange.Fits(c.ID()) {
+	//		cg.load += c.Load()
+	//		cg.cells[c.ID()] = c
+	//		if c.cg != nil && c.cg.id != cg.id {
+	//			c.cg.removeCell(c.ID())
+	//		}
+	//		c.SetGroup(cg)
+	//	}
+	//}
+	//}
 
 	return nil
 }
@@ -167,4 +167,11 @@ func (cg *CellGroup) SetCells(cells map[uint64]*cell) {
 
 func (cg *CellGroup) setCells(cells map[uint64]*cell) {
 	cg.cells = cells
+	cg.load = 0
+	if cells == nil {
+		cg.cells = make(map[uint64]*cell)
+	}
+	for iter := range cells {
+		cg.load += cells[iter].Load()
+	}
 }
