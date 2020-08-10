@@ -103,9 +103,16 @@ func (s *Space) Cells() []*cell {
 func (s *Space) TotalLoad() (load uint64) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	return s.totalLoad()
+}
+
+func (s *Space) totalLoad() (load uint64) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	for _, cell := range s.cells {
 		load += cell.Load()
 	}
+	s.load = load
 	return load
 }
 
@@ -124,14 +131,14 @@ func (s *Space) SetGroups(groups []*CellGroup) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.cgs = groups
-	for _, cg := range s.cgs {
-		cg.SetCells(nil)
-	}
-	for _, c := range s.cells {
-		if cg, ok := s.findCellGroup(c.id); ok {
-			cg.AddCell(c, true)
-		}
-	}
+	//for _, cg := range s.cgs {
+	//	cg.SetCells(nil)
+	//}
+	//for _, c := range s.cells {
+	//	if cg, ok := s.findCellGroup(c.ID()); ok {
+	//		cg.AddCell(c, true)
+	//	}
+	//}
 }
 
 //Len returns the number of CellGroups in the space.

@@ -25,7 +25,7 @@ func PowerOptimizer(s *balancer.Space) (res []*balancer.CellGroup, err error) {
 			if i == (len(cgs) - 1) {
 				continue
 			}
-			if err := cg.SetRange(min, max); err != nil {
+			if err := cg.SetRange(min, max, s); err != nil {
 				return nil, err
 			}
 			res = append(res, cg)
