@@ -124,6 +124,11 @@ func (s *Space) SetGroups(groups []*CellGroup) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.cgs = groups
+	for _, c := range s.cells {
+		if cg, ok := s.findCellGroup(c.id); ok {
+			cg.AddCell(c, true)
+		}
+	}
 }
 
 //Len returns the number of CellGroups in the space.
