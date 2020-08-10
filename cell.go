@@ -64,7 +64,7 @@ func (c *cell) Truncate() {
 func (c *cell) Add(d DataItem) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.isn = true
+	c.isn = false
 	c.load += d.Size()
 	c.dis[d.ID()] = d.Size()
 	c.cg.AddLoad(d.Size())
@@ -74,7 +74,7 @@ func (c *cell) Add(d DataItem) error {
 func (c *cell) Remove(d DataItem) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.isn = true
+	c.isn = false
 	if _, ok := c.off[d.ID()]; ok {
 		delete(c.off, d.ID())
 	}
@@ -89,7 +89,7 @@ func (c *cell) Remove(d DataItem) error {
 func (c *cell) Relocate(d DataItem, ncID uint64) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.isn = true
+	c.isn = false
 	c.off[d.ID()] = ncID
 	if _, ok := c.dis[d.ID()]; ok {
 		delete(c.dis, d.ID())
