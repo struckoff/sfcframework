@@ -2,12 +2,11 @@ package balancer
 
 import (
 	"github.com/pkg/errors"
-	"log"
 	"sync"
 )
 
 type CellGroup struct {
-	id     string
+	id     string //unique id of the cell group
 	mu     sync.Mutex
 	node   Node
 	cells  map[uint64]*cell
@@ -15,6 +14,7 @@ type CellGroup struct {
 	cRange Range
 }
 
+//NewCellGroup builds a new CellGroup
 func NewCellGroup(n Node) *CellGroup {
 	return &CellGroup{
 		id:    n.ID(),
@@ -23,75 +23,71 @@ func NewCellGroup(n Node) *CellGroup {
 	}
 }
 
+//ID returns the ID of the cell group
 func (cg *CellGroup) ID() string {
 	return cg.id
 }
 
+//Node returns the node attached to this cell group
 func (cg *CellGroup) Node() Node {
 	cg.mu.Lock()
 	defer cg.mu.Unlock()
 	return cg.node
 }
 
+//SetNode sets the node attached to the cell group
 func (cg *CellGroup) SetNode(n Node) {
 	cg.mu.Lock()
 	defer cg.mu.Unlock()
 	cg.node = n
 }
 
+//Range returns the range of cell group
 func (cg *CellGroup) Range() Range {
 	cg.mu.Lock()
 	defer cg.mu.Unlock()
 	return cg.cRange
 }
 
+//SetRange sets minimum and maximum of the cell group range
+//if s is not nil method will tryes to update cells of cell group from the space
 func (cg *CellGroup) SetRange(min, max uint64, s *Space) error {
-	log.Println("SetRange:", cg.id, cg.mu)
 	cg.mu.Lock()
-	log.Println("SetRange: cg.mu.Lock()", cg.id, cg.mu)
 	defer cg.mu.Unlock()
 	if min > max {
 		return errors.Errorf("min(%d) should be less or equall then max(%d)", min, max)
 	}
-	log.Println("SetRange: cg.cRange = Range", cg.id, cg.mu)
 	cg.cRange = Range{
 		Min: min,
 		Max: max,
 		Len: max - min,
 	}
 
-	log.Println("SetRange: if s != nil {", cg.id, cg.mu)
 	if s != nil {
 		cg.load = 0
 		cg.cells = make(map[uint64]*cell)
-		log.Println("SetRange: for _, c := range s.Cells()", cg.id, cg.mu, s.mu)
 		for _, c := range s.Cells() {
-			log.Println("SetRange: if cg.cRange.Fits(c.ID()) {", cg.id, c.ID())
 			if cg.cRange.Fits(c.ID()) {
-				log.Println("SetRange: cg.load += c.Load()", cg.id, cg.mu)
 				cg.load += c.Load()
-				log.Println("SetRange: cg.cells[c.ID()] = c", cg.id, cg.mu)
 				cg.cells[c.ID()] = c
-				log.Println("SetRange: if c.cg != nil && c.cg.id != cg.id {", cg.id, len(cg.cells))
 				if c.cg != nil && c.cg.id != cg.id {
-					log.Println("SetRange: c.cg.RemoveCell(c.ID())", cg.id, c.cg.id, c.ID())
 					c.cg.RemoveCell(c.ID())
 				}
-				log.Println("SetRange: c.SetGroup(cg)", cg.id, c.ID())
 				c.SetGroup(cg)
 			}
 		}
 	}
-	log.Println("SetRange: return nil", cg.id)
 	return nil
 }
 
+//FitsRange checks if the index of the cell fits the range of the cell group
 func (cg *CellGroup) FitsRange(index uint64) bool {
 	cg.mu.Lock()
 	defer cg.mu.Unlock()
 	return cg.cRange.Fits(index)
 }
 
+//Cells returns map of cells in the cell group
 func (cg *CellGroup) Cells() map[uint64]*cell {
 	cg.mu.Lock()
 	defer cg.mu.Unlock()
@@ -129,6 +125,7 @@ func (cg *CellGroup) removeCell(id uint64) {
 	delete(cg.cells, id)
 }
 
+//TotalLoad returns cumulative load of all cells in the cell group
 func (cg *CellGroup) TotalLoad() (load uint64) {
 	cg.mu.Lock()
 	defer cg.mu.Unlock()
@@ -139,6 +136,7 @@ func (cg *CellGroup) TotalLoad() (load uint64) {
 	return load
 }
 
+// AddLoad increase group load by given argument
 func (cg *CellGroup) AddLoad(l uint64) {
 	cg.mu.Lock()
 	defer cg.mu.Unlock()
@@ -149,16 +147,8 @@ func (cg *CellGroup) addLoad(l uint64) {
 	cg.load += l
 }
 
-func (cg *CellGroup) RemoveLoad(l uint64) {
-	cg.mu.Lock()
-	defer cg.mu.Unlock()
-	cg.removeLoad(l)
-}
-
-func (cg *CellGroup) removeLoad(l uint64) {
-	cg.load -= l
-}
-
+//Truncate call truncate method of each cell in the cell group
+//emptifies load of each cell without removing cells from the cell group
 func (cg *CellGroup) Truncate() {
 	cg.mu.Lock()
 	defer cg.mu.Unlock()
@@ -172,6 +162,7 @@ func (cg *CellGroup) truncate() {
 	cg.load = 0
 }
 
+//SetCells replaces cells in the cell group with given
 func (cg *CellGroup) SetCells(cells map[uint64]*cell) {
 	cg.mu.Lock()
 	defer cg.mu.Unlock()

@@ -10,10 +10,10 @@ import (
 
 type Space struct {
 	mu    sync.Mutex
-	cells map[uint64]*cell
-	cgs   []*CellGroup
-	sfc   curve.Curve
-	tf    TransformFunc
+	cells map[uint64]*cell //cells in the space
+	cgs   []*CellGroup     //cell groups in the space
+	sfc   curve.Curve      //encoder(Space filling curve)
+	tf    TransformFunc    //TransformFunc - transform DataItem into SFC-readable format
 	load  uint64
 }
 
@@ -192,23 +192,6 @@ func (s *Space) getNode(id string) (Node, bool) {
 	return nil, false
 }
 
-//func (s *Space) SetNodes(ns []Node) error {
-//	s.mu.Lock()
-//	defer s.mu.Unlock()
-//	if err := s.setNodes(ns); err != nil {
-//		return err
-//	}
-//	return nil
-//}
-//
-//func (s *Space) setNodes(ns []Node) error {
-//	s.cgs = nil
-//	for _, n := range ns {
-//		s.cgs = append(s.cgs, NewCellGroup(n))
-//	}
-//	return nil
-//}
-
 func (s *Space) RemoveNode(id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -318,6 +301,7 @@ func (s *Space) removeData(d DataItem) error {
 	return nil
 }
 
+//RelocateData moves DataItem to another cell
 func (s *Space) RelocateData(d DataItem, ncID uint64) (Node, uint64, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
