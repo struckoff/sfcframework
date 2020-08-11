@@ -38,7 +38,11 @@ func (c *cell) SetGroup(cg *CellGroup) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.cg = cg
-	c.log = append(c.log, "set group "+cg.id)
+	if cg == nil {
+		c.log = append(c.log, "set group nil")
+	} else {
+		c.log = append(c.log, "set group "+cg.id)
+	}
 }
 
 func (c *cell) Group() *CellGroup {

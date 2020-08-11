@@ -3,7 +3,6 @@ package balancer
 import (
 	"github.com/pkg/errors"
 	"math"
-	"sort"
 	"sync"
 
 	"github.com/struckoff/SFCFramework/curve"
@@ -86,16 +85,16 @@ func (s *Space) CellGroups() []*CellGroup {
 func (s *Space) Cells() []*cell {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	ids := make([]uint64, 0, len(s.cells))
-	for k := range s.cells {
-		ids = append(ids, k)
-	}
-	sort.Slice(ids, func(i, j int) bool {
-		return ids[i] < ids[j]
-	})
-	res := make([]*cell, len(s.cells))
-	for i, id := range ids {
-		res[i] = s.cells[id]
+	//ids := make([]uint64, 0, len(s.cells))
+	//for k := range s.cells {
+	//	ids = append(ids, k)
+	//}
+	//sort.Slice(ids, func(i, j int) bool {
+	//	return ids[i] < ids[j]
+	//})
+	res := make([]*cell, 0, len(s.cells))
+	for id := range s.cells {
+		res = append(res, s.cells[id])
 	}
 	return res
 }

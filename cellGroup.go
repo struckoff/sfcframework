@@ -64,7 +64,7 @@ func (cg *CellGroup) SetRange(min, max uint64, s *Space) error {
 	if s != nil {
 		cg.load = 0
 		cg.cells = make(map[uint64]*cell)
-		log.Println("SetRange: for _, c := range s.Cells()", cg.id, cg.mu)
+		log.Println("SetRange: for _, c := range s.Cells()", cg.id, cg.mu, s.mu)
 		for _, c := range s.Cells() {
 			log.Println("SetRange: if cg.cRange.Fits(c.ID()) {", cg.id, c.ID())
 			if cg.cRange.Fits(c.ID()) {
@@ -104,8 +104,8 @@ func (cg *CellGroup) Cells() map[uint64]*cell {
 func (cg *CellGroup) AddCell(c *cell, autoremove bool) {
 	cg.mu.Lock()
 	defer cg.mu.Unlock()
-	if cg == c.cg {
-		return
+	if ocl, ok := cg.cells[c.ID()]; ok {
+		cg.load -= ocl.Load()
 	}
 	cg.load += c.Load()
 	cg.cells[c.id] = c
