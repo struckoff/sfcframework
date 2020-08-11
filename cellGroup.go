@@ -2,6 +2,7 @@ package balancer
 
 import (
 	"github.com/pkg/errors"
+	"log"
 	"sync"
 )
 
@@ -45,32 +46,43 @@ func (cg *CellGroup) Range() Range {
 }
 
 func (cg *CellGroup) SetRange(min, max uint64, s *Space) error {
+	log.Println("SetRange:", cg.id, cg.mu)
 	cg.mu.Lock()
+	log.Println("SetRange: cg.mu.Lock()", cg.id, cg.mu)
 	defer cg.mu.Unlock()
 	if min > max {
 		return errors.Errorf("min(%d) should be less or equall then max(%d)", min, max)
 	}
+	log.Println("SetRange: cg.cRange = Range", cg.id, cg.mu)
 	cg.cRange = Range{
 		Min: min,
 		Max: max,
 		Len: max - min,
 	}
 
+	log.Println("SetRange: if s != nil {", cg.id, cg.mu)
 	if s != nil {
 		cg.load = 0
 		cg.cells = make(map[uint64]*cell)
+		log.Println("SetRange: for _, c := range s.Cells()", cg.id, cg.mu)
 		for _, c := range s.Cells() {
+			log.Println("SetRange: if cg.cRange.Fits(c.ID()) {", cg.id, c.ID())
 			if cg.cRange.Fits(c.ID()) {
+				log.Println("SetRange: cg.load += c.Load()", cg.id, cg.mu)
 				cg.load += c.Load()
+				log.Println("SetRange: cg.cells[c.ID()] = c", cg.id, cg.mu)
 				cg.cells[c.ID()] = c
+				log.Println("SetRange: if c.cg != nil && c.cg.id != cg.id {", cg.id, len(cg.cells))
 				if c.cg != nil && c.cg.id != cg.id {
-					c.cg.removeCell(c.ID())
+					log.Println("SetRange: c.cg.RemoveCell(c.ID())", cg.id, c.cg.id, c.ID())
+					c.cg.RemoveCell(c.ID())
 				}
+				log.Println("SetRange: c.SetGroup(cg)", cg.id, c.ID())
 				c.SetGroup(cg)
 			}
 		}
 	}
-
+	log.Println("SetRange: return nil", cg.id)
 	return nil
 }
 
