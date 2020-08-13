@@ -2,10 +2,11 @@ package optimizer
 
 import (
 	"github.com/struckoff/SFCFramework"
+	node2 "github.com/struckoff/SFCFramework/node"
 )
 
 func PowerOptimizer(s *balancer.Space) (res []*balancer.CellGroup, err error) {
-	var node balancer.Node
+	var node node2.Node
 
 	totalLoad := s.TotalLoad()
 	totalPower := s.TotalPower()

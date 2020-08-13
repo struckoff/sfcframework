@@ -1,10 +1,5 @@
 package mocks
 
-import (
-	"github.com/struckoff/SFCFramework"
-	"strconv"
-)
-
 // MockNode is Node implementation used for testing.
 //type MockNode struct {
 //	id       string
@@ -49,37 +44,37 @@ import (
 //	return cs
 //}
 
-func GenerateMockCellGroup(loadSet []uint64, rates []int, powers, caps []float64) []*balancer.CellGroup {
-	cgs := make([]*balancer.CellGroup, len(rates))
-	var min, max uint64
-	for iter, rate := range rates {
-		r := &Power{}
-		r.On("Get").Return(powers[iter])
-
-		capacity := &Capacity{}
-		capacity.On("Get").Return(caps[iter])
-
-		n := &Node{}
-		n.On("ID").Return("node-" + strconv.Itoa(iter))
-		n.On("Power").Return(r)
-		n.On("Capacity").Return(capacity)
-		n.On("Hash").Return(uint64(iter))
-
-		//cgs[iter] = NewCellGroup(NewMockNode("node-"+string(iter), powers[iter], 0, uint64(uuid.New().ID())))
-		cgs[iter] = balancer.NewCellGroup(n)
-		for iterCell := range loadSet[:rate] {
-			cell := balancer.NewCell(uint64(iterCell), nil, loadSet[iterCell])
-			cgs[iter].AddCell(cell, false)
-		}
-		max = min + uint64(rate)
-		loadSet = loadSet[rate:]
-		if err := cgs[iter].SetRange(min, max); err != nil {
-			panic(err)
-		}
-		min = max
-	}
-	return cgs
-}
+//func GenerateMockCellGroup(loadSet []uint64, rates []int, powers, caps []float64) []*balancer.CellGroup {
+//	cgs := make([]*balancer.CellGroup, len(rates))
+//	var min, max uint64
+//	for iter, rate := range rates {
+//		r := &mocks3.Power{}
+//		r.On("Get").Return(powers[iter])
+//
+//		capacity := &mocks.Capacity{}
+//		capacity.On("Get").Return(caps[iter])
+//
+//		n := &mocks2.Node{}
+//		n.On("ID").Return("node-" + strconv.Itoa(iter))
+//		n.On("Power").Return(r)
+//		n.On("Capacity").Return(capacity)
+//		n.On("Hash").Return(uint64(iter))
+//
+//		//cgs[iter] = NewCellGroup(NewMockNode("node-"+string(iter), powers[iter], 0, uint64(uuid.New().ID())))
+//		cgs[iter] = balancer.NewCellGroup(n)
+//		for iterCell := range loadSet[:rate] {
+//			cell := balancer.NewCell(uint64(iterCell), nil, loadSet[iterCell])
+//			cgs[iter].AddCell(cell, false)
+//		}
+//		max = min + uint64(rate)
+//		loadSet = loadSet[rate:]
+//		if err := cgs[iter].SetRange(min, max, nil); err != nil {
+//			panic(err)
+//		}
+//		min = max
+//	}
+//	return cgs
+//}
 
 //func CompareCellGroup(cg0, cg1 *balancer.CellGroup) (bool, string) {
 //	if !reflect.DeepEqual(cg0.cRange, cg1.cRange) {

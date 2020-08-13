@@ -59,6 +59,7 @@ func (c *cell) Load() (load uint64) {
 	for _, l := range c.dis {
 		load += l
 	}
+	c.load = load
 	return load
 }
 
@@ -89,9 +90,7 @@ func (c *cell) Remove(d DataItem) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	//c.log = append(c.log, "remove "+d.ID())
-	if _, ok := c.off[d.ID()]; ok {
-		delete(c.off, d.ID())
-	}
+	delete(c.off, d.ID())
 	if _, ok := c.dis[d.ID()]; ok {
 		c.load -= d.Size()
 		delete(c.dis, d.ID())
@@ -107,10 +106,11 @@ func (c *cell) Relocate(d DataItem, ncID uint64) {
 	defer c.mu.Unlock()
 	//c.log = append(c.log, "relocate "+d.ID()+" to"+strconv.Itoa(int(ncID)))
 	c.off[d.ID()] = ncID
-	if _, ok := c.dis[d.ID()]; ok {
+	if disize, ok := c.dis[d.ID()]; ok {
 		delete(c.dis, d.ID())
 		//c.cg.removeLoad(d.Size())
-		c.load -= d.Size()
+		c.load -= disize
+		c.cg.AddLoad(-disize)
 	}
 }
 

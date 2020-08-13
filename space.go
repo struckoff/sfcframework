@@ -2,6 +2,7 @@ package balancer
 
 import (
 	"github.com/pkg/errors"
+	"github.com/struckoff/SFCFramework/node"
 	"math"
 	"sync"
 
@@ -17,7 +18,7 @@ type Space struct {
 	load  uint64
 }
 
-func NewSpace(sfc curve.Curve, tf TransformFunc, nodes []Node) (*Space, error) {
+func NewSpace(sfc curve.Curve, tf TransformFunc, nodes []node.Node) (*Space, error) {
 	s := Space{
 		mu:    sync.Mutex{},
 		cells: map[uint64]*cell{},
@@ -153,7 +154,7 @@ func (s *Space) Capacity() uint64 {
 }
 
 //AddNode adds a new node to the space.
-func (s *Space) AddNode(n Node) error {
+func (s *Space) AddNode(n node.Node) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if err := s.addNode(n); err != nil {
@@ -162,7 +163,7 @@ func (s *Space) AddNode(n Node) error {
 	return nil
 }
 
-func (s *Space) addNode(n Node) error {
+func (s *Space) addNode(n node.Node) error {
 	//TODO May be s.cgs should be map
 	for iter := range s.cgs {
 		if s.cgs[iter].ID() == n.ID() {
@@ -176,13 +177,13 @@ func (s *Space) addNode(n Node) error {
 }
 
 //GetNode returns node with given ID.
-func (s *Space) GetNode(id string) (Node, bool) {
+func (s *Space) GetNode(id string) (node.Node, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.getNode(id)
 }
 
-func (s *Space) getNode(id string) (Node, bool) {
+func (s *Space) getNode(id string) (node.Node, bool) {
 	//TODO May be s.cgs should be map
 	for iter := range s.cgs {
 		if s.cgs[iter].ID() == id {
@@ -213,7 +214,7 @@ func (s *Space) removeNode(id string) error {
 }
 
 //AddData Add data item to the space.
-func (s *Space) AddData(d DataItem) (Node, uint64, error) {
+func (s *Space) AddData(d DataItem) (node.Node, uint64, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.locateData(d, true)
@@ -227,13 +228,13 @@ func (s *Space) RemoveData(d DataItem) error {
 }
 
 //LocateData find data item in the space.
-func (s *Space) LocateData(d DataItem) (Node, uint64, error) {
+func (s *Space) LocateData(d DataItem) (node.Node, uint64, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.locateData(d, false)
 }
 
-func (s *Space) locateData(d DataItem, load bool) (Node, uint64, error) {
+func (s *Space) locateData(d DataItem, load bool) (node.Node, uint64, error) {
 	if len(s.cgs) == 0 {
 		return nil, 0, errors.New("no nodes in the cluster")
 	}
@@ -302,13 +303,13 @@ func (s *Space) removeData(d DataItem) error {
 }
 
 //RelocateData moves DataItem to another cell
-func (s *Space) RelocateData(d DataItem, ncID uint64) (Node, uint64, error) {
+func (s *Space) RelocateData(d DataItem, ncID uint64) (node.Node, uint64, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.relocateData(d, ncID)
 }
 
-func (s *Space) relocateData(d DataItem, ncID uint64) (Node, uint64, error) {
+func (s *Space) relocateData(d DataItem, ncID uint64) (node.Node, uint64, error) {
 	if len(s.cgs) == 0 {
 		return nil, 0, errors.New("no nodes in the cluster")
 	}
@@ -360,10 +361,10 @@ func (s *Space) findCellGroup(cID uint64) (cg *CellGroup, ok bool) {
 	return nil, false
 }
 
-func (s *Space) Nodes() []Node {
+func (s *Space) Nodes() []node.Node {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	res := make([]Node, len(s.cgs))
+	res := make([]node.Node, len(s.cgs))
 	for iter := range s.cgs {
 		res[iter] = s.cgs[iter].Node()
 	}

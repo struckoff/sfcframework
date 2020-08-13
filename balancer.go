@@ -2,6 +2,7 @@ package balancer
 
 import (
 	"errors"
+	"github.com/struckoff/SFCFramework/node"
 	"reflect"
 
 	"github.com/struckoff/SFCFramework/curve"
@@ -25,7 +26,7 @@ type Balancer struct {
 //tf - function which transform DataItem into SFC-readable format
 //of - optimizer function which distributes cells into groups
 //nodes - list of nodes in space(could be nil)
-func NewBalancer(cType curve.CurveType, dims, size uint64, tf TransformFunc, of OptimizerFunc, nodes []Node) (*Balancer, error) {
+func NewBalancer(cType curve.CurveType, dims, size uint64, tf TransformFunc, of OptimizerFunc, nodes []node.Node) (*Balancer, error) {
 	bits, err := Log2(size)
 	if err != nil {
 		return nil, err
@@ -50,7 +51,7 @@ func (b *Balancer) Space() *Space {
 
 // AddNode adds node to the Space of balancer, and initiates rebalancing of cells
 // between cell groups.
-func (b *Balancer) AddNode(n Node, optimize bool) error {
+func (b *Balancer) AddNode(n node.Node, optimize bool) error {
 	if b.space.Len() == 0 || b.nType == nil {
 		b.nType = reflect.TypeOf(n)
 	}
@@ -68,11 +69,11 @@ func (b *Balancer) AddNode(n Node, optimize bool) error {
 }
 
 //GetNode returns the node by the given ID
-func (b *Balancer) GetNode(id string) (Node, bool) {
+func (b *Balancer) GetNode(id string) (node.Node, bool) {
 	return b.space.GetNode(id)
 }
 
-func (b *Balancer) Nodes() []Node {
+func (b *Balancer) Nodes() []node.Node {
 	return b.space.Nodes()
 }
 
@@ -97,12 +98,12 @@ func (b *Balancer) RemoveNode(id string, optimize bool) error {
 }
 
 // LocateData finds data in the Space of the balancer.
-func (b *Balancer) LocateData(d DataItem) (Node, uint64, error) {
+func (b *Balancer) LocateData(d DataItem) (node.Node, uint64, error) {
 	return b.space.LocateData(d)
 }
 
 // AddData loads data into the Space of the balancer.
-func (b *Balancer) AddData(d DataItem) (Node, uint64, error) {
+func (b *Balancer) AddData(d DataItem) (node.Node, uint64, error) {
 	return b.space.AddData(d)
 }
 
@@ -112,7 +113,7 @@ func (b *Balancer) RemoveData(d DataItem) error {
 }
 
 // AddData loads data into the Space of the balancer.
-func (b *Balancer) RelocateData(d DataItem, ncID uint64) (Node, uint64, error) {
+func (b *Balancer) RelocateData(d DataItem, ncID uint64) (node.Node, uint64, error) {
 	return b.space.RelocateData(d, ncID)
 }
 

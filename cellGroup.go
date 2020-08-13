@@ -2,20 +2,21 @@ package balancer
 
 import (
 	"github.com/pkg/errors"
+	node2 "github.com/struckoff/SFCFramework/node"
 	"sync"
 )
 
 type CellGroup struct {
 	id     string //unique id of the cell group
 	mu     sync.Mutex
-	node   Node
+	node   node2.Node
 	cells  map[uint64]*cell
 	load   uint64
 	cRange Range
 }
 
 //NewCellGroup builds a new CellGroup
-func NewCellGroup(n Node) *CellGroup {
+func NewCellGroup(n node2.Node) *CellGroup {
 	return &CellGroup{
 		id:    n.ID(),
 		node:  n,
@@ -29,14 +30,14 @@ func (cg *CellGroup) ID() string {
 }
 
 //Node returns the node attached to this cell group
-func (cg *CellGroup) Node() Node {
+func (cg *CellGroup) Node() node2.Node {
 	cg.mu.Lock()
 	defer cg.mu.Unlock()
 	return cg.node
 }
 
 //SetNode sets the node attached to the cell group
-func (cg *CellGroup) SetNode(n Node) {
+func (cg *CellGroup) SetNode(n node2.Node) {
 	cg.mu.Lock()
 	defer cg.mu.Unlock()
 	cg.node = n
