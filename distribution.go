@@ -4,7 +4,7 @@ package balancer
 type DataDistribution []NodeData
 
 // NodeData contains information about what data items should be placed onto node.
-//5ку45
+//
 // ID - identifier of the node.
 //
 // Items - slice of data items identifiers.

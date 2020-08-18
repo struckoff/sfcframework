@@ -415,3 +415,56 @@ func Test_cell_Relocated(t *testing.T) {
 		})
 	}
 }
+
+func TestNewCell(t *testing.T) {
+	type args struct {
+		id uint64
+		cg *CellGroup
+	}
+	tests := []struct {
+		name string
+		args args
+		want *cell
+	}{
+		{
+			name: "not nil cg",
+			args: args{
+				id: 11,
+				cg: &CellGroup{
+					id:    "test-cg",
+					cells: make(map[uint64]*cell),
+				},
+			},
+			want: &cell{
+				id:  11,
+				off: make(map[string]uint64),
+				dis: make(map[string]uint64),
+				cg: &CellGroup{
+					id:    "test-cg",
+					cells: map[uint64]*cell{},
+				},
+			},
+		},
+		{
+			name: "nil cg",
+			args: args{
+				id: 11,
+				cg: nil,
+			},
+			want: &cell{
+				id:  11,
+				off: make(map[string]uint64),
+				dis: make(map[string]uint64),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := NewCell(tt.args.id, tt.args.cg)
+			if tt.args.cg != nil {
+				tt.want.cg.cells[c.ID()] = c
+			}
+			assert.Equal(t, tt.want, c)
+		})
+	}
+}

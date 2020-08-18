@@ -2,21 +2,21 @@ package balancer
 
 import (
 	"github.com/pkg/errors"
-	node2 "github.com/struckoff/SFCFramework/node"
+	"github.com/struckoff/SFCFramework/node"
 	"sync"
 )
 
 type CellGroup struct {
 	id     string //unique id of the cell group
 	mu     sync.Mutex
-	node   node2.Node
+	node   node.Node
 	cells  map[uint64]*cell
 	load   uint64
 	cRange Range
 }
 
 //NewCellGroup builds a new CellGroup
-func NewCellGroup(n node2.Node) *CellGroup {
+func NewCellGroup(n node.Node) *CellGroup {
 	return &CellGroup{
 		id:    n.ID(),
 		node:  n,
@@ -30,14 +30,14 @@ func (cg *CellGroup) ID() string {
 }
 
 //Node returns the node attached to this cell group
-func (cg *CellGroup) Node() node2.Node {
+func (cg *CellGroup) Node() node.Node {
 	cg.mu.Lock()
 	defer cg.mu.Unlock()
 	return cg.node
 }
 
 //SetNode sets the node attached to the cell group
-func (cg *CellGroup) SetNode(n node2.Node) {
+func (cg *CellGroup) SetNode(n node.Node) {
 	cg.mu.Lock()
 	defer cg.mu.Unlock()
 	cg.node = n
@@ -98,17 +98,19 @@ func (cg *CellGroup) Cells() map[uint64]*cell {
 // AddCell adds a cell to the cell group
 // If autoremove flag is true, method calls CellGroup.RemoveCell of previous cell group.
 // Flag is useful when CellGroup is altered and not refilled
-func (cg *CellGroup) AddCell(c *cell, autoremove bool) {
+func (cg *CellGroup) AddCell(c *cell) {
 	cg.mu.Lock()
 	defer cg.mu.Unlock()
+	cg.addCell(c)
+}
+
+func (cg *CellGroup) addCell(c *cell) {
+	cg.cells[0].load = 1
 	if ocl, ok := cg.cells[c.ID()]; ok {
 		cg.load -= ocl.Load()
 	}
 	cg.load += c.Load()
 	cg.cells[c.id] = c
-	if c.cg != nil && autoremove && c.cg.id != cg.id {
-		c.cg.RemoveCell(c.id)
-	}
 	c.SetGroup(cg)
 }
 
@@ -120,8 +122,12 @@ func (cg *CellGroup) RemoveCell(id uint64) {
 }
 
 func (cg *CellGroup) removeCell(id uint64) {
+	if cg == nil {
+		return
+	}
 	if cell, ok := cg.cells[id]; ok {
 		cg.load -= cell.Load()
+		cell.cg = nil
 	}
 	delete(cg.cells, id)
 }
@@ -130,6 +136,10 @@ func (cg *CellGroup) removeCell(id uint64) {
 func (cg *CellGroup) TotalLoad() (load uint64) {
 	cg.mu.Lock()
 	defer cg.mu.Unlock()
+	return cg.totalLoad()
+}
+
+func (cg *CellGroup) totalLoad() (load uint64) {
 	for _, cell := range cg.cells {
 		load += cell.Load()
 	}
@@ -138,15 +148,15 @@ func (cg *CellGroup) TotalLoad() (load uint64) {
 }
 
 // AddLoad increase group load by given argument
-func (cg *CellGroup) AddLoad(l uint64) {
-	cg.mu.Lock()
-	defer cg.mu.Unlock()
-	cg.addLoad(l)
-}
+//func (cg *CellGroup) AddLoad(l uint64) {
+//	cg.mu.Lock()
+//	defer cg.mu.Unlock()
+//	cg.addLoad(l)
+//}
 
-func (cg *CellGroup) addLoad(l uint64) {
-	cg.load += l
-}
+//func (cg *CellGroup) addLoad(l uint64) {
+//	cg.load += l
+//}
 
 //Truncate call truncate method of each cell in the cell group
 //emptifies load of each cell without removing cells from the cell group
@@ -172,11 +182,8 @@ func (cg *CellGroup) SetCells(cells map[uint64]*cell) {
 
 func (cg *CellGroup) setCells(cells map[uint64]*cell) {
 	cg.cells = cells
-	cg.load = 0
 	if cells == nil {
 		cg.cells = make(map[uint64]*cell)
 	}
-	for iter := range cells {
-		cg.load += cells[iter].Load()
-	}
+	cg.totalLoad()
 }

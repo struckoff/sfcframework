@@ -35,7 +35,8 @@ func RangeOptimizer(s *balancer.Space) (res []*balancer.CellGroup, err error) {
 	for iter := range cells {
 		for cgiter := range cgs {
 			if cgs[cgiter].FitsRange(cells[iter].ID()) {
-				cgs[cgiter].AddCell(cells[iter], true)
+				cells[iter].Group().RemoveCell(cells[iter].ID())
+				cgs[cgiter].AddCell(cells[iter])
 				break
 			}
 		}
@@ -108,7 +109,8 @@ func PowerRangeOptimizer(s *balancer.Space) (res []*balancer.CellGroup, err erro
 					max = cells[citer].ID()
 					break
 				}
-				cgs[iter].AddCell(cells[citer], true)
+				cells[citer].Group().RemoveCell(cells[citer].ID())
+				cgs[iter].AddCell(cells[citer])
 			}
 		}
 		if err := cgs[iter].SetRange(min, max, s); err != nil {
@@ -122,7 +124,8 @@ func PowerRangeOptimizer(s *balancer.Space) (res []*balancer.CellGroup, err erro
 		}
 		for citer := range cells {
 			if cells[citer].ID() >= max {
-				cgs[len(cgs)-1].AddCell(cells[citer], true)
+				cells[citer].Group().RemoveCell(cells[citer].ID())
+				cgs[len(cgs)-1].AddCell(cells[citer])
 			}
 		}
 	}

@@ -57,18 +57,11 @@ func splitCells(n int, l uint64) ([]Range, error) {
 	}
 	for c < float64(l) {
 		if i == n-1 {
-			res[i] = Range{
-				Min: uint64(math.Ceil(c)),
-				Max: l,
-			}
+			res[i] = NewRange(uint64(math.Ceil(c)), l)
 			break
 		}
 		nc := c + s
-		res[i] = Range{
-			Min: uint64(math.Ceil(c)),
-			Max: uint64(math.Ceil(nc)),
-		}
-		res[i].Len = res[i].Max - res[i].Min
+		res[i] = NewRange(uint64(math.Ceil(c)), uint64(math.Ceil(nc)))
 		i++
 		c = nc
 	}
@@ -271,7 +264,7 @@ func (s *Space) getCell(cID uint64) (*cell, error) {
 		if !ok {
 			return nil, errors.Errorf("unable to bind cell to cell group (cID=%v)", cID)
 		}
-		c := NewCell(cID, cg, 0)
+		c := NewCell(cID, cg)
 		s.cells[cID] = c
 	}
 	return s.cells[cID], nil
@@ -369,4 +362,20 @@ func (s *Space) Nodes() []node.Node {
 		res[iter] = s.cgs[iter].Node()
 	}
 	return res
+}
+
+func (s *Space) FillCellGroup(cg *CellGroup) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.fillCellGroup(cg)
+}
+
+func (s *Space) fillCellGroup(cg *CellGroup) {
+	cg.SetCells(nil)
+	for cid, c := range s.cells {
+		if cg.FitsRange(cid) {
+			c.cg.RemoveCell(cid)
+			cg.AddCell(c)
+		}
+	}
 }

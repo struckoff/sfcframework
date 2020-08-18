@@ -14,17 +14,15 @@ type cell struct {
 	//log  []string
 }
 
-func NewCell(id uint64, cg *CellGroup, load uint64) *cell {
+func NewCell(id uint64, cg *CellGroup) *cell {
 	c := cell{
-		id:   id,
-		load: load,
-		cg:   cg,
-		off:  make(map[string]uint64),
-		dis:  make(map[string]uint64),
-		//log:  make([]string, 0),
+		id:  id,
+		cg:  cg,
+		off: make(map[string]uint64),
+		dis: make(map[string]uint64),
 	}
 	if cg != nil {
-		cg.AddCell(&c, false)
+		cg.AddCell(&c)
 	}
 	return &c
 }
@@ -70,7 +68,6 @@ func (c *cell) Truncate() {
 	c.dis = make(map[string]uint64)
 	c.load = 0
 	//c.log = append(c.log, "truncate")
-
 }
 
 //Add DataItem to the cell
@@ -81,7 +78,7 @@ func (c *cell) Add(d DataItem) error {
 	//c.log = append(c.log, "add "+d.ID())
 	c.load += d.Size()
 	c.dis[d.ID()] = d.Size()
-	c.cg.AddLoad(d.Size())
+	//c.cg.AddLoad(d.Size())
 	return nil
 }
 
@@ -94,7 +91,7 @@ func (c *cell) Remove(d DataItem) error {
 	if _, ok := c.dis[d.ID()]; ok {
 		c.load -= d.Size()
 		delete(c.dis, d.ID())
-		c.cg.AddLoad(-d.Size())
+		//c.cg.AddLoad(-d.Size())
 	}
 	return nil
 }
@@ -108,9 +105,8 @@ func (c *cell) Relocate(d DataItem, ncID uint64) {
 	c.off[d.ID()] = ncID
 	if disize, ok := c.dis[d.ID()]; ok {
 		delete(c.dis, d.ID())
-		//c.cg.removeLoad(d.Size())
 		c.load -= disize
-		c.cg.AddLoad(-disize)
+		//c.cg.AddLoad(-disize)
 	}
 }
 
