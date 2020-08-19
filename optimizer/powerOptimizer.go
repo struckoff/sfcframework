@@ -2,10 +2,11 @@ package optimizer
 
 import (
 	"github.com/struckoff/SFCFramework"
+	node2 "github.com/struckoff/SFCFramework/node"
 )
 
 func PowerOptimizer(s *balancer.Space) (res []*balancer.CellGroup, err error) {
-	var node balancer.Node
+	var node node2.Node
 
 	totalLoad := s.TotalLoad()
 	totalPower := s.TotalPower()
@@ -19,13 +20,13 @@ func PowerOptimizer(s *balancer.Space) (res []*balancer.CellGroup, err error) {
 	l := float64(totalLoad) * p
 	var min, max uint64
 	for iter := range cells {
-		cg.AddCell(cells[iter], false)
+		cg.AddCell(cells[iter])
 		max = cells[iter].ID()
 		if float64(cg.TotalLoad()) >= l {
 			if i == (len(cgs) - 1) {
 				continue
 			}
-			if err := cg.SetRange(min, max); err != nil {
+			if err := cg.SetRange(min, max, s); err != nil {
 				return nil, err
 			}
 			res = append(res, cg)
@@ -59,7 +60,7 @@ func PowerOptimizerGreedy(s *balancer.Space) (res []balancer.CellGroup, err erro
 	}
 
 	for iter := range cells {
-		res[i].AddCell(cells[iter], false)
+		res[i].AddCell(cells[iter])
 		ws[i] -= float64(cells[iter].Load())
 		if ws[i] <= 0 && i < lastCgIndex {
 			i++
@@ -91,7 +92,7 @@ func PowerOptimizerPerms(s *balancer.Space) (res []*balancer.CellGroup, err erro
 			continue
 		}
 		l -= cl
-		cgs[lastCgIndex].AddCell(cells[iter], true)
+		cgs[lastCgIndex].AddCell(cells[iter])
 	}
 
 	return cgs, nil

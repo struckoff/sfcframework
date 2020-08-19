@@ -2,6 +2,7 @@ package balancer
 
 import (
 	"errors"
+	"github.com/struckoff/SFCFramework/node"
 	"reflect"
 
 	"github.com/struckoff/SFCFramework/curve"
@@ -18,7 +19,14 @@ type Balancer struct {
 	of    OptimizerFunc
 }
 
-func NewBalancer(cType curve.CurveType, dims, size uint64, tf TransformFunc, of OptimizerFunc, nodes []Node) (*Balancer, error) {
+//NewBalancer creates a new instance of balancer
+//cType - type of space filling curve to use
+//dims - amount of dimension to work with
+//size - size of the each dimension(power of 2 of amount of the bits to encode dimension)
+//tf - function which transform DataItem into SFC-readable format
+//of - optimizer function which distributes cells into groups
+//nodes - list of nodes in space(could be nil)
+func NewBalancer(cType curve.CurveType, dims, size uint64, tf TransformFunc, of OptimizerFunc, nodes []node.Node) (*Balancer, error) {
 	bits, err := Log2(size)
 	if err != nil {
 		return nil, err
@@ -43,14 +51,10 @@ func (b *Balancer) Space() *Space {
 
 // AddNode adds node to the Space of balancer, and initiates rebalancing of cells
 // between cell groups.
-func (b *Balancer) AddNode(n Node, optimize bool) error {
+func (b *Balancer) AddNode(n node.Node, optimize bool) error {
 	if b.space.Len() == 0 || b.nType == nil {
 		b.nType = reflect.TypeOf(n)
-		//return b.space.AddNode(n)
 	}
-	//else if reflect.TypeOf(n) != b.nType {
-	//	return errors.New("incorrect node type")
-	//}
 	if err := b.space.AddNode(n); err != nil {
 		return err
 	}
@@ -64,11 +68,12 @@ func (b *Balancer) AddNode(n Node, optimize bool) error {
 	return nil
 }
 
-func (b *Balancer) GetNode(id string) (Node, bool) {
+//GetNode returns the node by the given ID
+func (b *Balancer) GetNode(id string) (node.Node, bool) {
 	return b.space.GetNode(id)
 }
 
-func (b *Balancer) Nodes() []Node {
+func (b *Balancer) Nodes() []node.Node {
 	return b.space.Nodes()
 }
 
@@ -76,29 +81,49 @@ func (b *Balancer) SFC() curve.Curve {
 	return b.Space().sfc
 }
 
-func (b *Balancer) RemoveNode(id string) error {
+//RemoveNode - removes node from space by given id
+//if optimize is true it will also updates cell groups by optimizer
+func (b *Balancer) RemoveNode(id string, optimize bool) error {
 	if err := b.space.RemoveNode(id); err != nil {
 		return err
 	}
+	if optimize {
+		cgs, err := b.of(b.space)
+		if err != nil {
+			return err
+		}
+		b.space.SetGroups(cgs)
+	}
+	return nil
+}
+
+// LocateData finds data in the Space of the balancer.
+func (b *Balancer) LocateData(d DataItem) (node.Node, uint64, error) {
+	return b.space.LocateData(d)
+}
+
+// AddData loads data into the Space of the balancer.
+func (b *Balancer) AddData(d DataItem) (node.Node, uint64, error) {
+	return b.space.AddData(d)
+}
+
+// RemoveData removes DataItem from the Space of the balancer
+func (b *Balancer) RemoveData(d DataItem) error {
+	return b.space.RemoveData(d)
+}
+
+// AddData loads data into the Space of the balancer.
+func (b *Balancer) RelocateData(d DataItem, ncID uint64) (node.Node, uint64, error) {
+	return b.space.RelocateData(d, ncID)
+}
+
+//Optimize updates cell groups by optimizer
+func (b *Balancer) Optimize() error {
 	cgs, err := b.of(b.space)
 	if err != nil {
 		return err
 	}
 	b.space.SetGroups(cgs)
-	return nil
-}
-
-// LocateData loads data into the Space of the balancer.
-func (b *Balancer) LocateData(d DataItem) (Node, error) {
-	return b.space.LocateData(d)
-}
-
-func (b *Balancer) Optimize() error {
-	ns, err := b.of(b.space)
-	if err != nil {
-		return err
-	}
-	b.space.cgs = ns
 	return nil
 }
 
