@@ -2,7 +2,8 @@ package transform
 
 import (
 	"errors"
-	"github.com/struckoff/SFCFramework/curve"
+
+	"github.com/struckoff/sfcframework/curve"
 )
 
 const latStep = 90.0

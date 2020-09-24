@@ -2,10 +2,11 @@ package balancer
 
 import (
 	"errors"
-	"github.com/struckoff/SFCFramework/node"
 	"reflect"
 
-	"github.com/struckoff/SFCFramework/curve"
+	"github.com/struckoff/sfcframework/node"
+
+	"github.com/struckoff/sfcframework/curve"
 )
 
 // Balancer is responsible for distributing load between nodes of the cluster. It stores

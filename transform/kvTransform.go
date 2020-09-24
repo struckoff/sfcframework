@@ -2,7 +2,7 @@ package transform
 
 import (
 	"errors"
-	"github.com/struckoff/SFCFramework/curve"
+	"github.com/struckoff/sfcframework/curve"
 )
 
 func KVTransform(values []interface{}, sfc curve.Curve) ([]uint64, error) {
@@ -25,18 +25,18 @@ func KVTransform(values []interface{}, sfc curve.Curve) ([]uint64, error) {
 		cut = 1
 	}
 
-	for iter := 0; iter < dc; iter++ {
+	for i := 0; i < dc; i++ {
 		if len(key) == 0 {
 			break
 		}
 
-		if iter < dc-1 {
-			res[iter] = stringhash(key[:cut], ds)
+		if i < dc-1 {
+			res[i] = stringhash(key[:cut], ds)
 			key = key[cut:]
 			continue
 		}
 
-		res[iter] = stringhash(key, ds)
+		res[i] = stringhash(key, ds)
 	}
 
 	return res, nil

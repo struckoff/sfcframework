@@ -88,9 +88,9 @@ func (c *Curve) parseIndex(coords []uint64, code uint64) ([]uint64, error) {
 	b := make([]byte, bitSize)
 	binary.LittleEndian.PutUint64(b, code)
 
-	for iter := 0; iter < bitSize; iter++ {
-		if (1 << (iter * bitSize)) > code {
-			bitLen = iter
+	for i := 0; i < bitSize; i++ {
+		if (1 << (i * bitSize)) > code {
+			bitLen = i
 			break
 		}
 	}
@@ -100,10 +100,10 @@ func (c *Curve) parseIndex(coords []uint64, code uint64) ([]uint64, error) {
 	if bitLen > 0 {
 		b = b[:bitLen]
 	}
-	for iter := 0; iter < bitSize*len(b); iter++ {
-		if (b[iter/bitSize] & (1 << (iter % bitSize))) != 0 {
-			dim := (c.length - uint64(iter) - 1) % c.dimensions
-			shift := (uint64(iter) / c.dimensions) % c.bits
+	for i := 0; i < bitSize*len(b); i++ {
+		if (b[i/bitSize] & (1 << (i % bitSize))) != 0 {
+			dim := (c.length - uint64(i) - 1) % c.dimensions
+			shift := (uint64(i) / c.dimensions) % c.bits
 			coords[dim] |= 1 << shift
 		}
 	}
@@ -156,9 +156,9 @@ func (c *Curve) validateCoordinates(coords []uint64) error {
 	if len(coords) < int(c.dimensions) {
 		return fmt.Errorf("number of coordinates == %v less then dimensions == %v", len(coords), c.dimensions)
 	}
-	for iter := range coords {
-		if coords[iter] > c.maxSize {
-			return fmt.Errorf("coordinate == %v exceeds limit == %v", coords[iter], c.maxSize)
+	for i := range coords {
+		if coords[i] > c.maxSize {
+			return fmt.Errorf("coordinate == %v exceeds limit == %v", coords[i], c.maxSize)
 		}
 	}
 	return nil
@@ -200,9 +200,9 @@ func (c *Curve) prepareIndex(coords []uint64) uint64 {
 	bIndex := c.length - 1
 	mask := uint64(1 << (c.bits - 1))
 
-	for iter := uint64(0); iter < c.bits; iter++ {
-		for coordsIter := range coords {
-			if (coords[coordsIter] & mask) != 0 {
+	for i := uint64(0); i < c.bits; i++ {
+		for ci := range coords {
+			if (coords[ci] & mask) != 0 {
 				tmpCoords[bIndex/bitSize] |= 1 << (bIndex % 8)
 			}
 			if bIndex > 0 {

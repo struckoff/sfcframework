@@ -1,11 +1,17 @@
 package balancer
 
 import (
-	"github.com/stretchr/testify/assert"
-	"github.com/struckoff/SFCFramework/node"
-	"github.com/struckoff/SFCFramework/node/mocks"
 	"testing"
+
+	node2 "github.com/struckoff/sfcframework/node"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/struckoff/sfcframework/mocks"
 )
+
+func uint64ptr(u uint64) *uint64 {
+	return &u
+}
 
 func TestCellGroup_ID(t *testing.T) {
 	type fields struct {
@@ -37,12 +43,12 @@ func TestCellGroup_ID(t *testing.T) {
 
 func TestCellGroup_Node(t *testing.T) {
 	type fields struct {
-		node node.Node
+		node node2.Node
 	}
 	tests := []struct {
 		name   string
 		fields fields
-		want   node.Node
+		want   node2.Node
 	}{
 		{
 			name: "",
@@ -65,7 +71,7 @@ func TestCellGroup_Node(t *testing.T) {
 
 func TestCellGroup_SetNode(t *testing.T) {
 	type args struct {
-		n node.Node
+		n node2.Node
 	}
 	tests := []struct {
 		name string
@@ -144,10 +150,10 @@ func TestCellGroup_SetRange(t *testing.T) {
 			name: "has cells, space",
 			fields: fields{
 				cells: map[uint64]*cell{
-					1:  {id: uint64(1), dis: map[string]uint64{"di-1": 1}, load: 1},
-					2:  {id: uint64(2), dis: map[string]uint64{"di-2": 10}, load: 10},
-					10: {id: uint64(10), dis: map[string]uint64{"di-10": 100}, load: 100},
-					15: {id: uint64(15), dis: map[string]uint64{"di-15": 1000}, load: 1000},
+					1:  {id: uint64(1), load: uint64ptr(1)},
+					2:  {id: uint64(2), load: uint64ptr(10)},
+					10: {id: uint64(10), load: uint64ptr(100)},
+					15: {id: uint64(15), load: uint64ptr(1000)},
 				},
 				load: 1111,
 				cRange: Range{
@@ -161,14 +167,14 @@ func TestCellGroup_SetRange(t *testing.T) {
 				max: 121,
 				s: &Space{
 					cells: map[uint64]*cell{
-						1:   {id: uint64(1), dis: map[string]uint64{"di-1": 1}, load: 1},
-						2:   {id: uint64(2), dis: map[string]uint64{"di-2": 10}, load: 10},
-						10:  {id: uint64(10), dis: map[string]uint64{"di-10": 100}, load: 100},
-						15:  {id: uint64(15), dis: map[string]uint64{"di-15": 1000}, load: 1000},
-						111: {id: uint64(111), dis: map[string]uint64{"di-111": 10000}, load: 10000},
-						115: {id: uint64(115), dis: map[string]uint64{"di-115": 100000}, load: 100000},
-						121: {id: uint64(121), dis: map[string]uint64{"di-121": 1000000}, load: 1000000},
-						122: {id: uint64(122), dis: map[string]uint64{"di-122": 10000000}, load: 10000000},
+						1:   {id: uint64(1), load: uint64ptr(1)},
+						2:   {id: uint64(2), load: uint64ptr(10)},
+						10:  {id: uint64(10), load: uint64ptr(100)},
+						15:  {id: uint64(15), load: uint64ptr(1000)},
+						111: {id: uint64(111), load: uint64ptr(10000)},
+						115: {id: uint64(115), load: uint64ptr(100000)},
+						121: {id: uint64(121), load: uint64ptr(1000000)},
+						122: {id: uint64(122), load: uint64ptr(10000000)},
 					},
 				},
 			},
@@ -181,10 +187,10 @@ func TestCellGroup_SetRange(t *testing.T) {
 				},
 				load: 111100,
 				cells: map[uint64]*cell{
-					10:  {id: uint64(10), dis: map[string]uint64{"di-10": 100}, load: 100},
-					15:  {id: uint64(15), dis: map[string]uint64{"di-15": 1000}, load: 1000},
-					111: {id: uint64(111), dis: map[string]uint64{"di-111": 10000}, load: 10000},
-					115: {id: uint64(115), dis: map[string]uint64{"di-115": 100000}, load: 100000},
+					10:  {id: uint64(10), load: uint64ptr(100)},
+					15:  {id: uint64(15), load: uint64ptr(1000)},
+					111: {id: uint64(111), load: uint64ptr(10000)},
+					115: {id: uint64(115), load: uint64ptr(100000)},
 				},
 			},
 		},
@@ -204,14 +210,14 @@ func TestCellGroup_SetRange(t *testing.T) {
 				max: 121,
 				s: &Space{
 					cells: map[uint64]*cell{
-						1:   {id: uint64(1), dis: map[string]uint64{"di-1": 1}, load: 1},
-						2:   {id: uint64(2), dis: map[string]uint64{"di-2": 10}, load: 10},
-						10:  {id: uint64(10), dis: map[string]uint64{"di-10": 100}, load: 100},
-						15:  {id: uint64(15), dis: map[string]uint64{"di-15": 1000}, load: 1000},
-						111: {id: uint64(111), dis: map[string]uint64{"di-111": 10000}, load: 10000},
-						115: {id: uint64(115), dis: map[string]uint64{"di-115": 100000}, load: 100000},
-						121: {id: uint64(121), dis: map[string]uint64{"di-121": 1000000}, load: 1000000},
-						122: {id: uint64(122), dis: map[string]uint64{"di-122": 10000000}, load: 10000000},
+						1:   {id: uint64(1), load: uint64ptr(1)},
+						2:   {id: uint64(2), load: uint64ptr(10)},
+						10:  {id: uint64(10), load: uint64ptr(100)},
+						15:  {id: uint64(15), load: uint64ptr(1000)},
+						111: {id: uint64(111), load: uint64ptr(10000)},
+						115: {id: uint64(115), load: uint64ptr(100000)},
+						121: {id: uint64(121), load: uint64ptr(1000000)},
+						122: {id: uint64(122), load: uint64ptr(10000000)},
 					},
 				},
 			},
@@ -224,10 +230,10 @@ func TestCellGroup_SetRange(t *testing.T) {
 				},
 				load: 111100,
 				cells: map[uint64]*cell{
-					10:  {id: uint64(10), dis: map[string]uint64{"di-10": 100}, load: 100},
-					15:  {id: uint64(15), dis: map[string]uint64{"di-15": 1000}, load: 1000},
-					111: {id: uint64(111), dis: map[string]uint64{"di-111": 10000}, load: 10000},
-					115: {id: uint64(115), dis: map[string]uint64{"di-115": 100000}, load: 100000},
+					10:  {id: uint64(10), load: uint64ptr(100)},
+					15:  {id: uint64(15), load: uint64ptr(1000)},
+					111: {id: uint64(111), load: uint64ptr(10000)},
+					115: {id: uint64(115), load: uint64ptr(100000)},
 				},
 			},
 		},
@@ -235,10 +241,10 @@ func TestCellGroup_SetRange(t *testing.T) {
 			name: "no space",
 			fields: fields{
 				cells: map[uint64]*cell{
-					1:  {id: uint64(1), dis: map[string]uint64{"di-1": 1}, load: 1},
-					2:  {id: uint64(2), dis: map[string]uint64{"di-2": 10}, load: 10},
-					10: {id: uint64(10), dis: map[string]uint64{"di-10": 100}, load: 100},
-					15: {id: uint64(15), dis: map[string]uint64{"di-15": 1000}, load: 1000},
+					1:  {id: uint64(1), load: uint64ptr(1)},
+					2:  {id: uint64(2), load: uint64ptr(10)},
+					10: {id: uint64(10), load: uint64ptr(100)},
+					15: {id: uint64(15), load: uint64ptr(1000)},
 				},
 				load: 1111,
 				cRange: Range{
@@ -261,10 +267,10 @@ func TestCellGroup_SetRange(t *testing.T) {
 				},
 				load: 1111,
 				cells: map[uint64]*cell{
-					1:  {id: uint64(1), dis: map[string]uint64{"di-1": 1}, load: 1},
-					2:  {id: uint64(2), dis: map[string]uint64{"di-2": 10}, load: 10},
-					10: {id: uint64(10), dis: map[string]uint64{"di-10": 100}, load: 100},
-					15: {id: uint64(15), dis: map[string]uint64{"di-15": 1000}, load: 1000},
+					1:  {id: uint64(1), load: uint64ptr(1)},
+					2:  {id: uint64(2), load: uint64ptr(10)},
+					10: {id: uint64(10), load: uint64ptr(100)},
+					15: {id: uint64(15), load: uint64ptr(1000)},
 				},
 			},
 		},
@@ -283,11 +289,14 @@ func TestCellGroup_SetRange(t *testing.T) {
 				}
 			}
 
-			err := cg.SetRange(tt.args.min, tt.args.max, tt.args.s)
+			err := cg.SetRange(tt.args.min, tt.args.max)
 			if tt.want.err {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
+			}
+			if tt.args.s != nil {
+				tt.args.s.FillCellGroup(cg)
 			}
 			assert.Equal(t, tt.want.cRange, cg.cRange)
 			assert.Equal(t, tt.want.cells, cg.cells)
@@ -309,17 +318,17 @@ func TestCellGroup_Cells(t *testing.T) {
 			name: "",
 			fields: fields{
 				cells: map[uint64]*cell{
-					1:  {id: uint64(1), dis: map[string]uint64{"di-1": 1}, load: 1},
-					2:  {id: uint64(2), dis: map[string]uint64{"di-2": 10}, load: 10},
-					10: {id: uint64(10), dis: map[string]uint64{"di-10": 100}, load: 100},
-					15: {id: uint64(15), dis: map[string]uint64{"di-15": 1000}, load: 1000},
+					1:  {id: uint64(1), load: uint64ptr(1)},
+					2:  {id: uint64(2), load: uint64ptr(10)},
+					10: {id: uint64(10), load: uint64ptr(100)},
+					15: {id: uint64(15), load: uint64ptr(1000)},
 				},
 			},
 			want: map[uint64]*cell{
-				1:  {id: uint64(1), dis: map[string]uint64{"di-1": 1}, load: 1},
-				2:  {id: uint64(2), dis: map[string]uint64{"di-2": 10}, load: 10},
-				10: {id: uint64(10), dis: map[string]uint64{"di-10": 100}, load: 100},
-				15: {id: uint64(15), dis: map[string]uint64{"di-15": 1000}, load: 1000},
+				1:  {id: uint64(1), load: uint64ptr(1)},
+				2:  {id: uint64(2), load: uint64ptr(10)},
+				10: {id: uint64(10), load: uint64ptr(100)},
+				15: {id: uint64(15), load: uint64ptr(1000)},
 			},
 		},
 	}
@@ -357,9 +366,8 @@ func TestCellGroup_AddCell(t *testing.T) {
 			fields: fields{
 				cells: map[uint64]*cell{1: {
 					id:   1,
-					load: 1,
+					load: uint64ptr(1),
 					off:  nil,
-					dis:  map[string]uint64{"di-0": 1},
 					cg:   nil,
 				}},
 				load: 1,
@@ -367,9 +375,8 @@ func TestCellGroup_AddCell(t *testing.T) {
 			args: args{
 				c: &cell{
 					id:   2,
-					load: 1,
+					load: uint64ptr(1),
 					off:  nil,
-					dis:  map[string]uint64{"di-1": 1},
 				},
 			},
 			want: want{
@@ -377,16 +384,14 @@ func TestCellGroup_AddCell(t *testing.T) {
 				cells: map[uint64]*cell{
 					1: {
 						id:   1,
-						load: 1,
+						load: uint64ptr(1),
 						off:  nil,
-						dis:  map[string]uint64{"di-0": 1},
 						cg:   nil,
 					},
 					2: {
 						id:   2,
-						load: 1,
+						load: uint64ptr(1),
 						off:  nil,
-						dis:  map[string]uint64{"di-1": 1},
 					},
 				},
 			},
@@ -400,9 +405,8 @@ func TestCellGroup_AddCell(t *testing.T) {
 			args: args{
 				c: &cell{
 					id:   2,
-					load: 1,
+					load: uint64ptr(1),
 					off:  nil,
-					dis:  map[string]uint64{"di-1": 1},
 				},
 			},
 			want: want{
@@ -410,9 +414,8 @@ func TestCellGroup_AddCell(t *testing.T) {
 				cells: map[uint64]*cell{
 					2: {
 						id:   2,
-						load: 1,
+						load: uint64ptr(1),
 						off:  nil,
-						dis:  map[string]uint64{"di-1": 1},
 					},
 				},
 			},
@@ -461,16 +464,14 @@ func TestCellGroup_RemoveCell(t *testing.T) {
 				cells: map[uint64]*cell{
 					1: {
 						id:   1,
-						load: 1,
+						load: uint64ptr(1),
 						off:  nil,
-						dis:  map[string]uint64{"di-0": 1},
 						cg:   nil,
 					},
 					2: {
 						id:   2,
-						load: 1,
+						load: uint64ptr(1),
 						off:  nil,
-						dis:  map[string]uint64{"di-1": 1},
 					},
 				},
 				load: 2,
@@ -481,9 +482,8 @@ func TestCellGroup_RemoveCell(t *testing.T) {
 				cells: map[uint64]*cell{
 					1: {
 						id:   1,
-						load: 1,
+						load: uint64ptr(1),
 						off:  nil,
-						dis:  map[string]uint64{"di-0": 1},
 						cg:   nil,
 					},
 				},
@@ -495,9 +495,8 @@ func TestCellGroup_RemoveCell(t *testing.T) {
 				cells: map[uint64]*cell{
 					2: {
 						id:   2,
-						load: 1,
+						load: uint64ptr(1),
 						off:  nil,
-						dis:  map[string]uint64{"di-1": 1},
 					},
 				},
 				load: 1,
@@ -514,9 +513,8 @@ func TestCellGroup_RemoveCell(t *testing.T) {
 				cells: map[uint64]*cell{
 					1: {
 						id:   1,
-						load: 1,
+						load: uint64ptr(1),
 						off:  nil,
-						dis:  map[string]uint64{"di-0": 1},
 					},
 				},
 				load: 1,
@@ -527,9 +525,8 @@ func TestCellGroup_RemoveCell(t *testing.T) {
 				cells: map[uint64]*cell{
 					1: {
 						id:   1,
-						load: 1,
+						load: uint64ptr(1),
 						off:  nil,
-						dis:  map[string]uint64{"di-0": 1},
 					},
 				},
 			},
@@ -573,16 +570,16 @@ func TestCellGroup_TotalLoad(t *testing.T) {
 			fields: fields{
 				cells: map[uint64]*cell{
 					1: {
-						id:  1,
-						dis: map[string]uint64{"di-0": 1},
+						id:   1,
+						load: uint64ptr(1),
 					},
 					2: {
-						id:  2,
-						dis: map[string]uint64{"di-10": 10},
+						id:   2,
+						load: uint64ptr(10),
 					},
 					3: {
-						id:  3,
-						dis: map[string]uint64{"di-100": 100},
+						id:   3,
+						load: uint64ptr(100),
 					},
 				},
 				load: 1,
@@ -631,18 +628,15 @@ func TestCellGroup_Truncate(t *testing.T) {
 				cells: map[uint64]*cell{
 					1: {
 						id:   1,
-						load: 1,
-						dis:  map[string]uint64{"di-0": 1},
+						load: uint64ptr(1),
 					},
 					2: {
 						id:   2,
-						load: 0,
-						dis:  map[string]uint64{"di-2": 0},
+						load: uint64ptr(0),
 					},
 					3: {
 						id:   3,
-						load: 2,
-						dis:  map[string]uint64{"di-3": 2},
+						load: uint64ptr(2),
 					},
 				},
 				load: 3,
@@ -651,18 +645,15 @@ func TestCellGroup_Truncate(t *testing.T) {
 				cells: map[uint64]*cell{
 					1: {
 						id:   1,
-						load: 0,
-						dis:  map[string]uint64{},
+						load: uint64ptr(0),
 					},
 					2: {
 						id:   2,
-						load: 0,
-						dis:  map[string]uint64{},
+						load: uint64ptr(0),
 					},
 					3: {
 						id:   3,
-						load: 0,
-						dis:  map[string]uint64{},
+						load: uint64ptr(0),
 					},
 				},
 				load: 0,
@@ -717,18 +708,15 @@ func TestCellGroup_SetCells(t *testing.T) {
 				cells: map[uint64]*cell{
 					1: {
 						id:   1,
-						load: 1,
-						dis:  map[string]uint64{},
+						load: uint64ptr(1),
 					},
 					2: {
 						id:   2,
-						load: 10,
-						dis:  map[string]uint64{},
+						load: uint64ptr(10),
 					},
 					3: {
 						id:   3,
-						load: 100,
-						dis:  map[string]uint64{},
+						load: uint64ptr(100),
 					},
 				},
 				load: 111,
@@ -751,18 +739,15 @@ func TestCellGroup_SetCells(t *testing.T) {
 				cells: map[uint64]*cell{
 					1: {
 						id:   1,
-						load: 1,
-						dis:  map[string]uint64{"di-1": 1},
+						load: uint64ptr(1),
 					},
 					2: {
 						id:   2,
-						load: 10,
-						dis:  map[string]uint64{"di-2": 10},
+						load: uint64ptr(10),
 					},
 					3: {
 						id:   3,
-						load: 100,
-						dis:  map[string]uint64{"di-3": 100},
+						load: uint64ptr(100),
 					},
 				},
 			},
@@ -770,18 +755,15 @@ func TestCellGroup_SetCells(t *testing.T) {
 				cells: map[uint64]*cell{
 					1: {
 						id:   1,
-						load: 1,
-						dis:  map[string]uint64{"di-1": 1},
+						load: uint64ptr(1),
 					},
 					2: {
 						id:   2,
-						load: 10,
-						dis:  map[string]uint64{"di-2": 10},
+						load: uint64ptr(10),
 					},
 					3: {
 						id:   3,
-						load: 100,
-						dis:  map[string]uint64{"di-3": 100},
+						load: uint64ptr(100),
 					},
 				},
 				load: 111,
@@ -793,18 +775,15 @@ func TestCellGroup_SetCells(t *testing.T) {
 				cells: map[uint64]*cell{
 					10: {
 						id:   10,
-						load: 1,
-						dis:  map[string]uint64{},
+						load: uint64ptr(1),
 					},
 					20: {
 						id:   20,
-						load: 10,
-						dis:  map[string]uint64{},
+						load: uint64ptr(10),
 					},
 					30: {
 						id:   30,
-						load: 100,
-						dis:  map[string]uint64{},
+						load: uint64ptr(100),
 					},
 				},
 				load: 111,
@@ -813,18 +792,15 @@ func TestCellGroup_SetCells(t *testing.T) {
 				cells: map[uint64]*cell{
 					1: {
 						id:   1,
-						load: 1,
-						dis:  map[string]uint64{"di-1": 1},
+						load: uint64ptr(1),
 					},
 					2: {
 						id:   2,
-						load: 10,
-						dis:  map[string]uint64{"di-2": 10},
+						load: uint64ptr(10),
 					},
 					3: {
 						id:   3,
-						load: 100,
-						dis:  map[string]uint64{"di-3": 100},
+						load: uint64ptr(100),
 					},
 				},
 			},
@@ -832,18 +808,15 @@ func TestCellGroup_SetCells(t *testing.T) {
 				cells: map[uint64]*cell{
 					1: {
 						id:   1,
-						load: 1,
-						dis:  map[string]uint64{"di-1": 1},
+						load: uint64ptr(1),
 					},
 					2: {
 						id:   2,
-						load: 10,
-						dis:  map[string]uint64{"di-2": 10},
+						load: uint64ptr(10),
 					},
 					3: {
 						id:   3,
-						load: 100,
-						dis:  map[string]uint64{"di-3": 100},
+						load: uint64ptr(100),
 					},
 				},
 				load: 111,

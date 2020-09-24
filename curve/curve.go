@@ -2,8 +2,9 @@ package curve
 
 import (
 	"errors"
-	"github.com/struckoff/SFCFramework/curve/hilbert"
-	"github.com/struckoff/SFCFramework/curve/morton"
+
+	"github.com/struckoff/sfcframework/curve/hilbert"
+	"github.com/struckoff/sfcframework/curve/morton"
 )
 
 //Curve is an interface of space filling curve realisation.

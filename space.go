@@ -1,12 +1,13 @@
 package balancer
 
 import (
-	"github.com/pkg/errors"
-	"github.com/struckoff/SFCFramework/node"
 	"math"
 	"sync"
 
-	"github.com/struckoff/SFCFramework/curve"
+	"github.com/struckoff/sfcframework/node"
+
+	"github.com/pkg/errors"
+	"github.com/struckoff/sfcframework/curve"
 )
 
 type Space struct {
@@ -111,8 +112,8 @@ func (s *Space) totalLoad() (load uint64) {
 func (s *Space) TotalPower() (power float64) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	for iter := range s.cgs {
-		power += s.cgs[iter].Node().Power().Get()
+	for i := range s.cgs {
+		power += s.cgs[i].Node().Power().Get()
 	}
 	return
 }
@@ -158,10 +159,10 @@ func (s *Space) AddNode(n node.Node) error {
 
 func (s *Space) addNode(n node.Node) error {
 	//TODO May be s.cgs should be map
-	for iter := range s.cgs {
-		if s.cgs[iter].ID() == n.ID() {
-			//s.cgs[iter].Truncate()
-			s.cgs[iter].SetNode(n)
+	for i := range s.cgs {
+		if s.cgs[i].ID() == n.ID() {
+			//s.cgs[i].Truncate()
+			s.cgs[i].SetNode(n)
 			return nil
 		}
 	}
@@ -178,9 +179,9 @@ func (s *Space) GetNode(id string) (node.Node, bool) {
 
 func (s *Space) getNode(id string) (node.Node, bool) {
 	//TODO May be s.cgs should be map
-	for iter := range s.cgs {
-		if s.cgs[iter].ID() == id {
-			return s.cgs[iter].Node(), true
+	for i := range s.cgs {
+		if s.cgs[i].ID() == id {
+			return s.cgs[i].Node(), true
 		}
 	}
 	return nil, false
@@ -195,11 +196,11 @@ func (s *Space) RemoveNode(id string) error {
 	return nil
 }
 func (s *Space) removeNode(id string) error {
-	for iter := range s.cgs {
-		if s.cgs[iter].ID() == id {
-			s.load -= s.cgs[iter].TotalLoad()
-			s.cgs[iter].Truncate()
-			s.cgs = append(s.cgs[:iter], s.cgs[iter+1:]...)
+	for i := range s.cgs {
+		if s.cgs[i].ID() == id {
+			s.load -= s.cgs[i].TotalLoad()
+			s.cgs[i].Truncate()
+			s.cgs = append(s.cgs[:i], s.cgs[i+1:]...)
 			return nil
 		}
 	}
@@ -247,9 +248,7 @@ func (s *Space) locateData(d DataItem, load bool) (node.Node, uint64, error) {
 		}
 	}
 	if load {
-		if err = c.Add(d); err != nil {
-			return nil, 0, err
-		}
+		c.AddLoad(d.Size())
 		s.load += d.Size()
 	}
 	return c.cg.Node(), cID, nil
@@ -283,14 +282,10 @@ func (s *Space) removeData(d DataItem) error {
 	}
 	if ncID, ok := s.cells[cID].Relocated(d.ID()); ok {
 		if _, ok := s.cells[ncID]; ok {
-			if err := s.cells[ncID].Remove(d); err != nil {
-				return err
-			}
+			s.cells[ncID].RemoveLoad(d.Size())
 		}
 	}
-	if err := s.cells[cID].Remove(d); err != nil {
-		return err
-	}
+	s.cells[cID].RemoveLoad(d.Size())
 	s.load -= d.Size()
 	return nil
 }
@@ -319,17 +314,15 @@ func (s *Space) relocateData(d DataItem, ncID uint64) (node.Node, uint64, error)
 		return nil, 0, err
 	}
 
+	c.RemoveLoad(d.Size())
 	c.Relocate(d, ncID)
-	if err = nc.Add(d); err != nil {
-		return nil, 0, err
-	}
+	nc.AddLoad(d.Size())
 
 	return nc.cg.Node(), ncID, nil
 }
 
 //cellID calculates the id of cell in space based on transform function and space filling curve.
 func (s *Space) cellID(d DataItem) (uint64, error) {
-	//size := s.sfc.DimensionSize()
 	if s.tf == nil {
 		return 0, errors.New("transform function is not set")
 	}
@@ -346,9 +339,9 @@ func (s *Space) cellID(d DataItem) (uint64, error) {
 }
 
 func (s *Space) findCellGroup(cID uint64) (cg *CellGroup, ok bool) {
-	for iter := range s.cgs {
-		if s.cgs[iter].FitsRange(cID) {
-			return s.cgs[iter], true
+	for i := range s.cgs {
+		if s.cgs[i].FitsRange(cID) {
+			return s.cgs[i], true
 		}
 	}
 	return nil, false
@@ -358,8 +351,8 @@ func (s *Space) Nodes() []node.Node {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	res := make([]node.Node, len(s.cgs))
-	for iter := range s.cgs {
-		res[iter] = s.cgs[iter].Node()
+	for i := range s.cgs {
+		res[i] = s.cgs[i].Node()
 	}
 	return res
 }
@@ -374,7 +367,9 @@ func (s *Space) fillCellGroup(cg *CellGroup) {
 	cg.SetCells(nil)
 	for cid, c := range s.cells {
 		if cg.FitsRange(cid) {
-			c.cg.RemoveCell(cid)
+			if c.cg != nil {
+				c.cg.RemoveCell(cid)
+			}
 			cg.AddCell(c)
 		}
 	}

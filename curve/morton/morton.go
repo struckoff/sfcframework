@@ -66,8 +66,8 @@ func (c *Curve) validateCode(code uint64) error {
 }
 
 func (c *Curve) compacter(coords []uint64, code uint64) []uint64 {
-	for iter := uint64(0); iter < c.dimensions; iter++ {
-		coords[iter] = c.compact(code >> iter)
+	for i := uint64(0); i < c.dimensions; i++ {
+		coords[i] = c.compact(code >> i)
 	}
 	return coords
 }
@@ -80,9 +80,9 @@ func (c *Curve) compact(x uint64) uint64 {
 	//x = (x ^ (x >> 8)) & 0x0000ffff
 
 	x &= c.masksArray[len(c.masksArray)-1]
-	for iter := 0; iter < len(c.masksArray)-1; iter++ {
-		//TODO may be "1 << iter" should be pregenerated
-		x = (x ^ (x >> (1 << iter))) & (c.masksArray[len(c.masksArray)-2-iter])
+	for i := 0; i < len(c.masksArray)-1; i++ {
+		//TODO may be "1 << i" should be pregenerated
+		x = (x ^ (x >> (1 << i))) & (c.masksArray[len(c.masksArray)-2-i])
 	}
 
 	return x
@@ -129,8 +129,8 @@ func (c *Curve) Encode(coords []uint64) (code uint64, err error) {
 	if err := c.validateCoordinates(coords); err != nil {
 		return 0, err
 	}
-	for iter := uint64(0); iter < c.dimensions; iter++ {
-		code |= c.split(coords[iter]) << iter
+	for i := uint64(0); i < c.dimensions; i++ {
+		code |= c.split(coords[i]) << i
 	}
 	return
 }
@@ -139,9 +139,9 @@ func (c *Curve) validateCoordinates(coords []uint64) error {
 	if len(coords) < int(c.dimensions) {
 		return fmt.Errorf("number of coordinates == %v less then dimensions == %v", len(coords), c.dimensions)
 	}
-	for iter := range coords {
-		if coords[iter] > c.maxSize {
-			return fmt.Errorf("coordinate == %v exceeds limit == %v", coords[iter], c.maxSize)
+	for i := range coords {
+		if coords[i] > c.maxSize {
+			return fmt.Errorf("coordinate == %v exceeds limit == %v", coords[i], c.maxSize)
 		}
 	}
 	return nil
@@ -149,8 +149,8 @@ func (c *Curve) validateCoordinates(coords []uint64) error {
 
 func (c *Curve) split(x uint64) uint64 {
 	//shiftIter := len(c.masksArray) - 1
-	for iter := 0; iter < len(c.masksArray); iter++ {
-		x = (x | (x << c.lshiftsArray[iter])) & c.masksArray[iter]
+	for i := 0; i < len(c.masksArray); i++ {
+		x = (x | (x << c.lshiftsArray[i])) & c.masksArray[i]
 		//shiftIter--
 	}
 

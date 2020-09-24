@@ -4,8 +4,9 @@ import (
 	"io/ioutil"
 	"log"
 	"math"
-	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMortonCurve_Decode(t *testing.T) {
@@ -119,9 +120,7 @@ func TestMortonCurve_Decode(t *testing.T) {
 				t.Errorf("Decode() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotCoords, tt.wantCoords) {
-				t.Errorf("Decode() gotCoords = %v, want %v", gotCoords, tt.wantCoords)
-			}
+			assert.Equal(t, tt.wantCoords, gotCoords)
 		})
 	}
 }
@@ -251,9 +250,7 @@ func TestMortonCurve_Encode(t *testing.T) {
 				t.Errorf("Encode() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotD, tt.wantCode) {
-				t.Errorf("Encode() gotD = %v, want %v", gotD, tt.wantCode)
-			}
+			assert.Equal(t, tt.wantCode, gotD)
 		})
 	}
 }
@@ -405,6 +402,11 @@ func TestNew(t *testing.T) {
 					0x33,
 					0x55,
 				},
+				lshiftsArray: []uint64{
+					0,
+					1 << 1,
+					1 << 0,
+				},
 				maxSize: 15,
 				maxCode: 255,
 			},
@@ -427,6 +429,16 @@ func TestNew(t *testing.T) {
 					0x909090909090909,
 					0x1111111111111111,
 				},
+				lshiftsArray: []uint64{
+					0,
+					1 << 6,
+					1 << 5,
+					1 << 4,
+					1 << 3,
+					1 << 2,
+					1 << 1,
+					1 << 0,
+				},
 				maxSize: 4294967295,
 				maxCode: 18446744073709551615,
 			},
@@ -440,9 +452,7 @@ func TestNew(t *testing.T) {
 				t.Errorf("New() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("New() got = %v, want %v", got, tt.want)
-			}
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }

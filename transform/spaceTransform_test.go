@@ -1,10 +1,11 @@
 package transform
 
 import (
-	"reflect"
 	"testing"
 
-	"github.com/struckoff/SFCFramework/curve"
+	"github.com/stretchr/testify/assert"
+
+	"github.com/struckoff/sfcframework/curve"
 )
 
 func TestSpaceTransform(t *testing.T) {
@@ -42,9 +43,7 @@ func TestSpaceTransform(t *testing.T) {
 				t.Errorf("SpaceTransform() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("SpaceTransform() = %v, want %v", got, tt.want)
-			}
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }

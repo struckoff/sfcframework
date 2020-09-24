@@ -4,8 +4,9 @@ import (
 	"io/ioutil"
 	"log"
 	"math"
-	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestHilbertCurve_Decode(t *testing.T) {
@@ -88,9 +89,8 @@ func TestHilbertCurve_Decode(t *testing.T) {
 				t.Errorf("Decode() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotCoords, tt.wantCoords) {
-				t.Errorf("Decode() gotCoords = %v, want %v", gotCoords, tt.wantCoords)
-			}
+
+			assert.Equal(t, tt.wantCoords, gotCoords)
 		})
 	}
 }
@@ -167,9 +167,8 @@ func TestHilbertCurve_Encode(t *testing.T) {
 				t.Errorf("Encode() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if gotCode != tt.wantCode {
-				t.Errorf("Encode() gotCode = %v, want %v", gotCode, tt.wantCode)
-			}
+
+			assert.Equal(t, tt.wantCode, gotCode)
 		})
 	}
 }
@@ -342,9 +341,7 @@ func TestNew(t *testing.T) {
 				t.Errorf("New() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("New() got = %v, want %v", got, tt.want)
-			}
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }

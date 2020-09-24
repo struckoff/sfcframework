@@ -1,22 +1,24 @@
 package balancer
 
 import (
-	"github.com/pkg/errors"
-	"github.com/struckoff/SFCFramework/node"
 	"sync"
+
+	node2 "github.com/struckoff/sfcframework/node"
+
+	"github.com/pkg/errors"
 )
 
 type CellGroup struct {
 	id     string //unique id of the cell group
-	mu     sync.Mutex
-	node   node.Node
+	mu     sync.RWMutex
+	node   node2.Node
 	cells  map[uint64]*cell
 	load   uint64
 	cRange Range
 }
 
 //NewCellGroup builds a new CellGroup
-func NewCellGroup(n node.Node) *CellGroup {
+func NewCellGroup(n node2.Node) *CellGroup {
 	return &CellGroup{
 		id:    n.ID(),
 		node:  n,
@@ -26,18 +28,20 @@ func NewCellGroup(n node.Node) *CellGroup {
 
 //ID returns the ID of the cell group
 func (cg *CellGroup) ID() string {
+	cg.mu.RLock()
+	defer cg.mu.RUnlock()
 	return cg.id
 }
 
 //Node returns the node attached to this cell group
-func (cg *CellGroup) Node() node.Node {
-	cg.mu.Lock()
-	defer cg.mu.Unlock()
+func (cg *CellGroup) Node() node2.Node {
+	cg.mu.RLock()
+	defer cg.mu.RUnlock()
 	return cg.node
 }
 
 //SetNode sets the node attached to the cell group
-func (cg *CellGroup) SetNode(n node.Node) {
+func (cg *CellGroup) SetNode(n node2.Node) {
 	cg.mu.Lock()
 	defer cg.mu.Unlock()
 	cg.node = n
@@ -45,14 +49,14 @@ func (cg *CellGroup) SetNode(n node.Node) {
 
 //Range returns the range of cell group
 func (cg *CellGroup) Range() Range {
-	cg.mu.Lock()
-	defer cg.mu.Unlock()
+	cg.mu.RLock()
+	defer cg.mu.RUnlock()
 	return cg.cRange
 }
 
 //SetRange sets minimum and maximum of the cell group range
 //if s is not nil method will tryes to update cells of cell group from the space
-func (cg *CellGroup) SetRange(min, max uint64, s *Space) error {
+func (cg *CellGroup) SetRange(min, max uint64) error {
 	cg.mu.Lock()
 	defer cg.mu.Unlock()
 	if min > max {
@@ -63,35 +67,20 @@ func (cg *CellGroup) SetRange(min, max uint64, s *Space) error {
 		Max: max,
 		Len: max - min,
 	}
-
-	if s != nil {
-		cg.load = 0
-		cg.cells = make(map[uint64]*cell)
-		for _, c := range s.Cells() {
-			if cg.cRange.Fits(c.ID()) {
-				cg.load += c.Load()
-				cg.cells[c.ID()] = c
-				if c.cg != nil && c.cg.id != cg.id {
-					c.cg.RemoveCell(c.ID())
-				}
-				c.SetGroup(cg)
-			}
-		}
-	}
 	return nil
 }
 
 //FitsRange checks if the index of the cell fits the range of the cell group
 func (cg *CellGroup) FitsRange(index uint64) bool {
-	cg.mu.Lock()
-	defer cg.mu.Unlock()
+	cg.mu.RLock()
+	defer cg.mu.RUnlock()
 	return cg.cRange.Fits(index)
 }
 
 //Cells returns map of cells in the cell group
 func (cg *CellGroup) Cells() map[uint64]*cell {
-	cg.mu.Lock()
-	defer cg.mu.Unlock()
+	cg.mu.RLock()
+	defer cg.mu.RUnlock()
 	return cg.cells
 }
 
@@ -105,7 +94,6 @@ func (cg *CellGroup) AddCell(c *cell) {
 }
 
 func (cg *CellGroup) addCell(c *cell) {
-	cg.cells[0].load = 1
 	if ocl, ok := cg.cells[c.ID()]; ok {
 		cg.load -= ocl.Load()
 	}

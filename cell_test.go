@@ -1,9 +1,10 @@
 package balancer
 
 import (
-	"github.com/stretchr/testify/assert"
-	"github.com/struckoff/SFCFramework/mocks"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/struckoff/sfcframework/mocks"
 )
 
 func Test_cell_ID(t *testing.T) {
@@ -19,9 +20,7 @@ func Test_cell_ID(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &cell{
-				id: tt.fields.id,
-			}
+			c := &cell{id: tt.fields.id}
 			assert.Equal(t, tt.want, c.ID())
 		})
 	}
@@ -30,37 +29,23 @@ func Test_cell_ID(t *testing.T) {
 func Test_cell_Load(t *testing.T) {
 	type fields struct {
 		load uint64
-		dis  map[string]uint64
 	}
 	tests := []struct {
-		name     string
-		fields   fields
-		wantLoad uint64
+		name   string
+		fields fields
 	}{
 		{
-			name: "1111",
-			fields: fields{
-				load: 33333,
-				dis: map[string]uint64{
-					"key-1": 1,
-					"key-2": 10,
-					"key-3": 100,
-					"key-4": 1000,
-				},
-			},
-			wantLoad: 1111,
+			name:   "33333",
+			fields: fields{load: 33333},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &cell{
-				load: tt.fields.load,
-				dis:  tt.fields.dis,
+				load: &tt.fields.load,
 			}
 
-			assert.NotEqual(t, tt.wantLoad, c.load)
-			assert.Equal(t, tt.wantLoad, c.Load())
-			assert.Equal(t, tt.wantLoad, c.load)
+			assert.Equal(t, tt.fields.load, c.Load())
 		})
 	}
 }
@@ -68,7 +53,6 @@ func Test_cell_Load(t *testing.T) {
 func Test_cell_Truncate(t *testing.T) {
 	type fields struct {
 		load uint64
-		dis  map[string]uint64
 	}
 	tests := []struct {
 		name   string
@@ -79,24 +63,16 @@ func Test_cell_Truncate(t *testing.T) {
 			name: "",
 			fields: fields{
 				load: 1111,
-				dis: map[string]uint64{
-					"key-1": 1,
-					"key-2": 10,
-					"key-3": 100,
-					"key-4": 1000,
-				},
 			},
 			want: &cell{
-				load: 0,
-				dis:  make(map[string]uint64),
+				load: uint64ptr(0),
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &cell{
-				load: tt.fields.load,
-				dis:  tt.fields.dis,
+				load: &tt.fields.load,
 			}
 			c.Truncate()
 			assert.Equal(t, tt.want, c)
@@ -106,18 +82,14 @@ func Test_cell_Truncate(t *testing.T) {
 
 func Test_cell_Add(t *testing.T) {
 	type fields struct {
-		dis  map[string]uint64
 		load uint64
 		cg   *CellGroup
 	}
 	type args struct {
-		ID   string
 		Size uint64
 	}
 	type want struct {
-		dis    map[string]uint64
-		load   uint64
-		cgload uint64
+		load uint64
 	}
 	tests := []struct {
 		name   string
@@ -128,41 +100,29 @@ func Test_cell_Add(t *testing.T) {
 		{
 			name: "test",
 			fields: fields{
-				dis:  make(map[string]uint64),
 				load: 0,
 				cg: &CellGroup{
 					load: 10,
 				},
 			},
 			args: args{
-				ID:   "di-0",
 				Size: 42,
 			},
 			want: want{
-				dis:    map[string]uint64{"di-0": 42},
-				load:   42,
-				cgload: 52,
+				load: 42,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &cell{
-				dis:  tt.fields.dis,
 				cg:   tt.fields.cg,
-				load: tt.fields.load,
+				load: &tt.fields.load,
 			}
 
-			di := &mocks.DataItem{}
-			di.On("ID").Return(tt.args.ID)
-			di.On("Size").Return(tt.args.Size)
+			c.AddLoad(tt.args.Size)
 
-			if err := c.Add(di); err != nil {
-				t.Error(err)
-			}
-
-			assert.Equal(t, tt.want.dis, c.dis)
-			assert.Equal(t, int(tt.want.cgload), int(c.cg.load))
+			assert.Equal(t, int(tt.want.load), int(*c.load))
 		})
 	}
 }
@@ -171,7 +131,6 @@ func Test_cell_Remove(t *testing.T) {
 	type fields struct {
 		load uint64
 		off  map[string]uint64
-		dis  map[string]uint64
 		cg   *CellGroup
 	}
 	type args struct {
@@ -179,10 +138,8 @@ func Test_cell_Remove(t *testing.T) {
 		Size uint64
 	}
 	type want struct {
-		dis    map[string]uint64
-		off    map[string]uint64
-		load   uint64
-		cgload uint64
+		off  map[string]uint64
+		load uint64
 	}
 	tests := []struct {
 		name   string
@@ -195,7 +152,6 @@ func Test_cell_Remove(t *testing.T) {
 			fields: fields{
 				load: 100,
 				off:  map[string]uint64{"di-2": 10, "di-3": 20},
-				dis:  map[string]uint64{"di-0": 10, "di-1": 20},
 				cg: &CellGroup{
 					load: 100,
 				},
@@ -205,55 +161,23 @@ func Test_cell_Remove(t *testing.T) {
 				Size: 10,
 			},
 			want: want{
-				dis:    map[string]uint64{"di-1": 20},
-				off:    map[string]uint64{"di-2": 10, "di-3": 20},
-				load:   90,
-				cgload: 90,
-			},
-		},
-		{
-			name: "off",
-			fields: fields{
-				load: 100,
-				off:  map[string]uint64{"di-0": 10, "di-1": 20},
-				dis:  map[string]uint64{"di-2": 10, "di-3": 20},
-				cg: &CellGroup{
-					load: 100,
-				},
-			},
-			args: args{
-				ID:   "di-0",
-				Size: 10,
-			},
-			want: want{
-				off:    map[string]uint64{"di-1": 20},
-				dis:    map[string]uint64{"di-2": 10, "di-3": 20},
-				load:   100,
-				cgload: 100,
+				off:  map[string]uint64{"di-2": 10, "di-3": 20},
+				load: 90,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &cell{
-				load: tt.fields.load,
+				load: &tt.fields.load,
 				off:  tt.fields.off,
-				dis:  tt.fields.dis,
 				cg:   tt.fields.cg,
 			}
 
-			di := &mocks.DataItem{}
-			di.On("ID").Return(tt.args.ID)
-			di.On("Size").Return(tt.args.Size)
+			c.RemoveLoad(tt.args.Size)
 
-			if err := c.Remove(di); err != nil {
-				t.Error(err)
-			}
-
-			assert.Equal(t, tt.want.dis, c.dis)
 			assert.Equal(t, tt.want.off, c.off)
-			assert.Equal(t, int(tt.want.load), int(c.load))
-			assert.Equal(t, int(tt.want.cgload), int(c.cg.load))
+			assert.Equal(t, int(tt.want.load), int(*c.load))
 		})
 	}
 }
@@ -262,15 +186,14 @@ func Test_cell_Relocate(t *testing.T) {
 	type fields struct {
 		load uint64
 		off  map[string]uint64
-		dis  map[string]uint64
 		cg   *CellGroup
 	}
 	type args struct {
 		ID   string
+		Size uint64
 		ncID uint64
 	}
 	type want struct {
-		dis    map[string]uint64
 		off    map[string]uint64
 		load   uint64
 		cgload uint64
@@ -286,7 +209,6 @@ func Test_cell_Relocate(t *testing.T) {
 			name: "not exist",
 			fields: fields{
 				load: 100,
-				dis:  map[string]uint64{"di-1": 20},
 				off:  map[string]uint64{"di-2": 10, "di-3": 20},
 				cg: &CellGroup{
 					load: 100,
@@ -294,10 +216,10 @@ func Test_cell_Relocate(t *testing.T) {
 			},
 			args: args{
 				ID:   "di-0",
+				Size: 10,
 				ncID: 4242,
 			},
 			want: want{
-				dis:    map[string]uint64{"di-1": 20},
 				off:    map[string]uint64{"di-0": 4242, "di-2": 10, "di-3": 20},
 				load:   100,
 				cgload: 100,
@@ -307,7 +229,6 @@ func Test_cell_Relocate(t *testing.T) {
 			name: "exist",
 			fields: fields{
 				load: 100,
-				dis:  map[string]uint64{"di-0": 10, "di-1": 20},
 				off:  map[string]uint64{"di-2": 10, "di-3": 20},
 				cg: &CellGroup{
 					load: 100,
@@ -315,33 +236,32 @@ func Test_cell_Relocate(t *testing.T) {
 			},
 			args: args{
 				ID:   "di-0",
+				Size: 10,
 				ncID: 4242,
 			},
 			want: want{
-				dis:    map[string]uint64{"di-1": 20},
 				off:    map[string]uint64{"di-0": 4242, "di-2": 10, "di-3": 20},
-				load:   90,
-				cgload: 90,
+				load:   100,
+				cgload: 100,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &cell{
-				load: tt.fields.load,
+				load: &tt.fields.load,
 				off:  tt.fields.off,
-				dis:  tt.fields.dis,
 				cg:   tt.fields.cg,
 			}
 
 			di := &mocks.DataItem{}
 			di.On("ID").Return(tt.args.ID)
+			di.On("Size").Return(tt.args.Size)
 
 			c.Relocate(di, tt.args.ncID)
 
-			assert.Equal(t, tt.want.dis, c.dis)
 			assert.Equal(t, tt.want.off, c.off)
-			assert.Equal(t, int(tt.want.load), int(c.load))
+			assert.Equal(t, int(tt.want.load), int(*c.load))
 			assert.Equal(t, int(tt.want.cgload), int(c.cg.load))
 		})
 	}
@@ -436,9 +356,9 @@ func TestNewCell(t *testing.T) {
 				},
 			},
 			want: &cell{
-				id:  11,
-				off: make(map[string]uint64),
-				dis: make(map[string]uint64),
+				id:   11,
+				off:  make(map[string]uint64),
+				load: new(uint64),
 				cg: &CellGroup{
 					id:    "test-cg",
 					cells: map[uint64]*cell{},
@@ -452,9 +372,9 @@ func TestNewCell(t *testing.T) {
 				cg: nil,
 			},
 			want: &cell{
-				id:  11,
-				off: make(map[string]uint64),
-				dis: make(map[string]uint64),
+				id:   11,
+				load: new(uint64),
+				off:  make(map[string]uint64),
 			},
 		},
 	}
