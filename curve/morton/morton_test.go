@@ -4,8 +4,9 @@ import (
 	"io/ioutil"
 	"log"
 	"math"
-	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMortonCurve_Decode(t *testing.T) {
@@ -107,6 +108,18 @@ func TestMortonCurve_Decode(t *testing.T) {
 			},
 			false,
 		},
+		{
+			"code < maxCode",
+			fields{
+				2,
+				2,
+			},
+			args{
+				math.MaxInt64,
+			},
+			nil,
+			true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -119,9 +132,7 @@ func TestMortonCurve_Decode(t *testing.T) {
 				t.Errorf("Decode() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotCoords, tt.wantCoords) {
-				t.Errorf("Decode() gotCoords = %v, want %v", gotCoords, tt.wantCoords)
-			}
+			assert.Equal(t, tt.wantCoords, gotCoords)
 		})
 	}
 }
@@ -239,6 +250,18 @@ func TestMortonCurve_Encode(t *testing.T) {
 			6442450941,
 			false,
 		},
+		{
+			"not valid coords",
+			fields{
+				5,
+				64,
+			},
+			args{
+				[]uint64{math.MaxUint64, math.MaxUint64},
+			},
+			0,
+			true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -251,9 +274,124 @@ func TestMortonCurve_Encode(t *testing.T) {
 				t.Errorf("Encode() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotD, tt.wantCode) {
-				t.Errorf("Encode() gotD = %v, want %v", gotD, tt.wantCode)
+			assert.Equal(t, tt.wantCode, gotD)
+		})
+	}
+}
+
+func TestHilbertCurve_DecodeWithBuffer(t *testing.T) {
+	type fields struct {
+		dimensions uint64
+		bits       uint64
+	}
+	type args struct {
+		code uint64
+		buf  []uint64
+	}
+	tests := []struct {
+		name       string
+		fields     fields
+		args       args
+		wantCoords []uint64
+		wantErr    bool
+	}{
+		{
+			"3 == [1, 1]",
+			fields{
+				2,
+				1,
+			},
+			args{
+				3,
+				make([]uint64, 2),
+			},
+			[]uint64{
+				1, 1,
+			},
+			false,
+		},
+		{
+			"96 == [8, 4]",
+			fields{
+				2,
+				10,
+			},
+			args{
+				96,
+				make([]uint64, 2),
+			},
+			[]uint64{
+				8, 4,
+			},
+			false,
+		},
+		{
+			"1096 == [40, 2]",
+			fields{
+				2,
+				10,
+			},
+			args{
+				1096,
+				make([]uint64, 2),
+			},
+			[]uint64{
+				40, 2,
+			},
+			false,
+		},
+		{
+			"MaxInt64 == [4095, 4096, 0, 0, 0, 0, 0, 0, 0, 0]",
+			fields{
+				5,
+				64,
+			},
+			args{
+				math.MaxInt64,
+				make([]uint64, 10),
+			},
+			[]uint64{
+				1, 1, 1, 1, 1, 0, 0, 0, 0, 0,
+			},
+			false,
+		},
+		{
+			"buf < dimensions",
+			fields{
+				5,
+				64,
+			},
+			args{
+				math.MaxInt64,
+				make([]uint64, 1),
+			},
+			nil,
+			true,
+		},
+		{
+			"code < maxCode",
+			fields{
+				2,
+				2,
+			},
+			args{
+				math.MaxInt64,
+				make([]uint64, 2),
+			},
+			nil,
+			true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c, _ := New(tt.fields.dimensions, tt.fields.bits)
+			gotCoords, err := c.DecodeWithBuffer(tt.args.buf, tt.args.code)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Decode() error = %v, wantErr %v", err, tt.wantErr)
+				return
 			}
+
+			assert.Equal(t, tt.wantCoords, gotCoords)
 		})
 	}
 }
@@ -405,6 +543,11 @@ func TestNew(t *testing.T) {
 					0x33,
 					0x55,
 				},
+				lshiftsArray: []uint64{
+					0,
+					1 << 1,
+					1 << 0,
+				},
 				maxSize: 15,
 				maxCode: 255,
 			},
@@ -427,6 +570,16 @@ func TestNew(t *testing.T) {
 					0x909090909090909,
 					0x1111111111111111,
 				},
+				lshiftsArray: []uint64{
+					0,
+					1 << 6,
+					1 << 5,
+					1 << 4,
+					1 << 3,
+					1 << 2,
+					1 << 1,
+					1 << 0,
+				},
 				maxSize: 4294967295,
 				maxCode: 18446744073709551615,
 			},
@@ -440,9 +593,7 @@ func TestNew(t *testing.T) {
 				t.Errorf("New() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("New() got = %v, want %v", got, tt.want)
-			}
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -599,6 +750,116 @@ func TestCurve_validateCode(t *testing.T) {
 			if err := c.validateCode(tt.args.code); (err != nil) != tt.wantErr {
 				t.Errorf("validateCode() error = %v, wantErr %v", err, tt.wantErr)
 			}
+		})
+	}
+}
+
+func TestCurve_DimensionSize(t *testing.T) {
+	type fields struct {
+		maxSize uint64
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   uint64
+	}{
+		{
+			name: "test",
+			fields: fields{
+				maxSize: 42,
+			},
+			want: 42,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Curve{
+				maxSize: tt.fields.maxSize,
+			}
+			got := c.DimensionSize()
+			assert.Equal(t, int(tt.want), int(got))
+		})
+	}
+}
+
+func TestCurve_Bits(t *testing.T) {
+	type fields struct {
+		bits uint64
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   uint64
+	}{
+		{
+			name: "test",
+			fields: fields{
+				bits: 42,
+			},
+			want: 42,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Curve{
+				bits: tt.fields.bits,
+			}
+			got := c.Bits()
+			assert.Equal(t, int(tt.want), int(got))
+		})
+	}
+}
+func TestCurve_Length(t *testing.T) {
+	type fields struct {
+		maxCode uint64
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   uint64
+	}{
+		{
+			name: "test",
+			fields: fields{
+				maxCode: 42,
+			},
+			want: 42,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Curve{
+				maxCode: tt.fields.maxCode,
+			}
+			got := c.Length()
+			assert.Equal(t, int(tt.want), int(got))
+		})
+	}
+}
+func TestCurve_Dimensions(t *testing.T) {
+	type fields struct {
+		dimensions uint64
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   uint64
+	}{
+		{
+			name: "test",
+			fields: fields{
+				dimensions: 42,
+			},
+			want: 42,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Curve{
+				dimensions: tt.fields.dimensions,
+			}
+			got := c.Dimensions()
+			assert.Equal(t, int(tt.want), int(got))
 		})
 	}
 }

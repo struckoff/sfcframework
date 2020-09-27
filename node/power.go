@@ -1,4 +1,4 @@
-package balancer
+package node
 
 // Power is an interface decribing computational ability of the node.
 type Power interface {

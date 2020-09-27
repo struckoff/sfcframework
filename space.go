@@ -1,26 +1,27 @@
 package balancer
 
 import (
-	"github.com/pkg/errors"
 	"math"
-	"sort"
+	"reflect"
 	"sync"
 
-	"github.com/struckoff/SFCFramework/curve"
+	"github.com/struckoff/sfcframework/node"
+
+	"github.com/pkg/errors"
+	"github.com/struckoff/sfcframework/curve"
 )
 
 type Space struct {
 	mu    sync.Mutex
-	cells map[uint64]*cell
-	cgs   []*CellGroup
-	sfc   curve.Curve
-	tf    TransformFunc
+	cells map[uint64]*cell //cells in the space
+	cgs   []*CellGroup     //cell groups in the space
+	sfc   curve.Curve      //encoder(Space filling curve)
+	tf    TransformFunc    //TransformFunc - transform DataItem into SFC-readable format
 	load  uint64
 }
 
-func NewSpace(sfc curve.Curve, tf TransformFunc, nodes []Node) (*Space, error) {
+func NewSpace(sfc curve.Curve, tf TransformFunc, nodes []node.Node) (*Space, error) {
 	s := Space{
-		mu:    sync.Mutex{},
 		cells: map[uint64]*cell{},
 		cgs:   []*CellGroup{},
 		sfc:   sfc,
@@ -57,18 +58,11 @@ func splitCells(n int, l uint64) ([]Range, error) {
 	}
 	for c < float64(l) {
 		if i == n-1 {
-			res[i] = Range{
-				Min: uint64(math.Ceil(c)),
-				Max: l,
-			}
+			res[i] = NewRange(uint64(math.Ceil(c)), l)
 			break
 		}
 		nc := c + s
-		res[i] = Range{
-			Min: uint64(math.Ceil(c)),
-			Max: uint64(math.Ceil(nc)),
-		}
-		res[i].Len = res[i].Max - res[i].Min
+		res[i] = NewRange(uint64(math.Ceil(c)), uint64(math.Ceil(nc)))
 		i++
 		c = nc
 	}
@@ -86,32 +80,40 @@ func (s *Space) CellGroups() []*CellGroup {
 func (s *Space) Cells() []*cell {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	ids := make([]uint64, 0, len(s.cells))
-	for k := range s.cells {
-		ids = append(ids, k)
-	}
-	sort.Slice(ids, func(i, j int) bool {
-		return ids[i] < ids[j]
-	})
-	res := make([]*cell, len(s.cells))
-	for i, id := range ids {
-		res[i] = s.cells[id]
+	//ids := make([]uint64, 0, len(s.cells))
+	//for k := range s.cells {
+	//	ids = append(ids, k)
+	//}
+	//sort.Slice(ids, func(i, j int) bool {
+	//	return ids[i] < ids[j]
+	//})
+	res := make([]*cell, 0, len(s.cells))
+	for id := range s.cells {
+		res = append(res, s.cells[id])
 	}
 	return res
 }
 
-func (s *Space) TotalLoad() uint64 {
+func (s *Space) TotalLoad() (load uint64) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return s.load
+	return s.totalLoad()
+}
+
+func (s *Space) totalLoad() (load uint64) {
+	for _, cell := range s.cells {
+		load += cell.Load()
+	}
+	s.load = load
+	return load
 }
 
 //TotalPower returns the sum of the all node powers in the space.
 func (s *Space) TotalPower() (power float64) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	for iter := range s.cgs {
-		power += s.cgs[iter].node.Power().Get()
+	for i := range s.cgs {
+		power += s.cgs[i].Node().Power().Get()
 	}
 	return
 }
@@ -121,6 +123,14 @@ func (s *Space) SetGroups(groups []*CellGroup) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.cgs = groups
+	//for _, cg := range s.cgs {
+	//	cg.SetCells(nil)
+	//}
+	//for _, c := range s.cells {
+	//	if cg, ok := s.findCellGroup(c.ID()); ok {
+	//		cg.AddCell(c, true)
+	//	}
+	//}
 }
 
 //Len returns the number of CellGroups in the space.
@@ -138,7 +148,7 @@ func (s *Space) Capacity() uint64 {
 }
 
 //AddNode adds a new node to the space.
-func (s *Space) AddNode(n Node) error {
+func (s *Space) AddNode(n node.Node) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if err := s.addNode(n); err != nil {
@@ -147,11 +157,14 @@ func (s *Space) AddNode(n Node) error {
 	return nil
 }
 
-func (s *Space) addNode(n Node) error {
-	//TODO May be s.cgs should be map
-	for iter := range s.cgs {
-		if s.cgs[iter].ID() == n.ID() {
-			s.cgs[iter].SetNode(n)
+func (s *Space) addNode(n node.Node) error {
+	if n == nil || reflect.ValueOf(n).IsNil() {
+		return errors.New("node should not be nil")
+	}
+	for i := range s.cgs {
+		if s.cgs[i] != nil && s.cgs[i].ID() == n.ID() {
+			//s.cgs[i].Truncate()
+			s.cgs[i].SetNode(n)
 			return nil
 		}
 	}
@@ -160,38 +173,21 @@ func (s *Space) addNode(n Node) error {
 }
 
 //GetNode returns node with given ID.
-func (s *Space) GetNode(id string) (Node, bool) {
+func (s *Space) GetNode(id string) (node.Node, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.getNode(id)
 }
 
-func (s *Space) getNode(id string) (Node, bool) {
+func (s *Space) getNode(id string) (node.Node, bool) {
 	//TODO May be s.cgs should be map
-	for iter := range s.cgs {
-		if s.cgs[iter].ID() == id {
-			return s.cgs[iter].Node(), true
+	for i := range s.cgs {
+		if s.cgs[i].ID() == id {
+			return s.cgs[i].Node(), true
 		}
 	}
 	return nil, false
 }
-
-//func (s *Space) SetNodes(ns []Node) error {
-//	s.mu.Lock()
-//	defer s.mu.Unlock()
-//	if err := s.setNodes(ns); err != nil {
-//		return err
-//	}
-//	return nil
-//}
-//
-//func (s *Space) setNodes(ns []Node) error {
-//	s.cgs = nil
-//	for _, n := range ns {
-//		s.cgs = append(s.cgs, NewCellGroup(n))
-//	}
-//	return nil
-//}
 
 func (s *Space) RemoveNode(id string) error {
 	s.mu.Lock()
@@ -202,58 +198,130 @@ func (s *Space) RemoveNode(id string) error {
 	return nil
 }
 func (s *Space) removeNode(id string) error {
-	for iter := range s.cgs {
-		if s.cgs[iter].ID() == id {
-			s.cgs = append(s.cgs[:iter], s.cgs[iter+1:]...)
+	for i := range s.cgs {
+		if s.cgs[i].ID() == id {
+			s.load -= s.cgs[i].TotalLoad()
+			s.cgs[i].Truncate()
+			s.cgs = append(s.cgs[:i], s.cgs[i+1:]...)
 			return nil
 		}
 	}
 	return errors.Errorf("node(%s) not found", id)
 }
 
-//AddData add data item to the space.
-func (s *Space) AddData(d DataItem) (Node, error) {
+//AddData Add data item to the space.
+func (s *Space) AddData(d DataItem) (node.Node, uint64, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.locateData(d, true)
 }
 
+//RemoveData removes data item from the space.
+func (s *Space) RemoveData(d DataItem) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.removeData(d)
+}
+
 //LocateData find data item in the space.
-func (s *Space) LocateData(d DataItem) (Node, error) {
+func (s *Space) LocateData(d DataItem) (node.Node, uint64, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.locateData(d, false)
 }
 
-func (s *Space) locateData(d DataItem, load bool) (Node, error) {
+func (s *Space) locateData(d DataItem, load bool) (node.Node, uint64, error) {
 	if len(s.cgs) == 0 {
-		return nil, errors.New("no nodes in the cluster")
+		return nil, 0, errors.New("no nodes in the cluster")
 	}
 	cID, err := s.cellID(d)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
+	c, err := s.getCell(cID)
+	if err != nil {
+		return nil, 0, err
+	}
+	if ncID, ok := c.Relocated(d.ID()); ok {
+		cID = ncID
+		c, err = s.getCell(ncID)
+		if err != nil {
+			return nil, 0, err
+		}
+	}
+	if load {
+		c.AddLoad(d.Size())
+		s.load += d.Size()
+	}
+	return c.cg.Node(), cID, nil
+}
+
+func (s *Space) getCell(cID uint64) (*cell, error) {
 	if _, ok := s.cells[cID]; !ok {
 		cg, ok := s.findCellGroup(cID)
 		if !ok {
-			return nil, errors.Errorf("unable to bind cell to cell group (cID=%v  d=%s)", cID, d.ID())
+			return nil, errors.Errorf("unable to bind cell to cell group (cID=%v)", cID)
 		}
-		c := NewCell(cID, cg, 0)
+		c := NewCell(cID, cg)
 		s.cells[cID] = c
-		cg.cells[cID] = c
 	}
-	if load {
-		if err = s.cells[cID].add(d); err != nil {
-			return nil, err
+	return s.cells[cID], nil
+}
+
+func (s *Space) removeData(d DataItem) error {
+	if len(s.cgs) == 0 {
+		return nil
+	}
+	cID, err := s.cellID(d)
+	if err != nil {
+		return err
+	}
+	if _, ok := s.cells[cID]; !ok {
+		return nil
+	}
+	if ncID, ok := s.cells[cID].Relocated(d.ID()); ok {
+		if _, ok := s.cells[ncID]; ok {
+			s.cells[ncID].RemoveLoad(d.Size())
 		}
-		s.load += d.Size()
 	}
-	return s.cells[cID].cg.Node(), nil
+	s.cells[cID].RemoveLoad(d.Size())
+	s.load -= d.Size()
+	return nil
+}
+
+//RelocateData moves DataItem to another cell
+func (s *Space) RelocateData(d DataItem, ncID uint64) (node.Node, uint64, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.relocateData(d, ncID)
+}
+
+func (s *Space) relocateData(d DataItem, ncID uint64) (node.Node, uint64, error) {
+	if len(s.cgs) == 0 {
+		return nil, 0, errors.New("no nodes in the cluster")
+	}
+	cID, err := s.cellID(d)
+	if err != nil {
+		return nil, 0, err
+	}
+	c, err := s.getCell(cID)
+	if err != nil {
+		return nil, 0, err
+	}
+	nc, err := s.getCell(ncID)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	c.RemoveLoad(d.Size())
+	c.Relocate(d, ncID)
+	nc.AddLoad(d.Size())
+
+	return nc.cg.Node(), ncID, nil
 }
 
 //cellID calculates the id of cell in space based on transform function and space filling curve.
 func (s *Space) cellID(d DataItem) (uint64, error) {
-	//size := s.sfc.DimensionSize()
 	if s.tf == nil {
 		return 0, errors.New("transform function is not set")
 	}
@@ -270,20 +338,38 @@ func (s *Space) cellID(d DataItem) (uint64, error) {
 }
 
 func (s *Space) findCellGroup(cID uint64) (cg *CellGroup, ok bool) {
-	for iter := range s.cgs {
-		if s.cgs[iter].FitsRange(cID) {
-			return s.cgs[iter], true
+	for i := range s.cgs {
+		if s.cgs[i].FitsRange(cID) {
+			return s.cgs[i], true
 		}
 	}
 	return nil, false
 }
 
-func (s *Space) Nodes() []Node {
+func (s *Space) Nodes() []node.Node {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	res := make([]Node, len(s.cgs))
-	for iter := range s.cgs {
-		res[iter] = s.cgs[iter].Node()
+	res := make([]node.Node, len(s.cgs))
+	for i := range s.cgs {
+		res[i] = s.cgs[i].Node()
 	}
 	return res
+}
+
+func (s *Space) FillCellGroup(cg *CellGroup) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.fillCellGroup(cg)
+}
+
+func (s *Space) fillCellGroup(cg *CellGroup) {
+	cg.SetCells(nil)
+	for cid, c := range s.cells {
+		if cg.FitsRange(cid) {
+			if c.cg != nil {
+				c.cg.RemoveCell(cid)
+			}
+			cg.AddCell(c)
+		}
+	}
 }

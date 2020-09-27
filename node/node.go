@@ -1,4 +1,4 @@
-package balancer
+package node
 
 // Node is an interface describing storage/processing node in the cluster.
 type Node interface {
