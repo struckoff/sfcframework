@@ -37,4 +37,12 @@ jobs:
       run: go test -v -race ./...
    
     - name: Coverage
-      run: go test -cover ./...
+      run: go test -coverprofile=coverage.out ./...
+      
+    - name: Covbage
+      uses: jandelgado/gcov2lcov-action@v1.0.3
+      with:
+        infile: coverage.out
+        outfile: coverage.lcov
+      
+      
