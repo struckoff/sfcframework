@@ -30,6 +30,36 @@ func TestSpaceTransform(t *testing.T) {
 			want:    []uint64{255, 255},
 			wantErr: false,
 		},
+		{
+			name: "not enough values",
+			args: args{
+				values: []interface{}{90.0},
+				cType:  curve.Hilbert,
+				bits:   8,
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "latitude not float64",
+			args: args{
+				values: []interface{}{"90.0", 180.0},
+				cType:  curve.Hilbert,
+				bits:   8,
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "longitude not float64",
+			args: args{
+				values: []interface{}{90.0, "180.0"},
+				cType:  curve.Hilbert,
+				bits:   8,
+			},
+			want:    nil,
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

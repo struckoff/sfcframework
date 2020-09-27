@@ -388,3 +388,51 @@ func TestNewCell(t *testing.T) {
 		})
 	}
 }
+
+func Test_cell_Group(t *testing.T) {
+	type fields struct {
+		cg *CellGroup
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   *CellGroup
+	}{
+		{
+			name: "test",
+			fields: fields{
+				cg: &CellGroup{
+					id:    "test-group",
+					node:  &mocks.Node{},
+					cells: make(map[uint64]*cell, 42),
+					load:  42,
+					cRange: Range{
+						Min: 0,
+						Max: 111,
+						Len: 111,
+					},
+				},
+			},
+			want: &CellGroup{
+				id:    "test-group",
+				node:  &mocks.Node{},
+				cells: make(map[uint64]*cell, 42),
+				load:  42,
+				cRange: Range{
+					Min: 0,
+					Max: 111,
+					Len: 111,
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &cell{
+				cg: tt.fields.cg,
+			}
+			got := c.Group()
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}

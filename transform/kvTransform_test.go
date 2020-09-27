@@ -53,6 +53,28 @@ func TestKVTransform(t *testing.T) {
 			want:    []uint64{14},
 			wantErr: false,
 		},
+		{
+			name: "not enough values",
+			args: args{
+				[]interface{}{},
+				1,
+				4,
+				curve.Morton,
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "not string",
+			args: args{
+				[]interface{}{42},
+				1,
+				4,
+				curve.Morton,
+			},
+			want:    nil,
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

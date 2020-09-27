@@ -274,6 +274,31 @@ func TestCellGroup_SetRange(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "min > max",
+			fields: fields{
+				cells: map[uint64]*cell{
+					1:  {id: uint64(1), load: uint64ptr(1)},
+					2:  {id: uint64(2), load: uint64ptr(10)},
+					10: {id: uint64(10), load: uint64ptr(100)},
+					15: {id: uint64(15), load: uint64ptr(1000)},
+				},
+				load: 1111,
+				cRange: Range{
+					Min: 0,
+					Max: 111,
+					Len: 111,
+				},
+			},
+			args: args{
+				min: 121,
+				max: 10,
+				s:   nil,
+			},
+			want: want{
+				err: true,
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -294,13 +319,14 @@ func TestCellGroup_SetRange(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
+
+				if tt.args.s != nil {
+					tt.args.s.FillCellGroup(cg)
+				}
+				assert.Equal(t, tt.want.cRange, cg.cRange)
+				assert.Equal(t, tt.want.cells, cg.cells)
+				assert.Equal(t, int(tt.want.load), int(cg.load))
 			}
-			if tt.args.s != nil {
-				tt.args.s.FillCellGroup(cg)
-			}
-			assert.Equal(t, tt.want.cRange, cg.cRange)
-			assert.Equal(t, tt.want.cells, cg.cells)
-			assert.Equal(t, int(tt.want.load), int(cg.load))
 		})
 	}
 }
@@ -392,6 +418,36 @@ func TestCellGroup_AddCell(t *testing.T) {
 						id:   2,
 						load: uint64ptr(1),
 						off:  nil,
+					},
+				},
+			},
+		},
+		{
+			name: "cells exists",
+			fields: fields{
+				cells: map[uint64]*cell{1: {
+					id:   1,
+					load: uint64ptr(21),
+					off:  nil,
+					cg:   nil,
+				}},
+				load: 21,
+			},
+			args: args{
+				c: &cell{
+					id:   1,
+					load: uint64ptr(42),
+					off:  nil,
+				},
+			},
+			want: want{
+				load: 42,
+				cells: map[uint64]*cell{
+					1: {
+						id:   1,
+						load: uint64ptr(42),
+						off:  nil,
+						cg:   nil,
 					},
 				},
 			},
@@ -553,6 +609,11 @@ func TestCellGroup_RemoveCell(t *testing.T) {
 			assert.Equal(t, int(tt.want.load), int(cg.load))
 		})
 	}
+}
+
+func TestCell_RemoveCell_nil(t *testing.T) {
+	var cg *CellGroup
+	cg.removeCell(42)
 }
 
 func TestCellGroup_TotalLoad(t *testing.T) {

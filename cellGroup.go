@@ -3,7 +3,7 @@ package balancer
 import (
 	"sync"
 
-	node2 "github.com/struckoff/sfcframework/node"
+	"github.com/struckoff/sfcframework/node"
 
 	"github.com/pkg/errors"
 )
@@ -11,14 +11,14 @@ import (
 type CellGroup struct {
 	id     string //unique id of the cell group
 	mu     sync.RWMutex
-	node   node2.Node
+	node   node.Node
 	cells  map[uint64]*cell
 	load   uint64
 	cRange Range
 }
 
 //NewCellGroup builds a new CellGroup
-func NewCellGroup(n node2.Node) *CellGroup {
+func NewCellGroup(n node.Node) *CellGroup {
 	return &CellGroup{
 		id:    n.ID(),
 		node:  n,
@@ -34,14 +34,14 @@ func (cg *CellGroup) ID() string {
 }
 
 //Node returns the node attached to this cell group
-func (cg *CellGroup) Node() node2.Node {
+func (cg *CellGroup) Node() node.Node {
 	cg.mu.RLock()
 	defer cg.mu.RUnlock()
 	return cg.node
 }
 
 //SetNode sets the node attached to the cell group
-func (cg *CellGroup) SetNode(n node2.Node) {
+func (cg *CellGroup) SetNode(n node.Node) {
 	cg.mu.Lock()
 	defer cg.mu.Unlock()
 	cg.node = n

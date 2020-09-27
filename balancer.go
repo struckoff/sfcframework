@@ -2,7 +2,6 @@ package balancer
 
 import (
 	"errors"
-	"reflect"
 
 	"github.com/struckoff/sfcframework/node"
 
@@ -15,7 +14,6 @@ import (
 // the load between nodes, balancer analyzes power and capacity of nodes, and distributes
 // cells between cell groups in such way that all nodes would be equally.
 type Balancer struct {
-	nType reflect.Type
 	space *Space
 	of    OptimizerFunc
 }
@@ -53,9 +51,6 @@ func (b *Balancer) Space() *Space {
 // AddNode adds node to the Space of balancer, and initiates rebalancing of cells
 // between cell groups.
 func (b *Balancer) AddNode(n node.Node, optimize bool) error {
-	if b.space.Len() == 0 || b.nType == nil {
-		b.nType = reflect.TypeOf(n)
-	}
 	if err := b.space.AddNode(n); err != nil {
 		return err
 	}

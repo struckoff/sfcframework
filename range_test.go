@@ -1,8 +1,9 @@
 package balancer
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestRange_Fits(t *testing.T) {
@@ -52,7 +53,6 @@ func TestRange_Fits(t *testing.T) {
 				Max: tt.fields.Max,
 				Len: tt.fields.Len,
 			}
-
 			assert.Equal(t, tt.want, r.Fits(tt.args.index))
 		})
 	}

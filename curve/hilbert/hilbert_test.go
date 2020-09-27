@@ -80,11 +80,140 @@ func TestHilbertCurve_Decode(t *testing.T) {
 			},
 			false,
 		},
+		{
+			"not valid code",
+			fields{
+				2,
+				1,
+			},
+			args{
+				math.MaxUint64,
+			},
+			nil,
+			true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c, _ := New(tt.fields.dimensions, tt.fields.bits)
 			gotCoords, err := c.Decode(tt.args.code)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Decode() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			assert.Equal(t, tt.wantCoords, gotCoords)
+		})
+	}
+}
+
+func TestHilbertCurve_DecodeWithBuffer(t *testing.T) {
+	type fields struct {
+		dimensions uint64
+		bits       uint64
+	}
+	type args struct {
+		code uint64
+		buf  []uint64
+	}
+	tests := []struct {
+		name       string
+		fields     fields
+		args       args
+		wantCoords []uint64
+		wantErr    bool
+	}{
+		{
+			"3 == [1, 0]",
+			fields{
+				2,
+				1,
+			},
+			args{
+				3,
+				make([]uint64, 2),
+			},
+			[]uint64{
+				1, 0,
+			},
+			false,
+		},
+		{
+			"96 == [4, 12]",
+			fields{
+				2,
+				10,
+			},
+			args{
+				96,
+				make([]uint64, 2),
+			},
+			[]uint64{
+				4, 12,
+			},
+			false,
+		},
+		{
+			"1096 == [10, 34]",
+			fields{
+				2,
+				10,
+			},
+			args{
+				1096,
+				make([]uint64, 2),
+			},
+			[]uint64{
+				10, 34,
+			},
+			false,
+		},
+		{
+			"MaxInt64 == [4095, 4096, 0, 0, 0, 0, 0, 0, 0, 0]",
+			fields{
+				5,
+				64,
+			},
+			args{
+				math.MaxInt64,
+				make([]uint64, 10),
+			},
+			[]uint64{
+				4095, 4096, 0, 0, 0, 0, 0, 0, 0, 0,
+			},
+			false,
+		},
+		{
+			"buf < dimensions",
+			fields{
+				5,
+				64,
+			},
+			args{
+				math.MaxInt64,
+				make([]uint64, 1),
+			},
+			nil,
+			true,
+		},
+		{
+			"code < maxCode",
+			fields{
+				2,
+				2,
+			},
+			args{
+				math.MaxInt64,
+				make([]uint64, 2),
+			},
+			nil,
+			true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c, _ := New(tt.fields.dimensions, tt.fields.bits)
+			gotCoords, err := c.DecodeWithBuffer(tt.args.buf, tt.args.code)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Decode() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -158,6 +287,18 @@ func TestHilbertCurve_Encode(t *testing.T) {
 			math.MaxInt64,
 			false,
 		},
+		{
+			"not valid coords",
+			fields{
+				5,
+				64,
+			},
+			args{
+				[]uint64{math.MaxUint64, math.MaxUint64},
+			},
+			0,
+			true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -168,7 +309,12 @@ func TestHilbertCurve_Encode(t *testing.T) {
 				return
 			}
 
-			assert.Equal(t, tt.wantCode, gotCode)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, int(tt.wantCode), int(gotCode))
+			}
 		})
 	}
 }
@@ -494,6 +640,116 @@ func TestCurve_validateCode(t *testing.T) {
 			if err := c.validateCode(tt.args.code); (err != nil) != tt.wantErr {
 				t.Errorf("validateCode() error = %v, wantErr %v", err, tt.wantErr)
 			}
+		})
+	}
+}
+
+func TestCurve_DimensionSize(t *testing.T) {
+	type fields struct {
+		maxSize uint64
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   uint64
+	}{
+		{
+			name: "test",
+			fields: fields{
+				maxSize: 42,
+			},
+			want: 42,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Curve{
+				maxSize: tt.fields.maxSize,
+			}
+			got := c.DimensionSize()
+			assert.Equal(t, int(tt.want), int(got))
+		})
+	}
+}
+
+func TestCurve_Bits(t *testing.T) {
+	type fields struct {
+		bits uint64
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   uint64
+	}{
+		{
+			name: "test",
+			fields: fields{
+				bits: 42,
+			},
+			want: 42,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Curve{
+				bits: tt.fields.bits,
+			}
+			got := c.Bits()
+			assert.Equal(t, int(tt.want), int(got))
+		})
+	}
+}
+func TestCurve_Length(t *testing.T) {
+	type fields struct {
+		maxCode uint64
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   uint64
+	}{
+		{
+			name: "test",
+			fields: fields{
+				maxCode: 42,
+			},
+			want: 42,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Curve{
+				maxCode: tt.fields.maxCode,
+			}
+			got := c.Length()
+			assert.Equal(t, int(tt.want), int(got))
+		})
+	}
+}
+func TestCurve_Dimensions(t *testing.T) {
+	type fields struct {
+		dimensions uint64
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   uint64
+	}{
+		{
+			name: "test",
+			fields: fields{
+				dimensions: 42,
+			},
+			want: 42,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Curve{
+				dimensions: tt.fields.dimensions,
+			}
+			got := c.Dimensions()
+			assert.Equal(t, int(tt.want), int(got))
 		})
 	}
 }

@@ -29,6 +29,20 @@ func TestRangeOptimizer(t *testing.T) {
 		wantErr    bool
 	}{
 		{
+			"no nodes",
+			args{
+				loadSet: make([]uint64, 4096),
+				rates:   []int{},
+				powers:  []float64{},
+				caps:    []float64{},
+				cType:   curve.Morton,
+				dims:    3,
+				bits:    4,
+			},
+			[][2]uint64{},
+			false,
+		},
+		{
 			"equal 4 nodes",
 			args{
 				loadSet: make([]uint64, 4096),
@@ -71,8 +85,14 @@ func TestRangeOptimizer(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			sfc, _ := curve.NewCurve(tt.args.cType, tt.args.dims, tt.args.bits)
 
-			nodes := make([]node.Node, len(tt.args.powers))
-			rgs := make([]*balancer.CellGroup, len(tt.args.powers))
+			var nodes []node.Node
+			var rgs []*balancer.CellGroup
+
+			if len(tt.args.powers) > 0 {
+				nodes = make([]node.Node, len(tt.args.powers))
+				rgs = make([]*balancer.CellGroup, len(tt.args.powers))
+			}
+
 			for i := range tt.args.powers {
 				p := &mocks.Power{}
 				p.On("Get").Return(tt.args.powers[i])

@@ -1,7 +1,9 @@
 package balancer
 
 import (
+	"errors"
 	"fmt"
+	"math"
 	"sort"
 	"testing"
 
@@ -616,6 +618,321 @@ func TestSpace_LocateData(t *testing.T) {
 	assert.Equal(t, 0, int(s.load))
 }
 
+func TestSpace_LocateData_Relocated(t *testing.T) {
+	tf := func(values []interface{}, sfc curve.Curve) ([]uint64, error) {
+		res := make([]uint64, len(values))
+		for i := range values {
+			res[i] = values[i].(uint64)
+		}
+		return res, nil
+	}
+
+	sfc := &mocks.Curve{}
+	sfc.On("Encode", mock.AnythingOfType("[]uint64")).Return(uint64(42), nil)
+	d := &mocks.DataItem{}
+	d.On("ID").Return("test-di")
+	d.On("Size").Return(uint64(111))
+	d.On("Values").Return([]interface{}{
+		uint64(1),
+		uint64(2),
+		uint64(3),
+	})
+	n := &mocks.Node{}
+
+	cg := &CellGroup{
+		node:   n,
+		cells:  nil,
+		load:   0,
+		cRange: Range{},
+	}
+
+	cells := map[uint64]*cell{
+		42: {
+			id:   42,
+			load: uint64ptr(0),
+			cg:   cg,
+			off:  map[string]uint64{"test-di": 21},
+		},
+		21: {
+			id:   21,
+			load: uint64ptr(0),
+			cg:   cg,
+		},
+	}
+
+	cg.cells = cells
+
+	cgs := []*CellGroup{cg}
+
+	s := &Space{
+		sfc:   sfc,
+		cgs:   cgs,
+		cells: cells,
+		tf:    tf,
+		load:  0,
+	}
+
+	gotn, gotcid, err := s.LocateData(d)
+
+	assert.NoError(t, err)
+	assert.Equal(t, n, gotn)
+	assert.Equal(t, 21, int(gotcid))
+	assert.Equal(t, 0, int(s.load))
+}
+
+func TestSpace_LocateData_NoNodes(t *testing.T) {
+	tf := func(values []interface{}, sfc curve.Curve) ([]uint64, error) {
+		res := make([]uint64, len(values))
+		for i := range values {
+			res[i] = values[i].(uint64)
+		}
+		return res, nil
+	}
+
+	sfc := &mocks.Curve{}
+	sfc.On("Encode", mock.AnythingOfType("[]uint64")).Return(uint64(42), nil)
+	d := &mocks.DataItem{}
+	d.On("ID").Return("test-di")
+	d.On("Size").Return(uint64(111))
+	d.On("Values").Return([]interface{}{
+		uint64(1),
+		uint64(2),
+		uint64(3),
+	})
+	n := &mocks.Node{}
+
+	cg := &CellGroup{
+		node:   n,
+		cells:  nil,
+		load:   0,
+		cRange: Range{},
+	}
+
+	cells := map[uint64]*cell{
+		42: {
+			id:   42,
+			load: uint64ptr(0),
+			cg:   cg,
+			off:  map[string]uint64{"test-di": 21},
+		},
+		21: {
+			id:   21,
+			load: uint64ptr(0),
+			cg:   cg,
+		},
+	}
+
+	cg.cells = cells
+
+	s := &Space{
+		sfc:   sfc,
+		cgs:   nil,
+		cells: cells,
+		tf:    tf,
+		load:  0,
+	}
+
+	_, _, err := s.LocateData(d)
+
+	assert.Error(t, err)
+}
+
+func TestSpace_LocateData_TFNil(t *testing.T) {
+	sfc := &mocks.Curve{}
+	sfc.On("Encode", mock.AnythingOfType("[]uint64")).Return(uint64(42), nil)
+	d := &mocks.DataItem{}
+	d.On("ID").Return("test-di")
+	d.On("Size").Return(uint64(111))
+	d.On("Values").Return([]interface{}{
+		uint64(1),
+		uint64(2),
+		uint64(3),
+	})
+	n := &mocks.Node{}
+
+	cg := &CellGroup{
+		node:   n,
+		cells:  nil,
+		load:   0,
+		cRange: Range{},
+	}
+
+	cells := map[uint64]*cell{
+		42: {
+			id:   42,
+			load: uint64ptr(0),
+			cg:   cg,
+		},
+	}
+
+	cg.cells = cells
+
+	cgs := []*CellGroup{cg}
+
+	s := &Space{
+		sfc:   sfc,
+		cgs:   cgs,
+		cells: cells,
+		tf:    nil,
+		load:  0,
+	}
+
+	_, _, err := s.LocateData(d)
+	assert.Error(t, err)
+}
+
+func TestSpace_LocateData_EncodeErr(t *testing.T) {
+	tf := func(values []interface{}, sfc curve.Curve) ([]uint64, error) {
+		res := make([]uint64, len(values))
+		for i := range values {
+			res[i] = values[i].(uint64)
+		}
+		return res, nil
+	}
+
+	sfc := &mocks.Curve{}
+	sfc.On("Encode", mock.AnythingOfType("[]uint64")).Return(uint64(0), errors.New("tests err"))
+	d := &mocks.DataItem{}
+	d.On("ID").Return("test-di")
+	d.On("Size").Return(uint64(111))
+	d.On("Values").Return([]interface{}{
+		uint64(math.MaxUint64),
+		uint64(math.MaxUint64),
+		uint64(math.MaxUint64),
+	})
+	n := &mocks.Node{}
+
+	cg := &CellGroup{
+		node:   n,
+		cells:  nil,
+		load:   0,
+		cRange: Range{},
+	}
+
+	cells := map[uint64]*cell{
+		42: {
+			id:   42,
+			load: uint64ptr(0),
+			cg:   cg,
+		},
+	}
+
+	cg.cells = cells
+
+	cgs := []*CellGroup{cg}
+
+	s := &Space{
+		sfc:   sfc,
+		cgs:   cgs,
+		cells: cells,
+		tf:    tf,
+		load:  0,
+	}
+
+	_, _, err := s.LocateData(d)
+	assert.Error(t, err)
+}
+
+func TestSpace_LocateData_NotFound(t *testing.T) {
+	tf := func(values []interface{}, sfc curve.Curve) ([]uint64, error) {
+		res := make([]uint64, len(values))
+		for i := range values {
+			res[i] = values[i].(uint64)
+		}
+		return res, nil
+	}
+
+	sfc := &mocks.Curve{}
+	sfc.On("Encode", mock.AnythingOfType("[]uint64")).Return(uint64(42), nil)
+	d := &mocks.DataItem{}
+	d.On("ID").Return("test-di")
+	d.On("Size").Return(uint64(111))
+	d.On("Values").Return([]interface{}{
+		uint64(math.MaxUint64),
+		uint64(math.MaxUint64),
+		uint64(math.MaxUint64),
+	})
+	n := &mocks.Node{}
+
+	cg := &CellGroup{
+		node:   n,
+		cells:  nil,
+		load:   0,
+		cRange: Range{},
+	}
+
+	cells := map[uint64]*cell{
+		0: {
+			id:   0,
+			load: uint64ptr(0),
+			cg:   cg,
+		},
+	}
+
+	cg.cells = cells
+
+	cgs := []*CellGroup{cg}
+
+	s := &Space{
+		sfc:   sfc,
+		cgs:   cgs,
+		cells: cells,
+		tf:    tf,
+		load:  0,
+	}
+
+	_, _, err := s.LocateData(d)
+	assert.Error(t, err)
+}
+
+func TestSpace_LocateData_TransformErr(t *testing.T) {
+	tf := func(values []interface{}, sfc curve.Curve) ([]uint64, error) {
+		return nil, errors.New("test err")
+	}
+
+	sfc := &mocks.Curve{}
+	sfc.On("Encode", mock.AnythingOfType("[]uint64")).Return(uint64(42), nil)
+	d := &mocks.DataItem{}
+	d.On("ID").Return("test-di")
+	d.On("Size").Return(uint64(111))
+	d.On("Values").Return([]interface{}{
+		uint64(math.MaxUint64),
+		uint64(math.MaxUint64),
+		uint64(math.MaxUint64),
+	})
+	n := &mocks.Node{}
+
+	cg := &CellGroup{
+		node:   n,
+		cells:  nil,
+		load:   0,
+		cRange: Range{},
+	}
+
+	cells := map[uint64]*cell{
+		42: {
+			id:   0,
+			load: uint64ptr(42),
+			cg:   cg,
+		},
+	}
+
+	cg.cells = cells
+
+	cgs := []*CellGroup{cg}
+
+	s := &Space{
+		sfc:   sfc,
+		cgs:   cgs,
+		cells: cells,
+		tf:    tf,
+		load:  0,
+	}
+
+	_, _, err := s.LocateData(d)
+	assert.Error(t, err)
+}
+
 func TestSpace_Nodes(t *testing.T) {
 	wantns := make([]node.Node, 11)
 	cgs := make([]*CellGroup, len(wantns))
@@ -652,6 +969,34 @@ func TestSpace_FillCellGroup(t *testing.T) {
 		args   args
 		want   want
 	}{
+		{
+			name: "group fits cells, cell has cg",
+			fields: fields{
+				cells: map[uint64]*cell{
+					0:   {id: 0, load: uint64ptr(1), cg: &CellGroup{load: 100, cells: map[uint64]*cell{0: {id: 0, load: uint64ptr(1)}}}},
+					42:  {id: 42, load: uint64ptr(10)},
+					111: {id: 111, load: uint64ptr(100)},
+				},
+			},
+			args: args{
+				cg: &CellGroup{
+					id:    "",
+					load:  0,
+					cells: make(map[uint64]*cell),
+					cRange: Range{
+						Min: 0,
+						Max: 42,
+						Len: 42,
+					},
+				},
+			},
+			want: want{
+				cells: map[uint64]*cell{
+					0: {id: 0, load: uint64ptr(1)},
+				},
+				load: 1,
+			},
+		},
 		{
 			name: "group fits cells",
 			fields: fields{
@@ -753,6 +1098,219 @@ func TestSpace_FillCellGroup(t *testing.T) {
 
 			assert.Equal(t, tt.want.cells, cg.cells)
 			assert.Equal(t, int(tt.want.load), int(cg.load))
+		})
+	}
+}
+
+func TestSpace_TotalPower(t *testing.T) {
+	type fields struct {
+		powers []float64
+	}
+	tests := []struct {
+		name      string
+		fields    fields
+		wantPower float64
+	}{
+		{
+			name: "test",
+			fields: fields{
+				powers: []float64{0.1, 0.01, 0.001},
+			},
+			wantPower: 0.111,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &Space{}
+
+			cgs := make([]*CellGroup, len(tt.fields.powers))
+			for i := range cgs {
+				p := &mocks.Power{}
+				p.On("Get").Return(tt.fields.powers[i])
+				n := &mocks.Node{}
+				n.On("Power").Return(p)
+				cgs[i] = &CellGroup{node: n}
+			}
+
+			s.cgs = cgs
+
+			gotPower := s.TotalPower()
+			assert.Equal(t, tt.wantPower, gotPower)
+		})
+	}
+}
+
+func TestSpace_Capacity(t *testing.T) {
+	type fields struct {
+		length uint64
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   uint64
+	}{
+		{
+			name: "test",
+			fields: fields{
+				length: 42,
+			},
+			want: 42,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &Space{}
+			sfc := &mocks.Curve{}
+			sfc.On("Length").Return(tt.fields.length)
+			s.sfc = sfc
+
+			got := s.Capacity()
+
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestSpace_RelocateData(t *testing.T) {
+	type fields struct {
+		cells map[uint64]*cell
+		cgs   []*CellGroup
+		tf    TransformFunc
+		load  uint64
+	}
+	type args struct {
+		ncID uint64
+	}
+	type want struct {
+		err   bool
+		n     node.Node
+		cells map[uint64]*cell
+	}
+
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   want
+	}{
+		{
+			name: "test",
+			fields: fields{
+				cells: map[uint64]*cell{
+					42: {
+						id:   42,
+						load: uint64ptr(100),
+						off:  make(map[string]uint64),
+						cg: &CellGroup{
+							node: &mocks.Node{},
+						},
+					},
+					21: {
+						id:   21,
+						load: uint64ptr(100),
+						off:  make(map[string]uint64),
+						cg: &CellGroup{
+							node: &mocks.Node{},
+						},
+					},
+				},
+				cgs: []*CellGroup{{id: "test-node"}},
+				tf: func(values []interface{}, sfc curve.Curve) ([]uint64, error) {
+					return []uint64{0, 0}, nil
+				},
+				load: 0,
+			},
+			args: args{
+				ncID: 21,
+			},
+			want: want{
+				err: false,
+				n:   &mocks.Node{},
+				cells: map[uint64]*cell{
+					42: {
+						id:   42,
+						load: uint64ptr(99),
+						off: map[string]uint64{
+							"di-id": 21,
+						},
+						cg: &CellGroup{
+							node: &mocks.Node{},
+						},
+					},
+					21: {
+						id:   21,
+						load: uint64ptr(101),
+						off:  make(map[string]uint64),
+						cg: &CellGroup{
+							node: &mocks.Node{},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "unable to bind cell to cell group",
+			fields: fields{
+				cells: make(map[uint64]*cell),
+				cgs:   []*CellGroup{{id: "test-node"}},
+				tf: func(values []interface{}, sfc curve.Curve) ([]uint64, error) {
+					return []uint64{0, 0}, nil
+				},
+				load: 0,
+			},
+			args: args{
+				ncID: 21,
+			},
+			want: want{
+				err: true,
+			},
+		},
+		{
+			name: "no nodes in the cluster",
+			fields: fields{
+				cells: make(map[uint64]*cell),
+				cgs:   nil,
+				tf: func(values []interface{}, sfc curve.Curve) ([]uint64, error) {
+					return []uint64{0, 0}, nil
+				},
+				load: 0,
+			},
+			args: args{
+				ncID: 21,
+			},
+			want: want{
+				err: true,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &Space{
+				cells: tt.fields.cells,
+				cgs:   tt.fields.cgs,
+				tf:    tt.fields.tf,
+				load:  tt.fields.load,
+			}
+
+			sfc := &mocks.Curve{}
+			sfc.On("Encode", mock.AnythingOfType("[]uint64")).Return(uint64(42), nil)
+
+			s.sfc = sfc
+
+			d := &mocks.DataItem{}
+			d.On("Values").Return([]interface{}{0, 0})
+			d.On("Size").Return(uint64(1))
+			d.On("ID").Return("di-id")
+
+			got, gotCode, err := s.RelocateData(d, tt.args.ncID)
+			if tt.want.err {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.args.ncID, gotCode)
+				assert.Equal(t, tt.want.n, got)
+				assert.Equal(t, tt.want.cells, s.cells)
+			}
 		})
 	}
 }

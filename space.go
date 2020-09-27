@@ -2,6 +2,7 @@ package balancer
 
 import (
 	"math"
+	"reflect"
 	"sync"
 
 	"github.com/struckoff/sfcframework/node"
@@ -21,7 +22,6 @@ type Space struct {
 
 func NewSpace(sfc curve.Curve, tf TransformFunc, nodes []node.Node) (*Space, error) {
 	s := Space{
-		mu:    sync.Mutex{},
 		cells: map[uint64]*cell{},
 		cgs:   []*CellGroup{},
 		sfc:   sfc,
@@ -158,9 +158,11 @@ func (s *Space) AddNode(n node.Node) error {
 }
 
 func (s *Space) addNode(n node.Node) error {
-	//TODO May be s.cgs should be map
+	if n == nil || reflect.ValueOf(n).IsNil() {
+		return errors.New("node should not be nil")
+	}
 	for i := range s.cgs {
-		if s.cgs[i].ID() == n.ID() {
+		if s.cgs[i] != nil && s.cgs[i].ID() == n.ID() {
 			//s.cgs[i].Truncate()
 			s.cgs[i].SetNode(n)
 			return nil
@@ -255,10 +257,7 @@ func (s *Space) locateData(d DataItem, load bool) (node.Node, uint64, error) {
 }
 
 func (s *Space) getCell(cID uint64) (*cell, error) {
-	if cg, ok := s.cells[cID]; !ok {
-		if cg != nil {
-			return nil, errors.Errorf("cell exists (cID=%v)", cID)
-		}
+	if _, ok := s.cells[cID]; !ok {
 		cg, ok := s.findCellGroup(cID)
 		if !ok {
 			return nil, errors.Errorf("unable to bind cell to cell group (cID=%v)", cID)

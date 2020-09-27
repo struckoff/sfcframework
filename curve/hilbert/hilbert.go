@@ -48,10 +48,7 @@ func (c *Curve) Decode(code uint64) (coords []uint64, err error) {
 		return nil, err
 	}
 	coords = make([]uint64, c.dimensions)
-	coords, err = c.parseIndex(coords, code)
-	if err != nil {
-		return
-	}
+	coords = c.parseIndex(coords, code)
 	return c.transpose(coords), nil
 }
 
@@ -66,10 +63,7 @@ func (c *Curve) DecodeWithBuffer(buf []uint64, code uint64) (coords []uint64, er
 	if err := c.validateCode(code); err != nil {
 		return nil, err
 	}
-	coords, err = c.parseIndex(buf, code)
-	if err != nil {
-		return
-	}
+	coords = c.parseIndex(buf, code)
 	coords = c.transpose(coords)
 	return coords, nil
 }
@@ -81,8 +75,7 @@ func (c *Curve) validateCode(code uint64) error {
 	return nil
 }
 
-// TODO OPTIMIZE
-func (c *Curve) parseIndex(coords []uint64, code uint64) ([]uint64, error) {
+func (c *Curve) parseIndex(coords []uint64, code uint64) []uint64 {
 	var bitLen int
 
 	b := make([]byte, bitSize)
@@ -95,8 +88,6 @@ func (c *Curve) parseIndex(coords []uint64, code uint64) ([]uint64, error) {
 		}
 	}
 
-	//fmt.Println(b, b[:bitLen], bitLen, new(big.Int).SetUint64(code).Bytes())
-
 	if bitLen > 0 {
 		b = b[:bitLen]
 	}
@@ -107,7 +98,7 @@ func (c *Curve) parseIndex(coords []uint64, code uint64) ([]uint64, error) {
 			coords[dim] |= 1 << shift
 		}
 	}
-	return coords, nil
+	return coords
 }
 
 //! coords may be altered by method
