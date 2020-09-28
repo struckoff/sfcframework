@@ -3,8 +3,9 @@
 ![Coverage](https://s3.amazonaws.com/assets.coveralls.io/badges/coveralls_96.svg?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/struckoff/sfcframework)](https://goreportcard.com/report/github.com/struckoff/sfcframework)
 
-Library provides hashing mechanism which use space filling curve as core algorithm for locating data between multiple nodes.
+Library provides a hashing mechanism that uses the space-filling curve as a core algorithm for locating data between multiple nodes.
 This approach provides high data locality and distribution based on data and nodes features.
+ 
 
 # Architecture
 ![scheme](images/scheme.png)
@@ -17,8 +18,8 @@ Balancer is configurable by those parameters:
  + [transform function](#transform)
  + [optimizer](#optimizer)
 ## Curves
-Library provides implementation of Hilbert and morton curves.
-Curve is able to encode arbitrary number of dimensions.
+Library provides an implementation of Hilbert and Morton curves.
+A curve can encode an arbitrary number of dimensions.
 The number of dimensions to work with should be configured on curve creation. 
 ### Hilbert curve
 ![hilbert](images/hil.png)
@@ -31,8 +32,8 @@ TransformFunc is an adapter which purpose to convert values into encodable forma
 type TransformFunc func(values []interface{}, sfc curve.Curve) ([]uint64, error)
 ````
 ## Optimizer
-Optimizer is a function which responsible for dividing curve into cell groups.
-This function should contain realisation of an algorithm of distribution cell ranges per node.
+The optimizer is a function responsible for dividing the curve into cell groups.
+This function should contain the realization of an algorithm of distribution cell ranges per node.
 ````go
 type OptimizerFunc func(s *Space) ([]*CellGroup, error)
 ````
