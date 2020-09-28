@@ -8,26 +8,33 @@ import (
 
 const bitSize = 8
 
-//The Hilbert index is expressed as an array of transposed bits.
-//
-//Example: 5 bits for each of n=3 coordinates.
-//15-bit Hilbert integer = A B C D E F G H I J K L M N O is stored
-//as its Transpose                        ^
-//X[0] = A D G J M                    X[2]|  7
-//X[1] = B E H K N        <------->       | /X[1]
-//X[2] = C F I L O                   axes |/
-//       high low                         0------> X[0]
-//
-//NOTE: This algorithm is derived from work done by John Skilling and published in "Programming the Hilbert curve".
-//(c) 2004 American Institute of Physics.
+/*
+	The Hilbert index is expressed as an array of transposed bits.
+
+		Example: 5 bits for each of n=3 coordinates.
+		15-bit Hilbert integer = A B C D E F G H I J K L M N O is stored
+		as its Transpose                        ^
+		X[0] = A D G J M                   X[2]|    7
+		X[1] = B E H K N        <------->      |   /X[1]
+		X[2] = C F I L O                   axes| /
+		      high low                         0------> X[0]
+
+	NOTE: This algorithm is derived from work done by John Skilling and published in "Programming the Hilbert curve".
+	(c) 2004 American Institute of Physics.
+*/
 type Curve struct {
-	dimensions uint64
-	bits       uint64
-	length     uint64
-	maxSize    uint64
-	maxCode    uint64
+	dimensions uint64 //amount of curve dimensions
+	bits       uint64 //size in bits of each dimension
+	length     uint64 //bits * dims
+	maxSize    uint64 //maximum value of each dimension
+	maxCode    uint64 //biggest code which could be decoded by curve
 }
 
+//New - create new hilbert curve.
+//
+//dims - amount of curve dimensions.
+//
+//bits - size in bits of each dimension.
 func New(dims, bits uint64) (*Curve, error) {
 	if bits <= 0 || dims <= 0 {
 		return nil, errors.New("number of bits and dimension must be greater than 0")
@@ -42,7 +49,8 @@ func New(dims, bits uint64) (*Curve, error) {
 }
 
 //Decode returns coordinates for a given code(distance).
-//Method will return error if code(distance) exceeds the limit(2 ^ (dims * bits) - 1)
+//
+//Method will return error if code(distance) exceeds the limit(2 ^ (dims * bits) - 1).
 func (c *Curve) Decode(code uint64) (coords []uint64, err error) {
 	if err := c.validateCode(code); err != nil {
 		return nil, err
@@ -52,10 +60,12 @@ func (c *Curve) Decode(code uint64) (coords []uint64, err error) {
 	return c.transpose(coords), nil
 }
 
-//Decode returns coordinates for a given code(distance).
-//Method will return error if:
-//  - buffer less than number of dimensions
-//	- code(distance) exceeds the limit(2 ^ (dims * bits) - 1)
+//DecodeWithBuffer returns coordinates for a given code(distance).
+// Method will return error if:
+//
+// - buffer less than number of dimensions
+//
+// - code(distance) exceeds the limit(2 ^ (dims * bits) - 1)
 func (c *Curve) DecodeWithBuffer(buf []uint64, code uint64) (coords []uint64, err error) {
 	if len(buf) < int(c.dimensions) {
 		return nil, errors.New("buffer length less then dimensions")
@@ -101,9 +111,11 @@ func (c *Curve) parseIndex(coords []uint64, code uint64) []uint64 {
 	return coords
 }
 
-//! coords may be altered by method
 //Encode returns code(distance) for a given set of coordinates
+//
 //Method will return error if any of the coordinates exceeds limit(2 ^ bits - 1)
+//
+//! coords may be altered by method
 func (c *Curve) Encode(coords []uint64) (code uint64, err error) {
 	if err := c.validateCoordinates(coords); err != nil {
 		return 0, err
@@ -194,7 +206,7 @@ func (c *Curve) prepareIndex(coords []uint64) uint64 {
 	for i := uint64(0); i < c.bits; i++ {
 		for ci := range coords {
 			if (coords[ci] & mask) != 0 {
-				tmpCoords[bIndex/bitSize] |= 1 << (bIndex % 8)
+				tmpCoords[bIndex/bitSize] |= 1 << (bIndex % bitSize)
 			}
 			if bIndex > 0 {
 				bIndex--
@@ -211,16 +223,19 @@ func (c *Curve) DimensionSize() uint64 {
 	return c.maxSize
 }
 
-// Length returns the maximum distance along curve(code value)
+// Length returns the maximum distance along curve(code value).
+//
 // 2^(dimensions * bits) - 1
 func (c *Curve) Length() uint64 {
 	return c.maxCode
 }
 
+//Dimensions - amount of curve dimensions
 func (c *Curve) Dimensions() uint64 {
 	return c.dimensions
 }
 
+//Bits - size in bits of each dimension
 func (c *Curve) Bits() uint64 {
 	return c.bits
 }

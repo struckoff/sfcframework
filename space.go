@@ -80,13 +80,6 @@ func (s *Space) CellGroups() []*CellGroup {
 func (s *Space) Cells() []*cell {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	//ids := make([]uint64, 0, len(s.cells))
-	//for k := range s.cells {
-	//	ids = append(ids, k)
-	//}
-	//sort.Slice(ids, func(i, j int) bool {
-	//	return ids[i] < ids[j]
-	//})
 	res := make([]*cell, 0, len(s.cells))
 	for id := range s.cells {
 		res = append(res, s.cells[id])
@@ -123,14 +116,6 @@ func (s *Space) SetGroups(groups []*CellGroup) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.cgs = groups
-	//for _, cg := range s.cgs {
-	//	cg.SetCells(nil)
-	//}
-	//for _, c := range s.cells {
-	//	if cg, ok := s.findCellGroup(c.ID()); ok {
-	//		cg.AddCell(c, true)
-	//	}
-	//}
 }
 
 //Len returns the number of CellGroups in the space.
@@ -189,6 +174,7 @@ func (s *Space) getNode(id string) (node.Node, bool) {
 	return nil, false
 }
 
+//RemoveNode - removes bide from space by ID.
 func (s *Space) RemoveNode(id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -197,6 +183,7 @@ func (s *Space) RemoveNode(id string) error {
 	}
 	return nil
 }
+
 func (s *Space) removeNode(id string) error {
 	for i := range s.cgs {
 		if s.cgs[i].ID() == id {
@@ -256,6 +243,8 @@ func (s *Space) locateData(d DataItem, load bool) (node.Node, uint64, error) {
 	return c.cg.Node(), cID, nil
 }
 
+//getCell returns cell from space by ID,
+//it creates a new one if cell by given ID not exists.
 func (s *Space) getCell(cID uint64) (*cell, error) {
 	if _, ok := s.cells[cID]; !ok {
 		cg, ok := s.findCellGroup(cID)
@@ -320,7 +309,7 @@ func (s *Space) relocateData(d DataItem, ncID uint64) (node.Node, uint64, error)
 	return nc.cg.Node(), ncID, nil
 }
 
-//cellID calculates the id of cell in space based on transform function and space filling curve.
+//cellID calculates the ID of cell in space based on transform function and space filling curve.
 func (s *Space) cellID(d DataItem) (uint64, error) {
 	if s.tf == nil {
 		return 0, errors.New("transform function is not set")
@@ -337,6 +326,8 @@ func (s *Space) cellID(d DataItem) (uint64, error) {
 	return cID, nil
 }
 
+//findCellGroup returns cell group by ID,
+//ok value represents whether the group was found or not.
 func (s *Space) findCellGroup(cID uint64) (cg *CellGroup, ok bool) {
 	for i := range s.cgs {
 		if s.cgs[i].FitsRange(cID) {
@@ -346,6 +337,7 @@ func (s *Space) findCellGroup(cID uint64) (cg *CellGroup, ok bool) {
 	return nil, false
 }
 
+//Nodes returns list of nodes in space
 func (s *Space) Nodes() []node.Node {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -356,6 +348,8 @@ func (s *Space) Nodes() []node.Node {
 	return res
 }
 
+//FillCellGroup - populate cell group by cells from space
+//considering group range.
 func (s *Space) FillCellGroup(cg *CellGroup) {
 	s.mu.Lock()
 	defer s.mu.Unlock()

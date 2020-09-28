@@ -8,6 +8,8 @@ import (
 	balancer "github.com/struckoff/sfcframework"
 )
 
+//RangeOptimizer - divide curve into segments.
+//Length of each segment depends on nodes power.
 func RangeOptimizer(s *balancer.Space) (res []*balancer.CellGroup, err error) {
 	totalPower := s.TotalPower()
 	cgs := s.CellGroups()
@@ -45,6 +47,8 @@ func RangeOptimizer(s *balancer.Space) (res []*balancer.CellGroup, err error) {
 	return cgs, nil
 }
 
+//PowerRangeOptimizer - divide curve into segments.
+//Length of each segment depends on nodes power and capacity.
 func PowerRangeOptimizer(s *balancer.Space) (res []*balancer.CellGroup, err error) {
 	//TODO: reduce Capacity calls
 

@@ -5,16 +5,24 @@ import (
 	"fmt"
 )
 
+//The Morton index is expressed by bit interleaving of each dimension.
+//
+//Example: 010 & 011 -> 001101
 type Curve struct {
-	dimensions   uint64
-	bits         uint64
-	length       uint64
+	dimensions   uint64 //amount of curve dimensions
+	bits         uint64 //size in bits of each dimension
+	length       uint64 //(bits * dims) - bits
+	maxSize      uint64 //maximum value of each dimension
+	maxCode      uint64 //biggest code which could be decoded by curve
 	masksArray   []uint64
 	lshiftsArray []uint64
-	maxSize      uint64
-	maxCode      uint64
 }
 
+//New - create new hilbert curve.
+//
+//dims - amount of curve dimensions.
+//
+//bits - size in bits of each dimension.
 func New(dims, bits uint64) (*Curve, error) {
 	if bits <= 0 || dims <= 0 {
 		return nil, errors.New("number of bits and dimension must be greater than 0")
@@ -163,15 +171,18 @@ func (c *Curve) DimensionSize() uint64 {
 }
 
 // Length returns the maximum distance along curve(code value)
+//
 // 2^(dimensions * bits) - 1
 func (c *Curve) Length() uint64 {
 	return c.maxCode
 }
 
+//Dimensions - amount of curve dimensions
 func (c *Curve) Dimensions() uint64 {
 	return c.dimensions
 }
 
+//Bits - size in bits of each dimension
 func (c *Curve) Bits() uint64 {
 	return c.bits
 }

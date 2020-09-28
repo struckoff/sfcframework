@@ -14,6 +14,7 @@ func NewRange(min, max uint64) Range {
 	}
 }
 
+//Fits <- min <= index < max
 func (r *Range) Fits(index uint64) bool {
 	return index >= r.Min && index < r.Max
 }

@@ -14,10 +14,17 @@ type Curve interface {
 	Encode(coords []uint64) (code uint64, err error) //Encode returns code(distance) for a given set of coordinates
 	DimensionSize() uint64                           // DimensionSize returns the maximum coordinate value in any dimension
 	Length() uint64                                  // Length returns the maximum distance along curve
-	Dimensions() uint64
-	Bits() uint64
+	Dimensions() uint64                              // Dimensions - amount of curve dimensions
+	Bits() uint64                                    // Bits - size in bits of each dimension
 }
 
+//NewCurve - create a curve by given type
+//
+//cType - curve type(Hilbert, Morton)
+//
+//dims - amount of curve dimensions.
+//
+//bits - size in bits of each dimension.
 func NewCurve(cType CurveType, dims, bits uint64) (Curve, error) {
 	switch cType {
 	case Hilbert:

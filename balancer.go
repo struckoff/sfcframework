@@ -19,14 +19,20 @@ type Balancer struct {
 }
 
 //NewBalancer creates a new instance of balancer
+//
 //cType - type of space filling curve to use
+//
 //dims - amount of dimension to work with
+//
 //size - size of the each dimension(power of 2 of amount of the bits to encode dimension)
+//
 //tf - function which transform DataItem into SFC-readable format
+//
 //of - optimizer function which distributes cells into groups
+//
 //nodes - list of nodes in space(could be nil)
 func NewBalancer(cType curve.CurveType, dims, size uint64, tf TransformFunc, of OptimizerFunc, nodes []node.Node) (*Balancer, error) {
-	bits, err := Log2(size)
+	bits, err := log2(size)
 	if err != nil {
 		return nil, err
 	}
@@ -64,20 +70,22 @@ func (b *Balancer) AddNode(n node.Node, optimize bool) error {
 	return nil
 }
 
-//GetNode returns the node by the given ID
+//GetNode returns the node by the given ID.
 func (b *Balancer) GetNode(id string) (node.Node, bool) {
 	return b.space.GetNode(id)
 }
 
+//Nodes returns list of nodes from space.
 func (b *Balancer) Nodes() []node.Node {
 	return b.space.Nodes()
 }
 
+//Returns space filling curve which space use.
 func (b *Balancer) SFC() curve.Curve {
 	return b.Space().sfc
 }
 
-//RemoveNode - removes node from space by given id
+//RemoveNode - removes node from space by given ID,
 //if optimize is true it will also updates cell groups by optimizer
 func (b *Balancer) RemoveNode(id string, optimize bool) error {
 	if err := b.space.RemoveNode(id); err != nil {
@@ -123,7 +131,7 @@ func (b *Balancer) Optimize() error {
 	return nil
 }
 
-func Log2(n uint64) (p uint64, err error) {
+func log2(n uint64) (p uint64, err error) {
 	if (n & (n - 1)) != 0 {
 		return 0, errors.New("number must be a power of 2")
 	}
