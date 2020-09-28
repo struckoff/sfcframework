@@ -1,5 +1,6 @@
 ![Go](https://github.com/struckoff/sfcframework/workflows/Go/badge.svg?branch=master)
 ![Coverage](https://s3.amazonaws.com/assets.coveralls.io/badges/coveralls_96.svg?branch=master)
+[![Go Report Card](https://goreportcard.com/badge/github.com/struckoff/sfcframework)](https://goreportcard.com/report/github.com/struckoff/sfcframework)
 
 Library provides hashing mechanism which use space filling curve as core algorithm for locating data between multiple nodes.
 This approach provides high data locality and distribution based on data and nodes features.
