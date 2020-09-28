@@ -11,6 +11,8 @@ import (
 	"github.com/struckoff/sfcframework/curve"
 )
 
+//Space is a container for allocated cells and their relations to groups.
+//It contains instances of the space-filling curve and transforms function.
 type Space struct {
 	mu    sync.Mutex
 	cells map[uint64]*cell //cells in the space
@@ -20,6 +22,10 @@ type Space struct {
 	load  uint64
 }
 
+//NewSpace creates new space
+//using space-filling curve instance,
+//function which transform DataItem into SFC-readable format,
+//and list of nodes in space(could be nil).
 func NewSpace(sfc curve.Curve, tf TransformFunc, nodes []node.Node) (*Space, error) {
 	s := Space{
 		cells: map[uint64]*cell{},
@@ -87,6 +93,7 @@ func (s *Space) Cells() []*cell {
 	return res
 }
 
+//TotalLoad returns the cumulative load of all cells in space.
 func (s *Space) TotalLoad() (load uint64) {
 	s.mu.Lock()
 	defer s.mu.Unlock()

@@ -1,3 +1,8 @@
+/*
+	Default transform functions are provided by the library.
+	It covers only the most generic use cases.
+	For more appropriate use transform function should be provided by service from the outside.
+*/
 package transform
 
 import (
@@ -9,6 +14,8 @@ import (
 const latStep = 90.0
 const lonStep = 180.0
 
+//SpaceTransform is used to transform geo coordinates to fit SFC.
+//It requires two float64 values(latitude, longitude).
 func SpaceTransform(values []interface{}, sfc curve.Curve) ([]uint64, error) {
 	dimSize := sfc.DimensionSize()
 	if len(values) != 2 || sfc.Dimensions() != 2 {

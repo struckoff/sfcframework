@@ -1,3 +1,8 @@
+/*
+	Default optimizers provided by the library.
+	It covers only the most generic use cases.
+	For more appropriate use optimizer should be provided by service from the outside.
+*/
 package optimizer
 
 import (

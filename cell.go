@@ -5,14 +5,17 @@ import (
 	"sync/atomic"
 )
 
+//cell contains information about load produced by data items,
+//link to the cell group and information about relocated data to different from defined by SFC cells.
 type cell struct {
-	id   uint64 //unique id of the cell
 	mu   sync.RWMutex
+	id   uint64 //unique id of the cell
 	load *uint64
 	off  map[string]uint64 // location of Relocated DataItem. DataItem.ID -> cell.ID
 	cg   *CellGroup
 }
 
+//NewCell - allocates new instances of cell and attaches it to the cell group.
 func NewCell(id uint64, cg *CellGroup) *cell {
 	c := cell{
 		id:   id,
@@ -26,6 +29,7 @@ func NewCell(id uint64, cg *CellGroup) *cell {
 	return &c
 }
 
+//ID returns cell ID.
 func (c *cell) ID() uint64 {
 	return c.id
 }

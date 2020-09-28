@@ -1,3 +1,8 @@
+/*
+	The Morton index is expressed by bit interleaving of each dimension.
+
+	Example: 010 & 011 -> 001101
+*/
 package morton
 
 import (
@@ -5,9 +10,7 @@ import (
 	"fmt"
 )
 
-//The Morton index is expressed by bit interleaving of each dimension.
-//
-//Example: 010 & 011 -> 001101
+//Curve - the representation of Morton curve.
 type Curve struct {
 	dimensions   uint64 //amount of curve dimensions
 	bits         uint64 //size in bits of each dimension
@@ -51,7 +54,7 @@ func (c *Curve) Decode(code uint64) (coords []uint64, err error) {
 	return coords, nil
 }
 
-//Decode returns coordinates for a given code(distance).
+//DecodeWithBuffer returns coordinates for a given code(distance).
 //Method will return error if:
 //  - buffer less than number of dimensions
 //	- code(distance) exceeds the limit(2 ^ (dims * bits) - 1)

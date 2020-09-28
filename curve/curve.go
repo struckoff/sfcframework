@@ -1,3 +1,7 @@
+/*
+	The internal implementation of the space-filling curve algorithm responsible for encoding and decoding of dimensions.
+	The dimensions and index represented by unsigned int.
+*/
 package curve
 
 import (

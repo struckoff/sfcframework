@@ -8,6 +8,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+//CellGroup represents a segment of SFC attached to the node.
+//It contains information about the range of cells attached to this group and node.
 type CellGroup struct {
 	id     string //unique id of the cell group
 	mu     sync.RWMutex
@@ -17,7 +19,7 @@ type CellGroup struct {
 	cRange Range
 }
 
-//NewCellGroup builds a new CellGroup
+//NewCellGroup builds a new CellGroup.
 func NewCellGroup(n node.Node) *CellGroup {
 	return &CellGroup{
 		id:    n.ID(),
@@ -33,7 +35,7 @@ func (cg *CellGroup) ID() string {
 	return cg.id
 }
 
-//Node returns the node attached to this cell group
+//Node returns the node attached to this cell group.
 func (cg *CellGroup) Node() node.Node {
 	cg.mu.RLock()
 	defer cg.mu.RUnlock()
@@ -54,8 +56,7 @@ func (cg *CellGroup) Range() Range {
 	return cg.cRange
 }
 
-//SetRange sets minimum and maximum of the cell group range
-//if s is not nil method will tryes to update cells of cell group from the space
+//SetRange sets the minimum and maximum of the cell group range.
 func (cg *CellGroup) SetRange(min, max uint64) error {
 	cg.mu.Lock()
 	defer cg.mu.Unlock()
@@ -70,7 +71,7 @@ func (cg *CellGroup) SetRange(min, max uint64) error {
 	return nil
 }
 
-//FitsRange checks if the index of the cell fits the range of the cell group
+//FitsRange checks if the index of the cell fits the range of the cell group.
 func (cg *CellGroup) FitsRange(index uint64) bool {
 	cg.mu.RLock()
 	defer cg.mu.RUnlock()
@@ -84,7 +85,7 @@ func (cg *CellGroup) Cells() map[uint64]*cell {
 	return cg.cells
 }
 
-// AddCell adds a cell to the cell group
+// AddCell adds a cell to the cell group.
 // If autoremove flag is true, method calls CellGroup.RemoveCell of previous cell group.
 // Flag is useful when CellGroup is altered and not refilled
 func (cg *CellGroup) AddCell(c *cell) {
@@ -120,7 +121,7 @@ func (cg *CellGroup) removeCell(id uint64) {
 	delete(cg.cells, id)
 }
 
-//TotalLoad returns cumulative load of all cells in the cell group
+//TotalLoad returns cumulative load of all cells in the cell group.
 func (cg *CellGroup) TotalLoad() (load uint64) {
 	cg.mu.Lock()
 	defer cg.mu.Unlock()
@@ -147,7 +148,7 @@ func (cg *CellGroup) totalLoad() (load uint64) {
 //}
 
 //Truncate call truncate method of each cell in the cell group
-//emptifies load of each cell without removing cells from the cell group
+//which empties a load of each cell without removing cells from the cell group.
 func (cg *CellGroup) Truncate() {
 	cg.mu.Lock()
 	defer cg.mu.Unlock()

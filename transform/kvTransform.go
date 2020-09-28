@@ -2,9 +2,12 @@ package transform
 
 import (
 	"errors"
+
 	"github.com/struckoff/sfcframework/curve"
 )
 
+//KVTransform is used to transform string to fit SFC.
+//It requires one string value.
 func KVTransform(values []interface{}, sfc curve.Curve) ([]uint64, error) {
 	if len(values) != 1 {
 		return nil, errors.New("number of values must be 1")

@@ -1,13 +1,3 @@
-package hilbert
-
-import (
-	"encoding/binary"
-	"errors"
-	"fmt"
-)
-
-const bitSize = 8
-
 /*
 	The Hilbert index is expressed as an array of transposed bits.
 
@@ -22,6 +12,17 @@ const bitSize = 8
 	NOTE: This algorithm is derived from work done by John Skilling and published in "Programming the Hilbert curve".
 	(c) 2004 American Institute of Physics.
 */
+package hilbert
+
+import (
+	"encoding/binary"
+	"errors"
+	"fmt"
+)
+
+const bitSize = 8
+
+//Curve - the representation of Hilbert curve.
 type Curve struct {
 	dimensions uint64 //amount of curve dimensions
 	bits       uint64 //size in bits of each dimension
