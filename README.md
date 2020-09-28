@@ -12,7 +12,7 @@ Balancer is configurable by those parameters:
  + [curve type](#curves)
  + amount of dimensions
  + size of each dimension
- + [transform function](#transform function)
+ + [transform function](#transform)
  + [optimizer](#optimizer)
 ## Curves
 Library provides implementation of Hilbert and morton curves.
@@ -23,7 +23,7 @@ The number of dimensions to work with should be configured on curve creation.
 ### Morton curve
 ![morton](images/mor.png)
 
-##Transform function
+## Transform
 TransformFunc is an adapter which purpose to convert values into encodable format.
 ````go
 type TransformFunc func(values []interface{}, sfc curve.Curve) ([]uint64, error)
@@ -35,7 +35,7 @@ This function should contain realisation of an algorithm of distribution cell ra
 type OptimizerFunc func(s *Space) ([]*CellGroup, error)
 ````
 
-#Example
+# Example
 ````go
 package main
 
