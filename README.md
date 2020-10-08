@@ -1,4 +1,4 @@
-[![](https://godoc.org/github.com/https://godoc.org/github.com/struckoff/sfcframework?status.svg)](https://godoc.org/github.com/struckoff/sfcframework)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/struckoff/sfcframework)](https://pkg.go.dev/github.com/struckoff/sfcframework)
 ![Go](https://github.com/struckoff/sfcframework/workflows/Go/badge.svg?branch=master)
 ![Coverage](https://s3.amazonaws.com/assets.coveralls.io/badges/coveralls_96.svg?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/struckoff/sfcframework)](https://goreportcard.com/report/github.com/struckoff/sfcframework)
@@ -119,3 +119,6 @@ func (d *MyDataItem) Size() uint64 {
 	return 42
 }
 ````
+
+# Example of usage
+[github.com/struckoff/kvstore](https://github.com/struckoff/kvstore)
