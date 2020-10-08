@@ -7,6 +7,6 @@ package node
 type Node interface {
 	ID() string //unique node ID
 	Power() Power
-	Capacity() Capacity
+	//Capacity() Capacity
 	Hash() uint64 //unique node hash
 }

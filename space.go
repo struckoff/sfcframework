@@ -204,10 +204,10 @@ func (s *Space) removeNode(id string) error {
 }
 
 //AddData Add data item to the space.
-func (s *Space) AddData(d DataItem) (node.Node, uint64, error) {
+func (s *Space) AddData(cID uint64, d DataItem) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return s.locateData(d, true)
+	return s.addData(cID, d)
 }
 
 //RemoveData removes data item from the space.
@@ -221,10 +221,10 @@ func (s *Space) RemoveData(d DataItem) error {
 func (s *Space) LocateData(d DataItem) (node.Node, uint64, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return s.locateData(d, false)
+	return s.locateData(d)
 }
 
-func (s *Space) locateData(d DataItem, load bool) (node.Node, uint64, error) {
+func (s *Space) locateData(d DataItem) (node.Node, uint64, error) {
 	if len(s.cgs) == 0 {
 		return nil, 0, errors.New("no nodes in the cluster")
 	}
@@ -243,11 +243,17 @@ func (s *Space) locateData(d DataItem, load bool) (node.Node, uint64, error) {
 			return nil, 0, err
 		}
 	}
-	if load {
-		c.AddLoad(d.Size())
-		s.load += d.Size()
-	}
 	return c.cg.Node(), cID, nil
+}
+
+func (s *Space) addData(cID uint64, d DataItem) error {
+	c, err := s.getCell(cID)
+	if err != nil {
+		return err
+	}
+	c.AddLoad(d.Size())
+	s.load += d.Size()
+	return nil
 }
 
 //getCell returns cell from space by ID,

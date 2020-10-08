@@ -105,8 +105,8 @@ func (b *Balancer) LocateData(d DataItem) (node.Node, uint64, error) {
 }
 
 //AddData loads data into the Space of the balancer.
-func (b *Balancer) AddData(d DataItem) (node.Node, uint64, error) {
-	return b.space.AddData(d)
+func (b *Balancer) AddData(cID uint64, d DataItem) error {
+	return b.space.AddData(cID, d)
 }
 
 //RemoveData removes DataItem from the Space of the balancer
