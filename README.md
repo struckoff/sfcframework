@@ -119,3 +119,6 @@ func (d *MyDataItem) Size() uint64 {
 	return 42
 }
 ````
+
+# Example of usage
+[github.com/struckoff/kvstore](https://github.com/struckoff/kvstore)
