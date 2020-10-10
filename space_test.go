@@ -528,10 +528,14 @@ func TestSpace_AddData(t *testing.T) {
 	n := &mocks.Node{}
 
 	cg := &CellGroup{
-		node:   n,
-		cells:  nil,
-		load:   0,
-		cRange: Range{},
+		node:  n,
+		cells: nil,
+		load:  0,
+		cRange: Range{
+			Min: 0,
+			Max: math.MaxUint64,
+			Len: math.MaxUint64,
+		},
 	}
 
 	cells := map[uint64]*cell{
@@ -554,11 +558,11 @@ func TestSpace_AddData(t *testing.T) {
 		load:  0,
 	}
 
-	gotn, gotcid, err := s.AddData(d)
+	err := s.AddData(0, d)
 
 	assert.NoError(t, err)
-	assert.Equal(t, n, gotn)
-	assert.Equal(t, 42, int(gotcid))
+	//assert.Equal(t, n, gotn)
+	//assert.Equal(t, 42, int(gotcid))
 	assert.Equal(t, 111, int(s.load))
 }
 

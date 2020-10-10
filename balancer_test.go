@@ -519,9 +519,6 @@ func TestBalancer_RemoveNode(t *testing.T) {
 		space *Space
 		of    OptimizerFunc
 	}
-	type nd struct {
-		id string
-	}
 	type args struct {
 		id       string
 		optimize bool
@@ -804,13 +801,13 @@ func TestBalancer_AddData(t *testing.T) {
 
 			b.space.sfc = sfc
 
-			got, gotCode, err := b.AddData(d)
+			err := b.AddData(1, d)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, tt.want, got)
-				assert.Equal(t, tt.wantCode, gotCode)
+				//assert.Equal(t, tt.want, got)
+				//assert.Equal(t, tt.wantCode, gotCode)
 			}
 		})
 	}
